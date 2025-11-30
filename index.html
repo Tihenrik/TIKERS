@@ -426,7 +426,10 @@
         let activeInboxTab = 'new'; 
         let authStep = 1; 
         let tempUsername = ''; 
-        let isNewUser = false; 
+        let isNewUser = false;
+        
+        // --- WAKE LOCK STATE (NOVO) ---
+        let wakeLock = null;
 
         // --- DOM ELEMENTS ---
         const views = {
@@ -701,7 +704,7 @@
                     }) : '...';
 
                     const item = document.createElement('div');
-                    item.className = "glass-panel p-3 rounded-xl flex items-center justify-between group hover:bg-white/5 transition-all relative overflow-hidden cursor-pointer flex-none"; // flex-none previne esmagamento
+                    item.className = "glass-panel p-3 rounded-xl flex items-center justify-between group hover:bg-white/5 transition-all relative overflow-hidden cursor-pointer flex-none"; 
                     item.style.borderLeft = `3px solid ${color}`;
                     
                     const statusText = activeInboxTab === 'new' ? "RECEBIDA" : "ARQUIVADO";
@@ -793,7 +796,6 @@
 
         document.getElementById('btn-compose-fab').addEventListener('click', () => openCompose());
         
-        // ALTERADO: Volta para a aba NOVAS ao fechar
         document.getElementById('btn-close-compose').addEventListener('click', () => {
             setActiveTab('new'); 
             switchView('inbox');
@@ -818,7 +820,6 @@
                     from: currentUser.username, to: to, text: text, config: config, timestamp: serverTimestamp(), read: false
                 });
                 
-                // ALTERADO: Volta para a aba NOVAS ao enviar
                 setActiveTab('new');
                 switchView('inbox');
                 
@@ -831,7 +832,7 @@
             composeEls.btnSend.innerText = "ENVIAR RECADO";
         });
 
-        // --- FULLSCREEN & PLAYER ---
+        // --- FULLSCREEN & PLAYER & WAKE LOCK ---
         function enterFullscreen() {
             const elem = document.getElementById('app-wrapper');
             if (elem.requestFullscreen) { elem.requestFullscreen().catch(err => console.log(err)); }
@@ -842,10 +843,40 @@
             else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
         }
 
+        // Função robusta para pedir o Wake Lock e reconectar se cair
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock solto');
+                    });
+                    console.log('Wake Lock ativado');
+                }
+            } catch (err) {
+                console.log("Erro no Wake Lock:", err);
+            }
+        }
+
+        // Listener global: Se a página ficar visível de novo e estiver no player, pede o bloqueio
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible' && views.player.classList.contains('active')) {
+                await requestWakeLock();
+            }
+        });
+
+        // Ao sair do player, libera tudo
         document.getElementById('view-player').addEventListener('click', () => {
             exitFullscreen();
             switchView('inbox');
+            
+            // Cancela animação
             if(playerRafId) cancelAnimationFrame(playerRafId);
+            
+            // Libera Wake Lock
+            if(wakeLock) {
+                wakeLock.release().then(() => wakeLock = null).catch(e => console.log(e));
+            }
         });
 
         function playMessage(msg) {
@@ -876,7 +907,9 @@
                 textEl.style.fontSize = `${sizeBase}vh`; 
             }
 
+            // ATIVA O WAKE LOCK AQUI
             requestWakeLock();
+            
             switchView('player');
             const speedVal = parseInt(config.speed || 50);
             let position = shouldRotate ? window.innerHeight : window.innerWidth;
@@ -892,10 +925,6 @@
             }
             if(playerRafId) cancelAnimationFrame(playerRafId);
             playerRafId = requestAnimationFrame(animate);
-        }
-
-        async function requestWakeLock() {
-            try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (err) {}
         }
 
         lucide.createIcons();
