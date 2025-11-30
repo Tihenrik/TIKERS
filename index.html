@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>TICKERS</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Monoton&family=Orbitron:wght@900&family=Pacifico&family=Permanent+Marker&family=Press+Start+2P&family=Rubik+Mono+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --led-bg-color: #000000;
+        }
+
+        body {
+            background-color: #000000;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
+            height: 100dvh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* === WRAPPER GERAL E BACKUP PRETO === */
+        #app-wrapper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #000000;
+            overflow: hidden;
+        }
+
+        #app-wrapper::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: #000000;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        #app-wrapper:fullscreen { background-color: #000000; width: 100vw; height: 100vh; }
+        #app-wrapper:-webkit-full-screen { background-color: #000000; width: 100vw; height: 100vh; }
+
+        /* Views Management */
+        .view-section {
+            display: none;
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: black;
+        }
+        
+        .view-section.active {
+            display: flex;
+            z-index: 10;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom Inputs */
+        .custom-input {
+            background: #111;
+            border: 1px solid #333;
+            transition: all 0.3s;
+            color: white;
+        }
+        .custom-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px var(--active-color, #00ff00);
+            border-color: var(--active-color, #00ff00);
+        }
+        
+        /* Select Styling */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 0.6em auto;
+        }
+
+        /* Scrollbar Hide */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        #player-container {
+            background-color: var(--led-bg-color);
+            transition: background-color 0.5s;
+        }
+        
+        .dot-matrix-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 99999;
+            background-image: radial-gradient(circle, transparent 35%, rgba(0,0,0,0.85) 42%);
+            background-size: 6px 6px;
+            mix-blend-mode: multiply;
+        }
+
+        .marquee-wrapper {
+            white-space: nowrap;
+            will-change: transform;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+        }
+        
+        .rotate-screen {
+            width: 100vh !important;
+            height: 100vw !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) rotate(90deg) !important;
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        }
+        .pulse-indicator { animation: pulse-green 2s infinite; }
+        
+        /* Compact Slider */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444;
+            border-radius: 2px;
+        }
+
+        /* Tabs Styles */
+        .tab-btn {
+            padding-bottom: 0.5rem;
+            flex: 1;
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+            color: #666;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active-tab {
+            color: white;
+            border-color: #22c55e;
+        }
+
+        /* PIN Input Styles */
+        .pin-input {
+            letter-spacing: 0.5em;
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            -webkit-text-security: disc; /* Máscara de senha no iOS/Webkit */
+        }
+
+        /* === STYLE DO MODAL === */
+        #custom-modal-overlay {
+            z-index: 100000; /* Acima de tudo */
+        }
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-wrapper">
+
+        <div id="custom-modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-6">
+            <div id="custom-modal-box" class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center modal-enter">
+                
+                <div id="modal-icon-container" class="mb-4 text-green-500">
+                    <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+                </div>
+
+                <h3 id="modal-title" class="text-2xl font-black text-white mb-2 uppercase tracking-tight" style="font-family: 'Share Tech Mono'">
+                    ATENÇÃO
+                </h3>
+                
+                <p id="modal-message" class="text-gray-400 text-sm font-bold tracking-wider uppercase mb-6 leading-relaxed">
+                    Mensagem de aviso aqui.
+                </p>
+
+                <div class="flex gap-3 w-full" id="modal-actions">
+                    <button id="modal-btn-cancel" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-500 font-bold uppercase text-xs tracking-widest hidden">
+                        Cancelar
+                    </button>
+                    <button id="modal-btn-confirm" class="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-black font-black uppercase text-xs tracking-widest shadow-lg">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <section id="view-auth" class="view-section active items-center justify-center p-6">
+            <div class="mb-8 text-center scale-90">
+                <h1 class="text-6xl font-black text-white mb-0 tracking-tighter" style="font-family: 'Share Tech Mono'">
+                    TICK<span class="text-green-500">ERS</span>
+                </h1>
+                <p class="text-gray-500 text-xs tracking-[0.3em] uppercase mt-1">A Rede Social de Letreiros</p>
+            </div>
+
+            <form id="login-form" class="glass-panel p-6 rounded-2xl w-full max-w-sm flex flex-col gap-4 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+                
+                <div id="login-step-1">
+                    <label class="text-[10px] font-bold text-gray-400 tracking-widest block mb-2">QUEM ÉS TU?</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">@</span>
+                        <input type="text" id="login-username" class="custom-input w-full p-4 pl-8 rounded-xl text-xl text-center text-green-500 font-bold font-mono placeholder-gray-800" placeholder="NOME" required autocomplete="off">
+                    </div>
+                    <button type="submit" id="btn-check-user" class="w-full bg-white/10 hover:bg-white/20 text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all mt-4 border border-white/10">
+                        AVANÇAR
+                    </button>
+                </div>
+
+                <div id="login-step-2" class="hidden">
+                    <label id="pin-label" class="text-[10px] font-bold text-green-500 tracking-widest block mb-2 text-center uppercase">DIGITE SEU PIN</label>
+                    <div class="relative">
+                        <input type="tel" id="login-pin" maxlength="4" class="custom-input pin-input w-full p-4 rounded-xl text-white font-bold placeholder-gray-800" placeholder="••••" required>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button type="button" id="btn-back-auth" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 font-bold py-4 rounded-xl">
+                            VOLTAR
+                        </button>
+                        <button type="submit" id="btn-confirm-login" class="flex-[2] bg-green-600 hover:bg-green-500 text-black font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+                            ENTRAR
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+            <p class="text-center text-[10px] text-gray-600 mt-4">Sistema de acesso protegido por PIN.</p>
+        </section>
+
+        <section id="view-inbox" class="view-section p-4">
+            
+            <div class="flex-none flex justify-between items-center mt-2 mb-2">
+                <h2 class="text-3xl font-black tracking-tighter text-white" style="font-family: 'Share Tech Mono'">
+                    INBOX <span id="msg-count-new" class="text-green-500 text-sm align-super ml-1">0</span>
+                </h2>
+                <div class="flex flex-col items-end">
+                    <span id="user-display" class="text-xs font-bold text-green-500 bg-green-900/30 px-2 py-1 rounded">@USUARIO</span>
+                </div>
+            </div>
+
+            <div class="flex-none flex border-b border-gray-800 mb-4">
+                <button id="tab-new" class="tab-btn active-tab">NOVAS</button>
+                <button id="tab-read" class="tab-btn">LIDAS</button>
+            </div>
+
+            <div id="messages-list" class="flex-1 flex flex-col gap-2 overflow-y-auto no-scrollbar pb-24 min-h-0">
+                <div class="flex-1 flex flex-col items-center justify-center opacity-30 mt-10">
+                    <i data-lucide="loader" class="w-8 h-8 animate-spin mb-2"></i>
+                </div>
+            </div>
+
+            <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-4 z-40">
+                <button id="btn-logout" class="w-12 h-12 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+                
+                <button id="btn-compose-fab" class="w-16 h-16 rounded-full bg-green-500 text-black shadow-[0_0_20px_rgba(34,197,94,0.4)] flex items-center justify-center hover:scale-110 transition-transform pulse-indicator">
+                    <i data-lucide="plus" class="w-8 h-8" stroke-width="3"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="view-compose" class="view-section p-4 h-full">
+            <div class="flex-none flex justify-between items-center mb-2 mt-2">
+                <h2 id="compose-title" class="text-xl font-black tracking-tighter text-white" style="font-family: 'Share Tech Mono'">NOVA MENSAGEM</h2>
+                <button id="btn-close-compose" class="p-1 bg-white/10 rounded-full hover:bg-white/20">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 glass-panel p-4 rounded-2xl flex flex-col gap-3 shadow-2xl overflow-hidden justify-between">
+                <div class="flex flex-col gap-2">
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs">@</span>
+                        <input type="text" id="compose-to" placeholder="Para quem?" class="custom-input w-full p-2 pl-7 rounded-lg text-sm font-bold tracking-wider text-white">
+                    </div>
+                    <input type="text" id="compose-text" value="Olá" placeholder="Sua mensagem..." class="custom-input w-full p-4 rounded-lg text-lg text-center font-bold tracking-wider h-14">
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[9px] font-bold text-gray-500 tracking-widest ml-1 mb-0.5 block">FONTE</label>
+                            <select id="compose-font" class="w-full bg-[#151515] border border-[#333] text-white p-2 rounded-lg text-[10px] font-bold h-9">
+                                <option value="'Share Tech Mono', monospace">DIGITAL</option>
+                                <option value="'Orbitron', sans-serif">FUTURISTA</option>
+                                <option value="'Press Start 2P', cursive">RETRO</option>
+                                <option value="'Monoton', cursive">NEON</option>
+                                <option value="'Rubik Mono One', sans-serif">IMPACTO</option>
+                                <option value="'Permanent Marker', cursive">GRAFFITI</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-gray-500 tracking-widest ml-1 mb-0.5 block">TAMANHO</label>
+                            <div class="flex gap-1 bg-[#151515] p-0.5 rounded-lg border border-[#333] h-9" id="size-options">
+                                <button type="button" data-val="25" class="size-btn flex-1 rounded text-[9px] font-bold text-gray-500">P</button>
+                                <button type="button" data-val="50" class="size-btn flex-1 rounded text-[9px] font-bold text-gray-500">M</button>
+                                <button type="button" data-val="95" class="size-btn flex-1 rounded text-[9px] font-bold bg-white/20 text-white">G</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                         <div class="bg-[#151515] rounded-lg border border-[#333] p-1 flex items-center justify-center gap-2">
+                            <span class="text-[9px] font-bold text-gray-500">COR</span>
+                            <input type="color" id="compose-color" value="#00ff00" class="w-6 h-6 rounded bg-transparent cursor-pointer border-none p-0">
+                        </div>
+                         <div class="bg-[#151515] rounded-lg border border-[#333] p-1 flex items-center justify-center gap-2">
+                            <span class="text-[9px] font-bold text-gray-500">FUNDO</span>
+                            <input type="color" id="compose-bgcolor" value="#000000" class="w-6 h-6 rounded bg-transparent cursor-pointer border-none p-0">
+                        </div>
+                        <label class="bg-[#151515] rounded-lg border border-[#333] p-1 flex flex-col items-center justify-center cursor-pointer">
+                            <input type="checkbox" id="compose-rotate" checked class="hidden peer">
+                            <span class="text-[9px] font-bold text-gray-500 peer-checked:text-green-500">GIRAR</span>
+                            <div class="w-2 h-2 rounded-full bg-gray-700 peer-checked:bg-green-500 mt-0.5"></div>
+                        </label>
+                    </div>
+
+                    <div class="bg-[#151515] rounded-lg border border-[#333] p-2 flex items-center gap-3">
+                         <span class="text-[9px] font-bold text-gray-500 w-12">VELOC.</span>
+                         <input type="range" id="compose-speed" min="10" max="100" value="50" class="flex-1 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-white">
+                    </div>
+                </div>
+
+                <button id="btn-send" class="flex-none w-full bg-gradient-to-r from-green-600 to-green-400 text-black font-black text-sm py-3 rounded-xl shadow-lg hover:scale-[1.01] active:scale-[0.98] transition-all uppercase tracking-widest mt-1">
+                    ENVIAR RECADO
+                </button>
+            </div>
+        </section>
+
+        <section id="view-player" class="view-section" style="z-index: 99999; cursor: pointer;">
+            <div id="player-container" class="w-full h-full relative overflow-hidden flex items-center justify-center">
+                <div id="marquee" class="marquee-wrapper">
+                    <span id="player-text" class="whitespace-nowrap font-bold pl-4"></span>
+                </div>
+            </div>
+            <div class="dot-matrix-overlay"></div>
+        </section>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp, doc, deleteDoc, updateDoc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // --- CREDENCIAIS ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyChJadGlznjLRgzcxZ3pmkxtXw8GHsRFUY",
+            authDomain: "lednet-ebafd.firebaseapp.com",
+            projectId: "lednet-ebafd",
+            storageBucket: "lednet-ebafd.firebasestorage.app",
+            messagingSenderId: "483251330944",
+            appId: "1:483251330944:web:066a7214ea136eafd52b65"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- STATE ---
+        let currentUser = null; 
+        let currentMessages = [];
+        let playerRafId = null;
+        let unsubscribeMsgListener = null;
+        let activeInboxTab = 'new'; 
+        let authStep = 1; 
+        let tempUsername = ''; 
+        let isNewUser = false; 
+
+        // --- DOM ELEMENTS ---
+        const views = {
+            auth: document.getElementById('view-auth'),
+            inbox: document.getElementById('view-inbox'),
+            compose: document.getElementById('view-compose'),
+            player: document.getElementById('view-player')
+        };
+        
+        // --- NAVIGATION ---
+        function switchView(viewName) {
+            Object.values(views).forEach(el => el.classList.remove('active'));
+            views[viewName].classList.add('active');
+            lucide.createIcons();
+        }
+
+        // --- SISTEMA DE MODAL (ALERTAS CUSTOMIZADOS) ---
+        const modalOverlay = document.getElementById('custom-modal-overlay');
+        const modalBox = document.getElementById('custom-modal-box');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMsg = document.getElementById('modal-message');
+        const modalIcon = document.getElementById('modal-icon-container');
+        const btnModalCancel = document.getElementById('modal-btn-cancel');
+        const btnModalConfirm = document.getElementById('modal-btn-confirm');
+        let modalConfirmCallback = null;
+
+        function showModal(title, message, isConfirm = false, onConfirm = null) {
+            modalTitle.innerText = title;
+            modalMsg.innerText = message;
+            modalConfirmCallback = onConfirm;
+
+            // Define Ícone baseado no tipo
+            if(isConfirm) {
+                modalIcon.innerHTML = `<i data-lucide="help-circle" class="w-10 h-10"></i>`;
+                modalIcon.className = "mb-4 text-yellow-400";
+                btnModalCancel.classList.remove('hidden');
+            } else {
+                modalIcon.innerHTML = `<i data-lucide="info" class="w-10 h-10"></i>`;
+                modalIcon.className = "mb-4 text-green-500";
+                btnModalCancel.classList.add('hidden');
+            }
+
+            modalOverlay.classList.remove('hidden');
+            // Animação de entrada
+            setTimeout(() => {
+                modalBox.classList.add('modal-enter-active');
+            }, 10);
+            
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            modalBox.classList.remove('modal-enter-active');
+            setTimeout(() => {
+                modalOverlay.classList.add('hidden');
+                modalConfirmCallback = null;
+            }, 300);
+        }
+
+        btnModalCancel.addEventListener('click', closeModal);
+        btnModalConfirm.addEventListener('click', () => {
+            if (modalConfirmCallback) modalConfirmCallback();
+            closeModal();
+        });
+
+
+        // --- AUTH ---
+        async function initAuth() {
+            try { await signInAnonymously(auth); } catch(e) { console.error("Auth Error:", e); }
+
+            const savedUsername = localStorage.getItem('led_social_username');
+            
+            if (savedUsername) {
+                currentUser = { username: savedUsername };
+                document.getElementById('user-display').innerText = '@' + savedUsername.toUpperCase();
+                startInboxListener();
+                switchView('inbox');
+            } else {
+                switchView('auth');
+            }
+        }
+
+        // --- LÓGICA DE LOGIN COM PIN E MODAL ---
+        const loginForm = document.getElementById('login-form');
+        const step1Div = document.getElementById('login-step-1');
+        const step2Div = document.getElementById('login-step-2');
+        const pinLabel = document.getElementById('pin-label');
+        const btnCheckUser = document.getElementById('btn-check-user');
+        const btnBackAuth = document.getElementById('btn-back-auth');
+        const btnConfirmLogin = document.getElementById('btn-confirm-login');
+
+        loginForm.addEventListener('submit', (e) => e.preventDefault());
+
+        btnCheckUser.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username');
+            const username = usernameInput.value.trim().toLowerCase().replace(/\s/g, '');
+            
+            if(!username || username.length < 3) {
+                showModal("ERRO", "O nome deve ter pelo menos 3 letras.", false);
+                return;
+            }
+
+            btnCheckUser.innerText = "VERIFICANDO...";
+            btnCheckUser.disabled = true;
+
+            try {
+                const userRef = doc(db, 'led_users', username);
+                const userSnap = await getDoc(userRef);
+
+                tempUsername = username;
+                authStep = 2;
+
+                if (userSnap.exists()) {
+                    isNewUser = false;
+                    pinLabel.innerText = "USUÁRIO ENCONTRADO. DIGITE O PIN:";
+                    pinLabel.className = "text-[10px] font-bold text-green-500 tracking-widest block mb-2 text-center uppercase";
+                } else {
+                    isNewUser = true;
+                    pinLabel.innerText = "NOME DISPONÍVEL! CRIE SEU PIN:";
+                    pinLabel.className = "text-[10px] font-bold text-blue-400 tracking-widest block mb-2 text-center uppercase";
+                }
+
+                step1Div.classList.add('hidden');
+                step2Div.classList.remove('hidden');
+                document.getElementById('login-pin').value = '';
+                document.getElementById('login-pin').focus();
+
+            } catch(error) {
+                console.error(error);
+                showModal("ERRO DE CONEXÃO", "Falha ao verificar usuário.", false);
+            } finally {
+                btnCheckUser.innerText = "AVANÇAR";
+                btnCheckUser.disabled = false;
+            }
+        });
+
+        btnConfirmLogin.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const pin = document.getElementById('login-pin').value.trim();
+            
+            if(pin.length !== 4) {
+                showModal("PIN INVÁLIDO", "O PIN deve conter exatamente 4 números.", false);
+                return;
+            }
+
+            btnConfirmLogin.innerText = "...";
+            btnConfirmLogin.disabled = true;
+
+            try {
+                if(isNewUser) {
+                    await setDoc(doc(db, 'led_users', tempUsername), {
+                        pin: pin,
+                        createdAt: serverTimestamp()
+                    });
+                    finalizeLogin(tempUsername);
+                } else {
+                    const userRef = doc(db, 'led_users', tempUsername);
+                    const userSnap = await getDoc(userRef);
+                    
+                    if(userSnap.data().pin === pin) {
+                        finalizeLogin(tempUsername);
+                    } else {
+                        showModal("ACESSO NEGADO", "PIN Incorreto!", false);
+                        document.getElementById('login-pin').value = '';
+                        btnConfirmLogin.innerText = "ENTRAR";
+                        btnConfirmLogin.disabled = false;
+                    }
+                }
+            } catch(error) {
+                console.error(error);
+                showModal("ERRO", "Falha ao realizar login.", false);
+                btnConfirmLogin.innerText = "ENTRAR";
+                btnConfirmLogin.disabled = false;
+            }
+        });
+
+        btnBackAuth.addEventListener('click', () => {
+            step2Div.classList.add('hidden');
+            step1Div.classList.remove('hidden');
+            authStep = 1;
+            tempUsername = '';
+        });
+
+        function finalizeLogin(username) {
+            localStorage.setItem('led_social_username', username);
+            currentUser = { username: username };
+            document.getElementById('user-display').innerText = '@' + username.toUpperCase();
+            startInboxListener();
+            switchView('inbox');
+            
+            step2Div.classList.add('hidden');
+            step1Div.classList.remove('hidden');
+            document.getElementById('login-username').value = '';
+            btnConfirmLogin.innerText = "ENTRAR";
+            btnConfirmLogin.disabled = false;
+        }
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            showModal("LOGOUT", "Deseja realmente sair da sua conta?", true, () => {
+                localStorage.removeItem('led_social_username');
+                currentUser = null;
+                if(unsubscribeMsgListener) unsubscribeMsgListener();
+                switchView('auth');
+                document.getElementById('login-username').value = '';
+            });
+        });
+
+        // --- INBOX LOGIC ---
+        
+        const tabNew = document.getElementById('tab-new');
+        const tabRead = document.getElementById('tab-read');
+
+        function setActiveTab(tab) {
+            activeInboxTab = tab;
+            if(tab === 'new') {
+                tabNew.classList.add('active-tab');
+                tabNew.classList.remove('text-gray-600');
+                tabRead.classList.remove('active-tab');
+                tabRead.classList.add('text-gray-600');
+            } else {
+                tabRead.classList.add('active-tab');
+                tabRead.classList.remove('text-gray-600');
+                tabNew.classList.remove('active-tab');
+                tabNew.classList.add('text-gray-600');
+            }
+            renderInbox();
+        }
+
+        tabNew.addEventListener('click', () => setActiveTab('new'));
+        tabRead.addEventListener('click', () => setActiveTab('read'));
+
+        function startInboxListener() {
+            if(!currentUser) return;
+            const q = query(
+                collection(db, 'led_messages'), 
+                where('to', '==', currentUser.username),
+                orderBy('timestamp', 'desc')
+            );
+            unsubscribeMsgListener = onSnapshot(q, (snapshot) => {
+                currentMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderInbox();
+            });
+        }
+
+        function renderInbox() {
+            const listEl = document.getElementById('messages-list');
+            const countEl = document.getElementById('msg-count-new');
+            
+            const newCount = currentMessages.filter(m => !m.read).length;
+            countEl.innerText = newCount;
+            
+            const filteredMessages = currentMessages.filter(m => {
+                if(activeInboxTab === 'new') return !m.read; 
+                return m.read === true;
+            });
+
+            listEl.innerHTML = '';
+            
+            if (filteredMessages.length === 0) {
+                const emptyText = activeInboxTab === 'new' ? "SEM NOVAS MENSAGENS" : "NENHUMA MENSAGEM LIDA";
+                listEl.innerHTML = `<div class="flex-1 flex flex-col items-center justify-center opacity-30 mt-10">
+                    <i data-lucide="${activeInboxTab === 'new' ? 'inbox' : 'archive'}" class="w-12 h-12 mb-2"></i>
+                    <p class="text-xs font-bold tracking-widest text-center">${emptyText}</p>
+                </div>`;
+            } else {
+                filteredMessages.forEach(msg => {
+                    const color = msg.config?.color || '#333';
+                    const time = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleString('pt-BR', {
+                        day: '2-digit', month: '2-digit', year: '2-digit',
+                        hour: '2-digit', minute: '2-digit'
+                    }) : '...';
+
+                    const item = document.createElement('div');
+                    item.className = "glass-panel p-3 rounded-xl flex items-center justify-between group hover:bg-white/5 transition-all relative overflow-hidden cursor-pointer flex-none"; // flex-none previne esmagamento
+                    item.style.borderLeft = `3px solid ${color}`;
+                    
+                    const statusText = activeInboxTab === 'new' ? "RECEBIDA" : "ARQUIVADO";
+                    const statusIcon = activeInboxTab === 'new' ? "mail" : "check-circle";
+
+                    item.innerHTML = `
+                        <div class="flex-1 min-w-0 pointer-events-none">
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <span class="text-[10px] font-bold text-gray-400 bg-white/10 px-1.5 py-0.5 rounded">@${msg.from}</span>
+                                <span class="text-[9px] text-gray-600 flex items-center gap-1"><i data-lucide="clock" class="w-2.5 h-2.5"></i> ${time}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 opacity-80">
+                                <i data-lucide="${statusIcon}" class="w-3.5 h-3.5 text-green-500"></i>
+                                <p class="text-xs font-bold tracking-wider text-white uppercase" style="font-family: 'Share Tech Mono'">${statusText}</p>
+                            </div>
+                        </div>
+                        <div class="ml-2 flex items-center gap-2">
+                            <button class="btn-reply p-1.5 bg-white/5 rounded-full hover:bg-white/20 text-gray-400 hover:text-white" data-from="${msg.from}"><i data-lucide="reply" class="w-3.5 h-3.5"></i></button>
+                            <button class="btn-delete p-1.5 bg-white/5 rounded-full hover:bg-red-500/20 text-gray-600 hover:text-red-500" data-id="${msg.id}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    `;
+                    item.addEventListener('click', (e) => { if(!e.target.closest('button')) playMessage(msg); });
+                    item.querySelector('.btn-reply').addEventListener('click', (e) => { e.stopPropagation(); openCompose(msg.from); });
+                    item.querySelector('.btn-delete').addEventListener('click', (e) => { 
+                        e.stopPropagation(); 
+                        showModal("APAGAR?", "Essa ação não pode ser desfeita.", true, () => deleteMessage(msg.id));
+                    });
+                    listEl.appendChild(item);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        async function deleteMessage(id) {
+            try { await deleteDoc(doc(db, 'led_messages', id)); } catch(e) { console.error(e); }
+        }
+        
+        async function markAsRead(id) {
+            try {
+                const ref = doc(db, 'led_messages', id);
+                await updateDoc(ref, { read: true });
+            } catch(e) { console.error("Erro ao marcar lida:", e); }
+        }
+
+        // --- COMPOSE LOGIC ---
+        const composeEls = {
+            to: document.getElementById('compose-to'),
+            text: document.getElementById('compose-text'),
+            font: document.getElementById('compose-font'),
+            color: document.getElementById('compose-color'),
+            bgcolor: document.getElementById('compose-bgcolor'),
+            speed: document.getElementById('compose-speed'),
+            rotate: document.getElementById('compose-rotate'),
+            btnSend: document.getElementById('btn-send'),
+            title: document.getElementById('compose-title')
+        };
+        let selectedSize = "95";
+
+        document.getElementById('size-options').addEventListener('click', (e) => {
+            if(e.target.classList.contains('size-btn')) {
+                document.querySelectorAll('.size-btn').forEach(b => {
+                    b.classList.remove('bg-white/20', 'text-white');
+                    b.classList.add('text-gray-500');
+                });
+                e.target.classList.remove('text-gray-500');
+                e.target.classList.add('bg-white/20', 'text-white');
+                selectedSize = e.target.dataset.val;
+            }
+        });
+
+        function updateComposeStyles() {
+            const color = composeEls.color.value;
+            composeEls.text.style.color = color;
+            composeEls.text.style.borderColor = color;
+            composeEls.text.style.boxShadow = `0 0 10px ${color}30`;
+            composeEls.to.style.setProperty('--active-color', color);
+            composeEls.text.style.fontFamily = composeEls.font.value.split(',')[0].replace(/'/g, "");
+        }
+        composeEls.color.addEventListener('input', updateComposeStyles);
+        composeEls.font.addEventListener('change', updateComposeStyles);
+
+        function openCompose(replyTo = '') {
+            composeEls.to.value = replyTo;
+            composeEls.text.value = '';
+            composeEls.title.innerText = replyTo ? 'RESPONDER' : 'NOVA MENSAGEM';
+            updateComposeStyles();
+            switchView('compose');
+        }
+
+        document.getElementById('btn-compose-fab').addEventListener('click', () => openCompose());
+        
+        // ALTERADO: Volta para a aba NOVAS ao fechar
+        document.getElementById('btn-close-compose').addEventListener('click', () => {
+            setActiveTab('new'); 
+            switchView('inbox');
+        });
+
+        composeEls.btnSend.addEventListener('click', async () => {
+            const to = composeEls.to.value.trim().toLowerCase();
+            const text = composeEls.text.value.trim();
+            if(!to || !text) return;
+            composeEls.btnSend.disabled = true;
+            composeEls.btnSend.innerText = "...";
+            try {
+                const config = {
+                    color: composeEls.color.value,
+                    bgColor: composeEls.bgcolor.value,
+                    font: composeEls.font.value,
+                    size: selectedSize,
+                    speed: composeEls.speed.value,
+                    rotate: composeEls.rotate.checked
+                };
+                await addDoc(collection(db, 'led_messages'), {
+                    from: currentUser.username, to: to, text: text, config: config, timestamp: serverTimestamp(), read: false
+                });
+                
+                // ALTERADO: Volta para a aba NOVAS ao enviar
+                setActiveTab('new');
+                switchView('inbox');
+                
+                showModal("SUCESSO", "Mensagem enviada!", false);
+            } catch(e) { 
+                console.error(e); 
+                showModal("ERRO", "Falha ao enviar mensagem.", false);
+            }
+            composeEls.btnSend.disabled = false;
+            composeEls.btnSend.innerText = "ENVIAR RECADO";
+        });
+
+        // --- FULLSCREEN & PLAYER ---
+        function enterFullscreen() {
+            const elem = document.getElementById('app-wrapper');
+            if (elem.requestFullscreen) { elem.requestFullscreen().catch(err => console.log(err)); }
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+        }
+        function exitFullscreen() {
+            if (document.exitFullscreen) { document.exitFullscreen().catch(err => console.log(err)); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+        }
+
+        document.getElementById('view-player').addEventListener('click', () => {
+            exitFullscreen();
+            switchView('inbox');
+            if(playerRafId) cancelAnimationFrame(playerRafId);
+        });
+
+        function playMessage(msg) {
+            if(msg.read === false) { markAsRead(msg.id); }
+
+            enterFullscreen();
+            const config = msg.config || {};
+            const container = document.getElementById('player-container');
+            const textEl = document.getElementById('player-text');
+            const marquee = document.getElementById('marquee');
+
+            container.style.backgroundColor = config.bgColor || '#000000';
+            textEl.innerText = msg.text;
+            textEl.style.color = config.color || '#00ff00';
+            textEl.style.fontFamily = (config.font || '').split(',')[0].replace(/'/g, "");
+            textEl.style.textShadow = `0 0 5px ${config.color}, 0 0 10px ${config.color}, 0 0 20px ${config.color}`;
+
+            const shouldRotate = config.rotate;
+            const sizeBase = parseInt(config.size || 95);
+
+            if(shouldRotate) {
+                container.classList.add('rotate-screen');
+                container.style.width = '100vh'; container.style.height = '100vw'; 
+                textEl.style.fontSize = `${sizeBase}vw`; textEl.style.lineHeight = '0.85';
+            } else {
+                container.classList.remove('rotate-screen');
+                container.style.width = '100%'; container.style.height = '100%'; 
+                textEl.style.fontSize = `${sizeBase}vh`; 
+            }
+
+            requestWakeLock();
+            switchView('player');
+            const speedVal = parseInt(config.speed || 50);
+            let position = shouldRotate ? window.innerHeight : window.innerWidth;
+
+            function animate() {
+                const pixelsPerFrame = Math.pow(speedVal, 1.8) / 140;
+                const textWidth = textEl.offsetWidth;
+                const viewWidth = shouldRotate ? window.innerHeight : window.innerWidth;
+                position -= pixelsPerFrame;
+                if (position < (-textWidth - (viewWidth * 0.2))) position = viewWidth; 
+                marquee.style.transform = `translate(${position}px, -50%)`;
+                if(views.player.classList.contains('active')) playerRafId = requestAnimationFrame(animate);
+            }
+            if(playerRafId) cancelAnimationFrame(playerRafId);
+            playerRafId = requestAnimationFrame(animate);
+        }
+
+        async function requestWakeLock() {
+            try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (err) {}
+        }
+
+        lucide.createIcons();
+        initAuth();
+    </script>
+</body>
+</html>
