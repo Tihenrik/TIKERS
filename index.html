@@ -33,7 +33,7 @@
             padding: 0;
         }
 
-        /* === WRAPPER GERAL E BACKUP PRETO === */
+        /* === WRAPPER GERAL === */
         #app-wrapper {
             width: 100%;
             height: 100%;
@@ -42,6 +42,7 @@
             overflow: hidden;
         }
 
+        /* Fundo preto extendido para evitar "bounces" brancos no iOS */
         #app-wrapper::before {
             content: '';
             position: fixed;
@@ -53,9 +54,6 @@
             z-index: -1;
             pointer-events: none;
         }
-
-        #app-wrapper:fullscreen { background-color: #000000; width: 100vw; height: 100vh; }
-        #app-wrapper:-webkit-full-screen { background-color: #000000; width: 100vw; height: 100vh; }
 
         /* Views Management */
         .view-section {
@@ -74,14 +72,14 @@
             z-index: 10;
         }
 
-        /* Glassmorphism */
+        /* Glassmorphism UI */
         .glass-panel {
             background: rgba(20, 20, 20, 0.95);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Custom Inputs */
+        /* Inputs Customizados */
         .custom-input {
             background: #111;
             border: 1px solid #333;
@@ -107,6 +105,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Player Styles */
         #player-container {
             background-color: var(--led-bg-color);
             transition: background-color 0.5s;
@@ -145,7 +144,7 @@
             transform: translate(-50%, -50%) rotate(90deg) !important;
         }
 
-        /* Pulse Animation */
+        /* Animações e UI Elements */
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
@@ -153,64 +152,39 @@
         }
         .pulse-indicator { animation: pulse-green 2s infinite; }
         
-        /* Compact Slider */
-        input[type=range] {
-            -webkit-appearance: none; 
-            background: transparent; 
-        }
+        input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #ffffff;
+            height: 16px; width: 16px;
+            border-radius: 50%; background: #ffffff;
             margin-top: -6px;
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #444;
+            width: 100%; height: 4px;
+            cursor: pointer; background: #444;
             border-radius: 2px;
         }
 
-        /* Tabs Styles */
         .tab-btn {
-            padding-bottom: 0.5rem;
-            flex: 1;
-            text-align: center;
-            font-family: 'Share Tech Mono', monospace;
-            font-weight: bold;
-            letter-spacing: 0.1em;
-            transition: all 0.3s;
-            color: #666;
+            padding-bottom: 0.5rem; flex: 1;
+            text-align: center; font-family: 'Share Tech Mono', monospace;
+            font-weight: bold; letter-spacing: 0.1em;
+            transition: all 0.3s; color: #666;
             border-bottom: 2px solid transparent;
         }
-        .tab-btn.active-tab {
-            color: white;
-            border-color: #22c55e;
-        }
+        .tab-btn.active-tab { color: white; border-color: #22c55e; }
 
-        /* PIN Input Styles */
         .pin-input {
-            letter-spacing: 0.5em;
-            text-align: center;
+            letter-spacing: 0.5em; text-align: center;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 1.5rem;
-            -webkit-text-security: disc; /* Máscara de senha no iOS/Webkit */
+            font-size: 1.5rem; -webkit-text-security: disc;
         }
 
-        /* === STYLE DO MODAL === */
-        #custom-modal-overlay {
-            z-index: 100000; /* Acima de tudo */
-        }
-        .modal-enter {
-            opacity: 0;
-            transform: scale(0.9);
-        }
+        /* Modal Styles */
+        #custom-modal-overlay { z-index: 100000; }
+        .modal-enter { opacity: 0; transform: scale(0.9); }
         .modal-enter-active {
-            opacity: 1;
-            transform: scale(1);
+            opacity: 1; transform: scale(1);
             transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
     </style>
@@ -221,30 +195,17 @@
 
         <div id="custom-modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-6">
             <div id="custom-modal-box" class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center modal-enter">
-                
                 <div id="modal-icon-container" class="mb-4 text-green-500">
                     <i data-lucide="alert-triangle" class="w-10 h-10"></i>
                 </div>
-
-                <h3 id="modal-title" class="text-2xl font-black text-white mb-2 uppercase tracking-tight" style="font-family: 'Share Tech Mono'">
-                    ATENÇÃO
-                </h3>
-                
-                <p id="modal-message" class="text-gray-400 text-sm font-bold tracking-wider uppercase mb-6 leading-relaxed">
-                    Mensagem de aviso aqui.
-                </p>
-
+                <h3 id="modal-title" class="text-2xl font-black text-white mb-2 uppercase tracking-tight" style="font-family: 'Share Tech Mono'">ATENÇÃO</h3>
+                <p id="modal-message" class="text-gray-400 text-sm font-bold tracking-wider uppercase mb-6 leading-relaxed">Mensagem.</p>
                 <div class="flex gap-3 w-full" id="modal-actions">
-                    <button id="modal-btn-cancel" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-500 font-bold uppercase text-xs tracking-widest hidden">
-                        Cancelar
-                    </button>
-                    <button id="modal-btn-confirm" class="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-black font-black uppercase text-xs tracking-widest shadow-lg">
-                        OK
-                    </button>
+                    <button id="modal-btn-cancel" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-500 font-bold uppercase text-xs tracking-widest hidden">Cancelar</button>
+                    <button id="modal-btn-confirm" class="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-black font-black uppercase text-xs tracking-widest shadow-lg">OK</button>
                 </div>
             </div>
         </div>
-
 
         <section id="view-auth" class="view-section active items-center justify-center p-6">
             <div class="mb-8 text-center scale-90">
@@ -255,16 +216,13 @@
             </div>
 
             <form id="login-form" class="glass-panel p-6 rounded-2xl w-full max-w-sm flex flex-col gap-4 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-                
                 <div id="login-step-1">
                     <label class="text-[10px] font-bold text-gray-400 tracking-widest block mb-2">QUEM ÉS TU?</label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">@</span>
                         <input type="text" id="login-username" class="custom-input w-full p-4 pl-8 rounded-xl text-xl text-center text-green-500 font-bold font-mono placeholder-gray-800" placeholder="NOME" required autocomplete="off">
                     </div>
-                    <button type="submit" id="btn-check-user" class="w-full bg-white/10 hover:bg-white/20 text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all mt-4 border border-white/10">
-                        AVANÇAR
-                    </button>
+                    <button type="submit" id="btn-check-user" class="w-full bg-white/10 hover:bg-white/20 text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all mt-4 border border-white/10">AVANÇAR</button>
                 </div>
 
                 <div id="login-step-2" class="hidden">
@@ -273,21 +231,15 @@
                         <input type="tel" id="login-pin" maxlength="4" class="custom-input pin-input w-full p-4 rounded-xl text-white font-bold placeholder-gray-800" placeholder="••••" required>
                     </div>
                     <div class="flex gap-2 mt-4">
-                        <button type="button" id="btn-back-auth" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 font-bold py-4 rounded-xl">
-                            VOLTAR
-                        </button>
-                        <button type="submit" id="btn-confirm-login" class="flex-[2] bg-green-600 hover:bg-green-500 text-black font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(34,197,94,0.4)]">
-                            ENTRAR
-                        </button>
+                        <button type="button" id="btn-back-auth" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 font-bold py-4 rounded-xl">VOLTAR</button>
+                        <button type="submit" id="btn-confirm-login" class="flex-[2] bg-green-600 hover:bg-green-500 text-black font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(34,197,94,0.4)]">ENTRAR</button>
                     </div>
                 </div>
-
             </form>
             <p class="text-center text-[10px] text-gray-600 mt-4">Sistema de acesso protegido por PIN.</p>
         </section>
 
         <section id="view-inbox" class="view-section p-4">
-            
             <div class="flex-none flex justify-between items-center mt-2 mb-2">
                 <h2 class="text-3xl font-black tracking-tighter text-white" style="font-family: 'Share Tech Mono'">
                     INBOX <span id="msg-count-new" class="text-green-500 text-sm align-super ml-1">0</span>
@@ -312,7 +264,6 @@
                 <button id="btn-logout" class="w-12 h-12 rounded-full glass-panel flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                     <i data-lucide="log-out" class="w-5 h-5"></i>
                 </button>
-                
                 <button id="btn-compose-fab" class="w-16 h-16 rounded-full bg-green-500 text-black shadow-[0_0_20px_rgba(34,197,94,0.4)] flex items-center justify-center hover:scale-110 transition-transform pulse-indicator">
                     <i data-lucide="plus" class="w-8 h-8" stroke-width="3"></i>
                 </button>
@@ -403,7 +354,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp, doc, deleteDoc, updateDoc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // --- CREDENCIAIS ---
+        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyChJadGlznjLRgzcxZ3pmkxtXw8GHsRFUY",
             authDomain: "lednet-ebafd.firebaseapp.com",
@@ -427,7 +378,7 @@
         let tempUsername = ''; 
         let isNewUser = false;
         
-        // --- DOM ELEMENTS ---
+        // --- DOM ---
         const views = {
             auth: document.getElementById('view-auth'),
             inbox: document.getElementById('view-inbox'),
@@ -442,7 +393,7 @@
             lucide.createIcons();
         }
 
-        // --- SISTEMA DE MODAL (ALERTAS CUSTOMIZADOS) ---
+        // --- MODAL SYSTEM ---
         const modalOverlay = document.getElementById('custom-modal-overlay');
         const modalBox = document.getElementById('custom-modal-box');
         const modalTitle = document.getElementById('modal-title');
@@ -468,10 +419,7 @@
             }
 
             modalOverlay.classList.remove('hidden');
-            setTimeout(() => {
-                modalBox.classList.add('modal-enter-active');
-            }, 10);
-            
+            setTimeout(() => modalBox.classList.add('modal-enter-active'), 10);
             lucide.createIcons();
         }
 
@@ -489,13 +437,10 @@
             closeModal();
         });
 
-
-        // --- AUTH ---
+        // --- AUTH LOGIC ---
         async function initAuth() {
-            try { await signInAnonymously(auth); } catch(e) { console.error("Auth Error:", e); }
-
+            try { await signInAnonymously(auth); } catch(e) {}
             const savedUsername = localStorage.getItem('led_social_username');
-            
             if (savedUsername) {
                 currentUser = { username: savedUsername };
                 document.getElementById('user-display').innerText = '@' + savedUsername.toUpperCase();
@@ -506,7 +451,6 @@
             }
         }
 
-        // --- LÓGICA DE LOGIN COM PIN E MODAL ---
         const loginForm = document.getElementById('login-form');
         const step1Div = document.getElementById('login-step-1');
         const step2Div = document.getElementById('login-step-2');
@@ -553,7 +497,6 @@
                 document.getElementById('login-pin').focus();
 
             } catch(error) {
-                console.error(error);
                 showModal("ERRO DE CONEXÃO", "Falha ao verificar usuário.", false);
             } finally {
                 btnCheckUser.innerText = "AVANÇAR";
@@ -564,7 +507,6 @@
         btnConfirmLogin.addEventListener('click', async (e) => {
             e.preventDefault();
             const pin = document.getElementById('login-pin').value.trim();
-            
             if(pin.length !== 4) {
                 showModal("PIN INVÁLIDO", "O PIN deve conter exatamente 4 números.", false);
                 return;
@@ -575,27 +517,20 @@
 
             try {
                 if(isNewUser) {
-                    await setDoc(doc(db, 'led_users', tempUsername), {
-                        pin: pin,
-                        createdAt: serverTimestamp()
-                    });
+                    await setDoc(doc(db, 'led_users', tempUsername), { pin: pin, createdAt: serverTimestamp() });
                     finalizeLogin(tempUsername);
                 } else {
-                    const userRef = doc(db, 'led_users', tempUsername);
-                    const userSnap = await getDoc(userRef);
-                    
+                    const userSnap = await getDoc(doc(db, 'led_users', tempUsername));
                     if(userSnap.data().pin === pin) {
                         finalizeLogin(tempUsername);
                     } else {
                         showModal("ACESSO NEGADO", "PIN Incorreto!", false);
                         document.getElementById('login-pin').value = '';
-                        btnConfirmLogin.innerText = "ENTRAR";
-                        btnConfirmLogin.disabled = false;
                     }
                 }
             } catch(error) {
-                console.error(error);
                 showModal("ERRO", "Falha ao realizar login.", false);
+            } finally {
                 btnConfirmLogin.innerText = "ENTRAR";
                 btnConfirmLogin.disabled = false;
             }
@@ -604,8 +539,7 @@
         btnBackAuth.addEventListener('click', () => {
             step2Div.classList.add('hidden');
             step1Div.classList.remove('hidden');
-            authStep = 1;
-            tempUsername = '';
+            authStep = 1; tempUsername = '';
         });
 
         function finalizeLogin(username) {
@@ -614,40 +548,40 @@
             document.getElementById('user-display').innerText = '@' + username.toUpperCase();
             startInboxListener();
             switchView('inbox');
-            
             step2Div.classList.add('hidden');
             step1Div.classList.remove('hidden');
             document.getElementById('login-username').value = '';
-            btnConfirmLogin.innerText = "ENTRAR";
-            btnConfirmLogin.disabled = false;
         }
 
         document.getElementById('btn-logout').addEventListener('click', () => {
-            showModal("LOGOUT", "Deseja realmente sair da sua conta?", true, () => {
+            showModal("LOGOUT", "Deseja realmente sair da sua conta?", true, async () => {
                 localStorage.removeItem('led_social_username');
                 currentUser = null;
                 if(unsubscribeMsgListener) unsubscribeMsgListener();
+                
+                // Logout oficial do Firebase
+                try { await signOut(auth); } catch(e) {}
+                
                 switchView('auth');
                 document.getElementById('login-username').value = '';
             });
         });
 
         // --- INBOX LOGIC ---
-        
         const tabNew = document.getElementById('tab-new');
         const tabRead = document.getElementById('tab-read');
 
         function setActiveTab(tab) {
             activeInboxTab = tab;
             if(tab === 'new') {
-                tabNew.classList.add('active-tab');
+                tabNew.classList.add('active-tab', 'text-white');
                 tabNew.classList.remove('text-gray-600');
-                tabRead.classList.remove('active-tab');
+                tabRead.classList.remove('active-tab', 'text-white');
                 tabRead.classList.add('text-gray-600');
             } else {
-                tabRead.classList.add('active-tab');
+                tabRead.classList.add('active-tab', 'text-white');
                 tabRead.classList.remove('text-gray-600');
-                tabNew.classList.remove('active-tab');
+                tabNew.classList.remove('active-tab', 'text-white');
                 tabNew.classList.add('text-gray-600');
             }
             renderInbox();
@@ -672,29 +606,24 @@
         function renderInbox() {
             const listEl = document.getElementById('messages-list');
             const countEl = document.getElementById('msg-count-new');
-            
             const newCount = currentMessages.filter(m => !m.read).length;
             countEl.innerText = newCount;
             
-            const filteredMessages = currentMessages.filter(m => {
-                if(activeInboxTab === 'new') return !m.read; 
-                return m.read === true;
-            });
+            const filteredMessages = currentMessages.filter(m => activeInboxTab === 'new' ? !m.read : m.read);
 
             listEl.innerHTML = '';
-            
             if (filteredMessages.length === 0) {
                 const emptyText = activeInboxTab === 'new' ? "SEM NOVAS MENSAGENS" : "NENHUMA MENSAGEM LIDA";
+                const iconName = activeInboxTab === 'new' ? 'inbox' : 'archive';
                 listEl.innerHTML = `<div class="flex-1 flex flex-col items-center justify-center opacity-30 mt-10">
-                    <i data-lucide="${activeInboxTab === 'new' ? 'inbox' : 'archive'}" class="w-12 h-12 mb-2"></i>
+                    <i data-lucide="${iconName}" class="w-12 h-12 mb-2"></i>
                     <p class="text-xs font-bold tracking-widest text-center">${emptyText}</p>
                 </div>`;
             } else {
                 filteredMessages.forEach(msg => {
                     const color = msg.config?.color || '#333';
                     const time = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleString('pt-BR', {
-                        day: '2-digit', month: '2-digit', year: '2-digit',
-                        hour: '2-digit', minute: '2-digit'
+                        day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'
                     }) : '...';
 
                     const item = document.createElement('div');
@@ -732,16 +661,8 @@
             lucide.createIcons();
         }
 
-        async function deleteMessage(id) {
-            try { await deleteDoc(doc(db, 'led_messages', id)); } catch(e) { console.error(e); }
-        }
-        
-        async function markAsRead(id) {
-            try {
-                const ref = doc(db, 'led_messages', id);
-                await updateDoc(ref, { read: true });
-            } catch(e) { console.error("Erro ao marcar lida:", e); }
-        }
+        async function deleteMessage(id) { try { await deleteDoc(doc(db, 'led_messages', id)); } catch(e){} }
+        async function markAsRead(id) { try { await updateDoc(doc(db, 'led_messages', id), { read: true }); } catch(e){} }
 
         // --- COMPOSE LOGIC ---
         const composeEls = {
@@ -789,94 +710,69 @@
         }
 
         document.getElementById('btn-compose-fab').addEventListener('click', () => openCompose());
-        
-        document.getElementById('btn-close-compose').addEventListener('click', () => {
-            setActiveTab('new'); 
-            switchView('inbox');
-        });
+        document.getElementById('btn-close-compose').addEventListener('click', () => { setActiveTab('new'); switchView('inbox'); });
 
         composeEls.btnSend.addEventListener('click', async () => {
             const to = composeEls.to.value.trim().toLowerCase();
             const text = composeEls.text.value.trim();
             if(!to || !text) return;
+            
             composeEls.btnSend.disabled = true;
             composeEls.btnSend.innerText = "...";
             try {
                 const config = {
-                    color: composeEls.color.value,
-                    bgColor: composeEls.bgcolor.value,
-                    font: composeEls.font.value,
-                    size: selectedSize,
-                    speed: composeEls.speed.value,
-                    rotate: composeEls.rotate.checked
+                    color: composeEls.color.value, bgColor: composeEls.bgcolor.value,
+                    font: composeEls.font.value, size: selectedSize,
+                    speed: composeEls.speed.value, rotate: composeEls.rotate.checked
                 };
                 await addDoc(collection(db, 'led_messages'), {
-                    from: currentUser.username, to: to, text: text, config: config, timestamp: serverTimestamp(), read: false
+                    from: currentUser.username, to: to, text: text, config: config,
+                    timestamp: serverTimestamp(), read: false
                 });
-                
-                setActiveTab('new');
-                switchView('inbox');
-                
+                setActiveTab('new'); switchView('inbox');
                 showModal("SUCESSO", "Mensagem enviada!", false);
             } catch(e) { 
-                console.error(e); 
                 showModal("ERRO", "Falha ao enviar mensagem.", false);
             }
             composeEls.btnSend.disabled = false;
             composeEls.btnSend.innerText = "ENVIAR RECADO";
         });
 
-        // --- FULLSCREEN & PLAYER & WAKE LOCK ---
+        // --- PLAYER & WAKE LOCK ---
         function enterFullscreen() {
             const elem = document.getElementById('app-wrapper');
-            if (elem.requestFullscreen) { elem.requestFullscreen().catch(err => console.log(err)); }
+            if (elem.requestFullscreen) { elem.requestFullscreen().catch(() => {}); }
             else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
         }
         function exitFullscreen() {
-            if (document.exitFullscreen) { document.exitFullscreen().catch(err => console.log(err)); }
+            if (document.exitFullscreen) { document.exitFullscreen().catch(() => {}); }
             else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
         }
 
-        // ============================================
-        //      SISTEMA WAKE LOCK (TELA SEMPRE ACESA)
-        // ============================================
         let wakeLock = null;
-
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('⚡ Wake Lock ativo: Tela configurada para não apagar.');
                 }
-            } catch (err) {
-                console.error(`Erro Wake Lock: ${err.name}, ${err.message}`);
-            }
+            } catch (err) {} // Silent fail
         }
 
-        // Monitora visibilidade para reconectar o bloqueio se necessário
         document.addEventListener('visibilitychange', async () => {
-            // Só tenta reativar se o WakeLock foi inicializado E a tela do player está visível
             if (wakeLock !== null && document.visibilityState === 'visible' && views.player.classList.contains('active')) {
                 await requestWakeLock();
             }
         });
 
-        // Ao sair do player, libera tudo
         document.getElementById('view-player').addEventListener('click', () => {
             exitFullscreen();
             switchView('inbox');
-            
-            // Cancela animação
             if(playerRafId) cancelAnimationFrame(playerRafId);
-            
-            // Libera Wake Lock (Para economizar bateria na Inbox)
-            if(wakeLock) {
-                wakeLock.release().then(() => wakeLock = null).catch(e => console.log(e));
-            }
+            if(wakeLock) wakeLock.release().then(() => wakeLock = null).catch(() => {});
         });
 
         function playMessage(msg) {
-            if(msg.read === false) { markAsRead(msg.id); }
+            if(msg.read === false) markAsRead(msg.id);
 
             enterFullscreen();
             const config = msg.config || {};
@@ -903,10 +799,9 @@
                 textEl.style.fontSize = `${sizeBase}vh`; 
             }
 
-            // ATIVA O WAKE LOCK AQUI (Quando o player abre)
             requestWakeLock();
-            
             switchView('player');
+            
             const speedVal = parseInt(config.speed || 50);
             let position = shouldRotate ? window.innerHeight : window.innerWidth;
 
