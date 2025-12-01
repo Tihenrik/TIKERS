@@ -9,7 +9,6 @@
     <title>TICKERS</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -428,9 +427,6 @@
         let tempUsername = ''; 
         let isNewUser = false;
         
-        // --- WAKE LOCK STATE (NOVO) ---
-        let wakeLock = null;
-
         // --- DOM ELEMENTS ---
         const views = {
             auth: document.getElementById('view-auth'),
@@ -461,7 +457,6 @@
             modalMsg.innerText = message;
             modalConfirmCallback = onConfirm;
 
-            // Define Ícone baseado no tipo
             if(isConfirm) {
                 modalIcon.innerHTML = `<i data-lucide="help-circle" class="w-10 h-10"></i>`;
                 modalIcon.className = "mb-4 text-yellow-400";
@@ -473,7 +468,6 @@
             }
 
             modalOverlay.classList.remove('hidden');
-            // Animação de entrada
             setTimeout(() => {
                 modalBox.classList.add('modal-enter-active');
             }, 10);
@@ -843,23 +837,25 @@
             else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
         }
 
-        // Função robusta para pedir o Wake Lock e reconectar se cair
+        // ============================================
+        //      SISTEMA WAKE LOCK (TELA SEMPRE ACESA)
+        // ============================================
+        let wakeLock = null;
+
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Wake Lock solto');
-                    });
-                    console.log('Wake Lock ativado');
+                    console.log('⚡ Wake Lock ativo: Tela configurada para não apagar.');
                 }
             } catch (err) {
-                console.log("Erro no Wake Lock:", err);
+                console.error(`Erro Wake Lock: ${err.name}, ${err.message}`);
             }
         }
 
-        // Listener global: Se a página ficar visível de novo e estiver no player, pede o bloqueio
+        // Monitora visibilidade para reconectar o bloqueio se necessário
         document.addEventListener('visibilitychange', async () => {
+            // Só tenta reativar se o WakeLock foi inicializado E a tela do player está visível
             if (wakeLock !== null && document.visibilityState === 'visible' && views.player.classList.contains('active')) {
                 await requestWakeLock();
             }
@@ -873,7 +869,7 @@
             // Cancela animação
             if(playerRafId) cancelAnimationFrame(playerRafId);
             
-            // Libera Wake Lock
+            // Libera Wake Lock (Para economizar bateria na Inbox)
             if(wakeLock) {
                 wakeLock.release().then(() => wakeLock = null).catch(e => console.log(e));
             }
@@ -907,7 +903,7 @@
                 textEl.style.fontSize = `${sizeBase}vh`; 
             }
 
-            // ATIVA O WAKE LOCK AQUI
+            // ATIVA O WAKE LOCK AQUI (Quando o player abre)
             requestWakeLock();
             
             switchView('player');
