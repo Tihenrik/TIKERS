@@ -1,2 +1,2 @@
-# TIKERS
-Rede social TICKERS
+# Anulador de ruídos 
+
