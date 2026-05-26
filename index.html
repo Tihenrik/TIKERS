@@ -3,270 +3,619 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AereoVista — Vista Aérea 360°</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>ORBITA — Missão de Reconhecimento Aéreo</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --sky: #0a0f1e; --horizon: #0d1f3c;
-    --accent: #00d4ff; --accent2: #ff6b35;
-    --glass: rgba(255,255,255,0.04);
-    --glass-border: rgba(255,255,255,0.10);
-    --text: #e8f4ff; --muted: #6a8ba8;
-  }
-  html, body { height: 100%; background: var(--sky); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#020508;--panel:#060d14;--border:#0f2a3a;
+  --green:#00ff88;--green2:#00cc66;--cyan:#00d4ff;
+  --red:#ff3355;--orange:#ff8c00;--yellow:#ffe100;
+  --text:#b8d4e0;--dim:#3a5a6a;
+  --scan: #00ff8822;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow:hidden;cursor:crosshair;}
 
-  .stars {
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background:
-      radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.6) 0%, transparent 100%),
-      radial-gradient(1px 1px at 34% 72%, rgba(255,255,255,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 57%  9%, rgba(255,255,255,.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 78% 55%, rgba(255,255,255,.3) 0%, transparent 100%),
-      radial-gradient(1px 1px at 91% 30%, rgba(255,255,255,.6) 0%, transparent 100%),
-      radial-gradient(2px 2px at 23% 51%, rgba(0,212,255,.4)   0%, transparent 100%),
-      radial-gradient(2px 2px at 83% 14%, rgba(0,212,255,.3)   0%, transparent 100%),
-      var(--sky);
-  }
-  .orb { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(80px); opacity: .15; }
-  .orb-1 { width: 500px; height: 500px; background: var(--accent);  top: -150px; left: -150px; animation: drift 14s ease-in-out infinite alternate; }
-  .orb-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -100px; animation: drift 18s ease-in-out infinite alternate-reverse; }
-  @keyframes drift { from { transform: translate(0,0); } to { transform: translate(60px,40px); } }
+/* ═══════════ SCANLINES ═══════════ */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,.015) 2px,rgba(0,255,136,.015) 4px);pointer-events:none;z-index:9999;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;z-index:9998;}
 
-  #app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; padding: 0 16px; }
+/* ═══════════ CANVAS ═══════════ */
+#orbitCanvas{position:fixed;inset:0;width:100%;height:100%;}
 
-  header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 18px 0 14px;
-    border-bottom: 1px solid var(--glass-border);
-    animation: fadeDown .6s ease both;
-  }
-  .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent), #0066aa); border-radius: 10px; display: grid; place-items: center; font-size: 19px; box-shadow: 0 0 18px rgba(0,212,255,.35); }
-  .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; background: linear-gradient(90deg, var(--accent), #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .logo-sub { margin-left: auto; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+/* ═══════════ LAYOUT ═══════════ */
+#ui{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:280px 1fr 280px;pointer-events:none;z-index:100;}
 
-  .search-wrap { display: flex; gap: 8px; margin: 14px 0 10px; animation: fadeDown .6s .1s ease both; }
-  .search-input {
-    flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
-    border-radius: 12px; padding: 12px 16px; color: var(--text);
-    font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none;
-    transition: border-color .25s, box-shadow .25s; backdrop-filter: blur(12px);
-  }
-  .search-input::placeholder { color: var(--muted); }
-  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,255,.12); }
-  .btn-search {
-    background: linear-gradient(135deg, var(--accent), #0088cc); border: none; border-radius: 12px;
-    padding: 12px 20px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
-    cursor: pointer; white-space: nowrap; transition: transform .15s, box-shadow .15s;
-    box-shadow: 0 4px 20px rgba(0,212,255,.3);
-  }
-  .btn-search:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,212,255,.45); }
-  .btn-search:active { transform: translateY(0); opacity: .85; }
+/* ═══════════ TOP BAR ═══════════ */
+#topbar{
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:20px;
+  padding:12px 20px;
+  background:linear-gradient(180deg,rgba(2,5,8,.95) 0%,rgba(2,5,8,.7) 100%);
+  border-bottom:1px solid var(--border);
+  pointer-events:all;
+}
+.logo{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;letter-spacing:6px;color:var(--green);text-shadow:0 0 20px rgba(0,255,136,.5);flex-shrink:0;}
+.logo span{color:var(--cyan);}
+.mission-id{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:2px;}
 
-  .tips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; animation: fadeDown .6s .15s ease both; align-items: center; }
-  .tips-label { font-size: 11px; color: var(--muted); }
-  .tip-btn { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--muted); cursor: pointer; transition: all .2s; backdrop-filter: blur(8px); }
-  .tip-btn:hover { border-color: var(--accent); color: var(--accent); }
+.search-zone{flex:1;display:flex;gap:8px;align-items:center;max-width:600px;margin:0 auto;}
+.coord-input{
+  flex:1;background:rgba(0,255,136,.05);border:1px solid var(--green2);
+  border-radius:4px;padding:9px 14px;color:var(--green);
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  outline:none;letter-spacing:1px;
+  transition:all .2s;
+  text-transform:uppercase;
+}
+.coord-input::placeholder{color:var(--dim);text-transform:none;}
+.coord-input:focus{background:rgba(0,255,136,.08);box-shadow:0 0 0 2px rgba(0,255,136,.2),0 0 30px rgba(0,255,136,.1);}
+.btn-launch{
+  background:var(--green);color:#000;border:none;border-radius:4px;
+  padding:9px 20px;font-family:'Orbitron',monospace;font-size:11px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;white-space:nowrap;
+  transition:all .15s;text-transform:uppercase;
+  box-shadow:0 0 20px rgba(0,255,136,.4);
+}
+.btn-launch:hover{background:#fff;box-shadow:0 0 30px rgba(0,255,136,.8);}
+.btn-launch:active{transform:scale(.97);}
+.btn-launch:disabled{opacity:.4;cursor:not-allowed;}
 
-  .viewer-wrap {
-    flex: 1; min-height: 0; border-radius: 16px; overflow: hidden;
-    border: 1px solid var(--glass-border); position: relative;
-    box-shadow: 0 8px 48px rgba(0,0,0,.5);
-    animation: fadeUp .7s .2s ease both;
-  }
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-dot.idle{background:var(--dim);}
+.status-dot.active{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1s ease-in-out infinite;}
+.status-dot.scanning{background:var(--orange);box-shadow:0 0 8px var(--orange);animation:pulse .5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-  /* ── Placeholder ── */
-  .placeholder {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 16px;
-    background: var(--horizon); z-index: 2;
-    transition: opacity .4s, visibility .4s;
-  }
-  .placeholder.hidden { opacity: 0; visibility: hidden; }
-  .globe-anim {
-    width: 88px; height: 88px; border: 3px solid var(--accent); border-radius: 50%;
-    position: relative; animation: spin 6s linear infinite;
-    box-shadow: 0 0 28px rgba(0,212,255,.3), inset 0 0 28px rgba(0,212,255,.08);
-  }
-  .globe-anim::before { content:''; position: absolute; inset: -3px; border-radius: 50%; border: 3px dashed rgba(0,212,255,.25); animation: spin 12s linear infinite reverse; }
-  .globe-anim::after  { content:'🌍'; font-size: 40px; position: absolute; inset: 0; display: grid; place-items: center; animation: spin 6s linear infinite reverse; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .placeholder p { color: var(--muted); font-size: 13px; text-align: center; line-height: 1.7; max-width: 280px; }
-  .placeholder strong { color: var(--text); }
+/* ═══════════ LEFT PANEL ═══════════ */
+#leftPanel{
+  padding:16px;display:flex;flex-direction:column;gap:12px;
+  background:linear-gradient(90deg,rgba(2,5,8,.92) 0%,rgba(2,5,8,.6) 100%);
+  border-right:1px solid var(--border);
+  pointer-events:all;
+  overflow-y:auto;
+}
+/* ═══════════ RIGHT PANEL ═══════════ */
+#rightPanel{
+  padding:16px;display:flex;flex-direction:column;gap:12px;
+  background:linear-gradient(270deg,rgba(2,5,8,.92) 0%,rgba(2,5,8,.6) 100%);
+  border-left:1px solid var(--border);
+  pointer-events:all;
+  overflow-y:auto;
+}
 
-  /* ── Loading overlay ── */
-  .loading {
-    position: absolute; inset: 0; background: var(--horizon);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-    z-index: 3; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s;
-  }
-  .loading.show { opacity: 1; visibility: visible; }
-  .spinner { width: 44px; height: 44px; border: 3px solid rgba(0,212,255,.2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-  .loading p { font-size: 13px; color: var(--muted); }
+.panel-block{
+  border:1px solid var(--border);border-radius:4px;padding:12px;
+  background:rgba(0,212,255,.02);
+}
+.panel-title{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  letter-spacing:3px;color:var(--cyan);text-transform:uppercase;
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.panel-title::before{content:'';display:block;width:12px;height:1px;background:var(--cyan);}
 
-  #map-frame { width: 100%; height: 100%; border: none; display: block; }
+.data-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+.data-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:1px;}
+.data-val{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--green);letter-spacing:1px;}
+.data-val.cyan{color:var(--cyan);}
+.data-val.orange{color:var(--orange);}
+.data-val.red{color:var(--red);}
 
-  .overlay-bar {
-    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 8px; align-items: center;
-    background: rgba(10,15,30,.8); backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border); border-radius: 40px; padding: 7px 16px;
-    opacity: 0; pointer-events: none; transition: opacity .4s;
-    white-space: nowrap; font-size: 12px; color: var(--muted); z-index: 4;
-  }
-  .overlay-bar.visible { opacity: 1; }
-  .overlay-bar span { color: var(--accent); font-weight: 500; }
+/* ── MINI RADAR ── */
+#radar{
+  width:100%;aspect-ratio:1;border-radius:50%;
+  border:1px solid var(--border);
+  background:radial-gradient(circle,rgba(0,255,136,.04) 0%,transparent 70%);
+  position:relative;overflow:hidden;
+}
+.radar-ring{position:absolute;border-radius:50%;border:1px solid rgba(0,255,136,.15);}
+.radar-ring:nth-child(1){inset:25%;}
+.radar-ring:nth-child(2){inset:50%;}
+.radar-sweep{
+  position:absolute;inset:0;
+  background:conic-gradient(from 0deg,transparent 300deg,rgba(0,255,136,.4) 360deg);
+  border-radius:50%;
+  animation:sweep 3s linear infinite;
+  transform-origin:center;
+}
+@keyframes sweep{to{transform:rotate(360deg);}}
+.radar-center{position:absolute;top:50%;left:50%;width:4px;height:4px;background:var(--green);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 8px var(--green);}
+.radar-blip{position:absolute;width:5px;height:5px;background:var(--green);border-radius:50%;box-shadow:0 0 6px var(--green);transform:translate(-50%,-50%);animation:blip 3s ease-out infinite;}
+@keyframes blip{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}70%{opacity:.4;}100%{opacity:1;transform:translate(-50%,-50%) scale(1);}}
 
-  /* ── Open button ── */
-  .open-btn {
-    position: absolute; top: 14px; right: 14px; z-index: 5;
-    background: rgba(10,15,30,.8); backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border); border-radius: 10px;
-    padding: 8px 14px; font-size: 12px; color: var(--accent);
-    cursor: pointer; text-decoration: none; display: none;
-    transition: background .2s;
-  }
-  .open-btn:hover { background: rgba(0,212,255,.12); }
-  .open-btn.visible { display: block; }
+/* ── ORBIT PROGRESS ── */
+.orbit-track{width:100%;height:4px;background:rgba(0,255,136,.1);border-radius:2px;margin:8px 0 4px;overflow:hidden;}
+.orbit-fill{height:100%;background:linear-gradient(90deg,var(--green2),var(--green));border-radius:2px;width:0%;transition:width .1s linear;box-shadow:0 0 8px var(--green);}
 
-  footer { text-align: center; padding: 8px 0 12px; font-size: 11px; color: var(--muted); animation: fadeDown .6s .3s ease both; }
+/* ── AI INTEL ── */
+#intel-box{
+  flex:1;min-height:80px;max-height:200px;
+  background:rgba(0,0,0,.3);border:1px solid var(--border);
+  border-radius:4px;padding:10px;overflow-y:auto;
+  font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.6;
+  color:var(--green);
+}
+#intel-box .line{display:block;margin-bottom:2px;}
+#intel-box .line.cmd{color:var(--cyan);}
+#intel-box .line.warn{color:var(--orange);}
+#intel-box .line.err{color:var(--red);}
+#intel-box .cursor{display:inline-block;width:7px;height:12px;background:var(--green);animation:blink .7s step-end infinite;vertical-align:middle;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
 
-  @keyframes fadeDown { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
-  @keyframes fadeUp   { from { opacity:0; transform: translateY(12px);  } to { opacity:1; transform: translateY(0); } }
+/* ── PRESETS ── */
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.preset-btn{
+  background:rgba(0,212,255,.04);border:1px solid var(--border);
+  border-radius:4px;padding:7px 6px;font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:var(--dim);cursor:pointer;letter-spacing:.5px;
+  transition:all .2s;text-align:left;
+}
+.preset-btn:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,.08);}
+.preset-btn .flag{font-size:14px;display:block;margin-bottom:2px;}
+
+/* ══ BOTTOM BAR ══ */
+#bottombar{
+  grid-column:1/-1;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 20px;
+  background:linear-gradient(0deg,rgba(2,5,8,.95) 0%,rgba(2,5,8,.7) 100%);
+  border-top:1px solid var(--border);
+  font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);
+  letter-spacing:1px;
+  pointer-events:none;
+}
+.bottom-item{display:flex;gap:6px;align-items:center;}
+.bottom-item span{color:var(--green);}
+
+/* ══ CENTER CROSSHAIR ══ */
+#crosshair{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:60px;height:60px;pointer-events:none;z-index:200;
+  opacity:0;transition:opacity .5s;
+}
+#crosshair.show{opacity:1;}
+#crosshair::before,#crosshair::after{content:'';position:absolute;background:var(--green);opacity:.8;}
+#crosshair::before{width:1px;height:100%;left:50%;top:0;}
+#crosshair::after{width:100%;height:1px;top:50%;left:0;}
+.ch-ring{position:absolute;inset:8px;border:1px solid var(--green);border-radius:50%;opacity:.6;animation:chring 2s ease-in-out infinite;}
+.ch-ring2{position:absolute;inset:18px;border:1px solid var(--cyan);border-radius:50%;opacity:.4;animation:chring 2s ease-in-out infinite reverse;}
+@keyframes chring{0%,100%{transform:scale(1);opacity:.6;}50%{transform:scale(1.15);opacity:.3;}}
+
+/* ══ SCAN FLASH ══ */
+#scanFlash{position:fixed;inset:0;background:rgba(0,255,136,.06);z-index:190;opacity:0;pointer-events:none;}
+#scanFlash.flash{animation:scanAnim .8s ease-out forwards;}
+@keyframes scanAnim{0%{opacity:1;transform:scaleY(0);}50%{opacity:.8;transform:scaleY(1);}100%{opacity:0;transform:scaleY(1);}}
+
+/* ══ LOADING ══ */
+#loadScreen{
+  position:fixed;inset:0;background:var(--bg);z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  transition:opacity .8s;
+}
+#loadScreen.hide{opacity:0;pointer-events:none;}
+.load-logo{font-family:'Orbitron',monospace;font-size:48px;font-weight:900;letter-spacing:12px;color:var(--green);text-shadow:0 0 40px rgba(0,255,136,.6);}
+.load-bar-wrap{width:300px;height:2px;background:rgba(0,255,136,.1);}
+.load-bar{height:100%;background:var(--green);width:0%;transition:width .05s linear;box-shadow:0 0 10px var(--green);}
+.load-status{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:2px;}
+
+/* ══ MAP CONTAINER ══ */
+#mapWrap{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:min(60vw,500px);
+  height:min(60vw,500px);
+  border-radius:50%;
+  overflow:hidden;
+  border:2px solid rgba(0,255,136,.3);
+  box-shadow:0 0 0 1px rgba(0,255,136,.1),0 0 60px rgba(0,255,136,.15),inset 0 0 40px rgba(0,0,0,.5);
+  z-index:50;
+  opacity:0;
+  transition:opacity .8s, box-shadow .3s;
+  pointer-events:none;
+}
+#mapWrap.show{opacity:1;pointer-events:all;}
+#mapWrap.orbiting{box-shadow:0 0 0 2px rgba(0,255,136,.6),0 0 80px rgba(0,255,136,.4),0 0 160px rgba(0,255,136,.1),inset 0 0 40px rgba(0,0,0,.5);}
+#mapFrame{width:130%;height:130%;border:none;margin:-15%;}
+
+/* scrollbar */
+#intel-box::-webkit-scrollbar{width:4px;}
+#intel-box::-webkit-scrollbar-track{background:transparent;}
+#intel-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 </style>
 </head>
 <body>
-<div class="stars"></div>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
 
-<div id="app">
-  <header>
-    <div class="logo-icon">🛰️</div>
-    <div class="logo-text">AereoVista</div>
-    <div class="logo-sub">Vista Aérea 360°</div>
-  </header>
+<!-- LOAD SCREEN -->
+<div id="loadScreen">
+  <div class="load-logo">ORBITA</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--dim);letter-spacing:4px;">SISTEMA DE RECONHECIMENTO ORBITAL</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+  <div class="load-status" id="loadStatus">INICIALIZANDO SISTEMAS…</div>
+</div>
 
-  <div class="search-wrap">
-    <input id="addr" class="search-input" type="text"
-      placeholder="Digite um endereço, cidade ou ponto turístico…"
-      autocomplete="off" spellcheck="false">
-    <button class="btn-search" onclick="fly()">🛸 Voar</button>
-  </div>
+<!-- CANVAS BACKGROUND -->
+<canvas id="orbitCanvas"></canvas>
 
-  <div class="tips">
-    <span class="tips-label">Exemplos:</span>
-    <button class="tip-btn" onclick="preset('Cristo Redentor, Rio de Janeiro, Brasil')">Cristo Redentor</button>
-    <button class="tip-btn" onclick="preset('Torre Eiffel, Paris, França')">Torre Eiffel</button>
-    <button class="tip-btn" onclick="preset('Coliseu, Roma, Itália')">Coliseu</button>
-    <button class="tip-btn" onclick="preset('Floresta Amazônica, Brasil')">Amazônia</button>
-    <button class="tip-btn" onclick="preset('Grand Canyon, Arizona, USA')">Grand Canyon</button>
-    <button class="tip-btn" onclick="preset('Machu Picchu, Peru')">Machu Picchu</button>
-  </div>
+<!-- SCAN FLASH -->
+<div id="scanFlash"></div>
 
-  <div class="viewer-wrap">
-    <div class="placeholder" id="placeholder">
-      <div class="globe-anim"></div>
-      <p>
-        <strong>Digite um endereço e clique em Voar</strong><br>
-        O mapa abre em visão de satélite.<br>
-        Clique em <strong>"Abrir no Google Maps"</strong> para a experiência 3D completa com rotação 360°.
-      </p>
+<!-- CROSSHAIR -->
+<div id="crosshair" class="show"><div class="ch-ring"></div><div class="ch-ring2"></div></div>
+
+<!-- MAP CIRCULAR -->
+<div id="mapWrap">
+  <iframe id="mapFrame" allowfullscreen title="Vista de Satélite"></iframe>
+</div>
+
+<!-- UI OVERLAY -->
+<div id="ui">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div>
+      <div class="logo">OR<span>BIT</span>A</div>
+      <div class="mission-id" id="missionId">MISSÃO: ---  ·  AGUARDANDO COORDENADAS</div>
     </div>
-
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <p id="loading-text">Localizando…</p>
+    <div class="search-zone">
+      <div class="status-dot idle" id="statusDot"></div>
+      <input class="coord-input" id="addr" type="text" placeholder="Digite qualquer lugar do planeta…" autocomplete="off" spellcheck="false">
+      <button class="btn-launch" id="btnLaunch" onclick="launch()">⚡ LANÇAR</button>
     </div>
-
-    <iframe id="map-frame" allowfullscreen title="Google Maps Satélite"></iframe>
-
-    <a id="open-link" class="open-btn" target="_blank" rel="noopener">🗺️ Abrir no Google Maps</a>
-
-    <div class="overlay-bar" id="tips-bar">
-      🖱️ <span>Arrastar</span> para mover &nbsp;|&nbsp;
-      🔍 <span>Scroll</span> para zoom &nbsp;|&nbsp;
-      🌐 <span>Abrir no Maps</span> para 3D completo
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);text-align:right;line-height:1.8;">
+      <div id="clock">--:--:--</div>
+      <div id="utcDate">UTC ---</div>
     </div>
   </div>
 
-  <footer>
-    Powered by Google Maps · Sem cadastro · Sem instalação
-  </footer>
+  <!-- LEFT PANEL -->
+  <div id="leftPanel">
+
+    <div class="panel-block">
+      <div class="panel-title">Telemetria Orbital</div>
+      <div class="data-row"><span class="data-label">ALT</span><span class="data-val" id="altVal">--- km</span></div>
+      <div class="data-row"><span class="data-label">VEL</span><span class="data-val cyan" id="velVal">--- km/h</span></div>
+      <div class="data-row"><span class="data-label">LAT</span><span class="data-val" id="latVal">---.------°</span></div>
+      <div class="data-row"><span class="data-label">LON</span><span class="data-val" id="lonVal">---.------°</span></div>
+      <div class="data-row"><span class="data-label">ÂNGULO</span><span class="data-val orange" id="angleVal">---°</span></div>
+      <div class="data-row"><span class="data-label">ÓRBITA</span><span class="data-val cyan" id="orbitCount">0 / 1</span></div>
+    </div>
+
+    <div class="panel-block">
+      <div class="panel-title">Progresso Órbita</div>
+      <div class="orbit-track"><div class="orbit-fill" id="orbitFill"></div></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);text-align:right;" id="orbitPct">0%</div>
+    </div>
+
+    <div class="panel-block" style="flex:1;">
+      <div class="panel-title">Radar de Superfície</div>
+      <div id="radar">
+        <div class="radar-ring"></div>
+        <div class="radar-ring"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-center"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CENTER (empty — map rendered outside) -->
+  <div></div>
+
+  <!-- RIGHT PANEL -->
+  <div id="rightPanel">
+
+    <div class="panel-block">
+      <div class="panel-title">Status do Sistema</div>
+      <div class="data-row"><span class="data-label">CÂMERA</span><span class="data-val" id="camStatus">STANDBY</span></div>
+      <div class="data-row"><span class="data-label">ZOOM</span><span class="data-val cyan" id="zoomStatus">17×</span></div>
+      <div class="data-row"><span class="data-label">SINAL</span><span class="data-val orange" id="signalVal">---</span></div>
+      <div class="data-row"><span class="data-label">MODO</span><span class="data-val" id="modeVal">SATÉLITE</span></div>
+    </div>
+
+    <div class="panel-block">
+      <div class="panel-title">Inteligência de Terreno — IA</div>
+      <div id="intel-box">
+        <span class="line cmd">> ORBITA v4.2 PRONTO</span>
+        <span class="line">> Aguardando alvo…</span>
+        <span class="cursor"></span>
+      </div>
+    </div>
+
+    <div class="panel-block">
+      <div class="panel-title">Alvos de Missão</div>
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="preset('Cristo Redentor, Rio de Janeiro')"><span class="flag">🇧🇷</span>CRISTO RJ</button>
+        <button class="preset-btn" onclick="preset('Amazônia, Brasil')"><span class="flag">🌿</span>AMAZÔNIA</button>
+        <button class="preset-btn" onclick="preset('Torre Eiffel, Paris')"><span class="flag">🇫🇷</span>EIFFEL</button>
+        <button class="preset-btn" onclick="preset('Grand Canyon, USA')"><span class="flag">🇺🇸</span>GRAND CANYON</button>
+        <button class="preset-btn" onclick="preset('Machu Picchu, Peru')"><span class="flag">🇵🇪</span>MACHU PICCHU</button>
+        <button class="preset-btn" onclick="preset('Dubai, UAE')"><span class="flag">🇦🇪</span>DUBAI</button>
+        <button class="preset-btn" onclick="preset('Kilauea Volcano, Hawaii')"><span class="flag">🌋</span>KILAUEA</button>
+        <button class="preset-btn" onclick="preset('Sahara Desert, Africa')"><span class="flag">🏜️</span>SAHARA</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div id="bottombar">
+    <div class="bottom-item">ORBITA RECON SYS · <span>v4.2.1</span></div>
+    <div class="bottom-item">FONTE: <span>OSM + GOOGLE MAPS</span></div>
+    <div class="bottom-item">SATÉLITES: <span id="satCount">0</span> ATIVOS</div>
+    <div class="bottom-item">SEM CADASTRO · <span>ACESSO LIVRE</span></div>
+  </div>
+
 </div>
 
 <script>
-  const input    = document.getElementById('addr');
-  const frame    = document.getElementById('map-frame');
-  const ph       = document.getElementById('placeholder');
-  const loading  = document.getElementById('loading');
-  const loadTxt  = document.getElementById('loading-text');
-  const tipsBar  = document.getElementById('tips-bar');
-  const openLink = document.getElementById('open-link');
+// ═══════════════════════════════════════════════════
+//  CANVAS — Starfield + Orbit ring
+// ═══════════════════════════════════════════════════
+const canvas = document.getElementById('orbitCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, stars=[], orbitAngle=0, isOrbiting=false;
 
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') fly(); });
+function resize(){
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+  stars=[];
+  for(let i=0;i<200;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+.2,sp:Math.random()*.3+.1,t:Math.random()*Math.PI*2});
+}
+window.addEventListener('resize',resize); resize();
 
-  function preset(addr) { input.value = addr; fly(); }
+function drawCanvas(){
+  ctx.clearRect(0,0,W,H);
 
-  async function fly() {
-    const addr = input.value.trim();
-    if (!addr) {
-      input.focus();
-      input.style.borderColor = 'var(--accent2)';
-      setTimeout(() => input.style.borderColor = '', 900);
-      return;
-    }
+  // Stars twinkle
+  stars.forEach(s=>{
+    s.t+=.02;
+    const a=.3+.3*Math.sin(s.t);
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(180,220,255,${a})`;ctx.fill();
+  });
 
-    // Show loading
-    ph.classList.remove('hidden');
-    loading.classList.add('show');
-    loadTxt.textContent = 'Localizando "' + addr + '"…';
-    tipsBar.classList.remove('visible');
-    openLink.classList.remove('visible');
+  if(isOrbiting){
+    const cx=W/2,cy=H/2;
+    const rOuter=Math.min(W,H)*0.38;
 
-    try {
-      // Use Nominatim (OpenStreetMap) geocoder — free, no key needed
-      const geo = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }
-      );
-      const results = await geo.json();
+    // Outer glow ring
+    const grad=ctx.createRadialGradient(cx,cy,rOuter-4,cx,cy,rOuter+4);
+    grad.addColorStop(0,'rgba(0,255,136,0)');
+    grad.addColorStop(.5,'rgba(0,255,136,.15)');
+    grad.addColorStop(1,'rgba(0,255,136,0)');
+    ctx.beginPath();ctx.arc(cx,cy,rOuter,0,Math.PI*2);
+    ctx.strokeStyle=grad;ctx.lineWidth=8;ctx.stroke();
 
-      if (!results.length) {
-        loading.classList.remove('show');
-        loadTxt.textContent = 'Localização não encontrada. Tente outro endereço.';
-        loading.classList.add('show');
-        setTimeout(() => { loading.classList.remove('show'); }, 2500);
-        return;
-      }
+    // Orbit trail
+    ctx.beginPath();ctx.arc(cx,cy,rOuter,orbitAngle-1.5,orbitAngle,false);
+    ctx.strokeStyle='rgba(0,255,136,.5)';ctx.lineWidth=2;ctx.stroke();
 
-      const { lat, lon, display_name } = results[0];
-      const latF = parseFloat(lat).toFixed(6);
-      const lonF = parseFloat(lon).toFixed(6);
+    // Satellite dot
+    const sx=cx+Math.cos(orbitAngle)*rOuter;
+    const sy=cy+Math.sin(orbitAngle)*rOuter;
+    const gSat=ctx.createRadialGradient(sx,sy,0,sx,sy,10);
+    gSat.addColorStop(0,'rgba(0,255,136,1)');
+    gSat.addColorStop(.4,'rgba(0,255,136,.4)');
+    gSat.addColorStop(1,'rgba(0,255,136,0)');
+    ctx.beginPath();ctx.arc(sx,sy,10,0,Math.PI*2);
+    ctx.fillStyle=gSat;ctx.fill();
+    ctx.beginPath();ctx.arc(sx,sy,3,0,Math.PI*2);
+    ctx.fillStyle='#fff';ctx.fill();
 
-      // Google Maps embed — satellite view, high zoom
-      const embedUrl = `https://maps.google.com/maps?q=${latF},${lonF}&z=17&t=k&output=embed&hl=pt-BR`;
-      const mapsUrl  = `https://www.google.com/maps/@${latF},${lonF},500m/data=!3m1!1e3`;
+    // Dashed orbit circle
+    ctx.setLineDash([4,8]);
+    ctx.beginPath();ctx.arc(cx,cy,rOuter,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,255,136,.08)';ctx.lineWidth=1;ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
-      loadTxt.textContent = 'Abrindo visão aérea…';
+  requestAnimationFrame(drawCanvas);
+}
+drawCanvas();
 
-      frame.onload = () => {
-        loading.classList.remove('show');
-        ph.classList.add('hidden');
-        setTimeout(() => {
-          tipsBar.classList.add('visible');
-          openLink.classList.add('visible');
-        }, 600);
-      };
+// ═══════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toISOString().slice(11,19);
+  document.getElementById('utcDate').textContent='UTC '+n.toISOString().slice(0,10);
+}
+setInterval(updateClock,1000); updateClock();
 
-      frame.src = embedUrl;
-      openLink.href = mapsUrl;
+// ═══════════════════════════════════════════════════
+//  SATELLITE COUNT animation
+// ═══════════════════════════════════════════════════
+let satBase=12;
+setInterval(()=>{
+  satBase=12+Math.floor(Math.random()*4);
+  document.getElementById('satCount').textContent=satBase;
+},2000);
 
-    } catch (err) {
-      loading.classList.remove('show');
-      alert('Erro ao buscar localização. Verifique sua conexão.');
+// ═══════════════════════════════════════════════════
+//  SIGNAL animation
+// ═══════════════════════════════════════════════════
+const signals=['████████','███████░','██████░░','█████░░░','████░░░░'];
+let sigI=0;
+setInterval(()=>{
+  if(isOrbiting){ sigI=(sigI+1)%signals.length; document.getElementById('signalVal').textContent=signals[sigI]+'  '+Math.floor(92+Math.random()*8)+'%'; }
+},400);
+
+// ═══════════════════════════════════════════════════
+//  LOAD SCREEN
+// ═══════════════════════════════════════════════════
+const loadMsgs=['INICIALIZANDO SISTEMAS…','CONECTANDO SATÉLITES…','CALIBRANDO CÂMERAS…','CARREGANDO MAPAS…','SISTEMA PRONTO.'];
+let loadPct=0;
+const loadBar=document.getElementById('loadBar');
+const loadStatus=document.getElementById('loadStatus');
+const loadInterval=setInterval(()=>{
+  loadPct+=Math.random()*12+4;
+  if(loadPct>=100){loadPct=100;clearInterval(loadInterval);
+    setTimeout(()=>{document.getElementById('loadScreen').classList.add('hide');},500);
+  }
+  loadBar.style.width=loadPct+'%';
+  loadStatus.textContent=loadMsgs[Math.min(Math.floor(loadPct/25),4)];
+},120);
+
+// ═══════════════════════════════════════════════════
+//  INTEL LOG
+// ═══════════════════════════════════════════════════
+const intelBox=document.getElementById('intel-box');
+function log(msg,cls=''){
+  const el=document.createElement('span');
+  el.className='line '+(cls||'');
+  el.textContent='> '+msg;
+  intelBox.appendChild(el);
+  intelBox.scrollTop=intelBox.scrollHeight;
+}
+function clearLog(){intelBox.innerHTML='';}
+
+// ═══════════════════════════════════════════════════
+//  ORBIT STATE
+// ═══════════════════════════════════════════════════
+let orbitTimer=null, orbitProgress=0;
+const ORBIT_DURATION=18000; // 18s per 360°
+
+function startOrbit(lat,lon,name){
+  isOrbiting=true;
+  orbitAngle=0; orbitProgress=0;
+  const start=performance.now();
+
+  // telemetry animation
+  let alt=450, vel=27600;
+  const telTimer=setInterval(()=>{
+    alt=450+Math.sin(Date.now()/2000)*12+Math.random()*5;
+    vel=27600+Math.sin(Date.now()/3000)*200+Math.random()*50;
+    const angle=((orbitAngle*180/Math.PI)%360+360)%360;
+    document.getElementById('altVal').textContent=alt.toFixed(1)+' km';
+    document.getElementById('velVal').textContent=vel.toFixed(0)+' km/h';
+    document.getElementById('angleVal').textContent=angle.toFixed(1)+'°';
+    document.getElementById('latVal').textContent=(lat+Math.sin(orbitAngle)*.002).toFixed(6)+'°';
+    document.getElementById('lonVal').textContent=(lon+Math.cos(orbitAngle)*.002).toFixed(6)+'°';
+  },100);
+
+  function tick(now){
+    const elapsed=now-start;
+    orbitProgress=Math.min(elapsed/ORBIT_DURATION,1);
+    orbitAngle=-Math.PI/2+orbitProgress*Math.PI*2;
+    const pct=Math.round(orbitProgress*100);
+    document.getElementById('orbitFill').style.width=pct+'%';
+    document.getElementById('orbitPct').textContent=pct+'%';
+    document.getElementById('orbitCount').textContent='1 / 1';
+
+    if(orbitProgress<1){ orbitTimer=requestAnimationFrame(tick); }
+    else {
+      clearInterval(telTimer);
+      document.getElementById('angleVal').textContent='360.0°';
+      document.getElementById('orbitFill').style.width='100%';
+      log('ÓRBITA COMPLETA ✓','cmd');
+      log('MISSÃO ENCERRADA.');
+      document.getElementById('camStatus').textContent='STANDBY';
+      document.getElementById('statusDot').className='status-dot active';
+      document.getElementById('btnLaunch').disabled=false;
     }
   }
+  orbitTimer=requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════════════
+//  AI TERRAIN INTEL
+// ═══════════════════════════════════════════════════
+const terrainDB={
+  'cristo redentor':['Estrutura monumental detectada.','Altitude: 710m acima do nível do mar.','Floresta Atlântica densa ao redor.','Densidade urbana: ALTA (Rio de Janeiro)','Visibilidade: 360° desobstruída.'],
+  'amazônia':['ALERTA: Cobertura vegetal densa.','Dossel detectado: ~35m de altura.','Umidade atmosférica: 87%.','Biodiversidade: MÁXIMA.','Rio Amazonas visível ao norte.'],
+  'torre eiffel':['Estrutura metálica de 330m.','Densidade urbana: EXTREMAMENTE ALTA.','Rio Sena detectado a 700m.','Turistas estimados: >15.000/dia.','Iluminação noturna: EXCEPCIONAL.'],
+  'grand canyon':['FORMAÇÃO GEOLÓGICA EXTREMA.','Profundidade: ~1.800m.','Idade estimada: 5-6 milhões de anos.','Rio Colorado detectado.','Temperatura superficial: ELEVADA.'],
+  'machu picchu':['Sítio arqueológico Inca detectado.','Altitude: 2.430m.','Terreno: MONTANHOSO EXTREMO.','Estruturas de pedra: >200 edificações.','Névoa andina presente.'],
+  'dubai':['Arranha-céus: >150 detectados.','Burj Khalifa: 828m identificado.','Deserto ao sul.','Litoral do Golfo Pérsico: visível.','Desenvolvimento urbano: ACELERADO.'],
+  'kilauea':['ALERTA VULCÂNICO ATIVO!','Temperatura superficial: >700°C.','Emissão de SO₂ detectada.','Fluxo de lava: dirección sudeste.','Zona de exclusão ativa.'],
+  'sahara':['Terreno: DESERTO HIPERÁRIDO.','Temperatura superficial: +58°C.','Dunas detectadas: até 180m altura.','Umidade: < 5%.','Vento: Harmattan a 40km/h.'],
+};
+function getIntel(name){
+  const key=Object.keys(terrainDB).find(k=>name.toLowerCase().includes(k));
+  if(key) return terrainDB[key];
+  return [
+    'Análise de terreno em progresso…',
+    'Cobertura de satélite: OK.',
+    'Resolução: 30cm/pixel.',
+    'Coordenadas adquiridas.',
+    'Missão de reconhecimento ativa.',
+  ];
+}
+
+// ═══════════════════════════════════════════════════
+//  MAIN LAUNCH
+// ═══════════════════════════════════════════════════
+const input=document.getElementById('addr');
+input.addEventListener('keydown',e=>{if(e.key==='Enter')launch();});
+
+function preset(addr){ input.value=addr; launch(); }
+
+async function launch(){
+  const addr=input.value.trim();
+  if(!addr){ input.focus(); input.style.borderColor='var(--red)'; setTimeout(()=>input.style.borderColor='',800); return; }
+  if(orbitTimer){ cancelAnimationFrame(orbitTimer); isOrbiting=false; }
+
+  const dot=document.getElementById('statusDot');
+  const btn=document.getElementById('btnLaunch');
+  btn.disabled=true; dot.className='status-dot scanning';
+  document.getElementById('camStatus').textContent='ADQUIRINDO…';
+
+  clearLog();
+  log('ALVO: '+addr.toUpperCase(),'cmd');
+  log('Geocodificando coordenadas…');
+
+  try{
+    const geo=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,{headers:{'Accept-Language':'pt-BR'}});
+    const res=await geo.json();
+    if(!res.length){ log('ERRO: Localização não encontrada.','err'); dot.className='status-dot idle'; btn.disabled=false; return; }
+
+    const {lat,lon,display_name}=res[0];
+    const latF=parseFloat(lat).toFixed(6), lonF=parseFloat(lon).toFixed(6);
+
+    log(`LAT ${latF} / LON ${lonF}`,'cmd');
+    log('Sincronizando satélites…');
+
+    document.getElementById('latVal').textContent=latF+'°';
+    document.getElementById('lonVal').textContent=lonF+'°';
+    document.getElementById('missionId').textContent=`MISSÃO: M-${Date.now().toString().slice(-6)}  ·  ALVO: ${addr.toUpperCase().slice(0,30)}`;
+
+    // Load map
+    const mapWrap=document.getElementById('mapWrap');
+    const mapFrame=document.getElementById('mapFrame');
+    const embedUrl=`https://maps.google.com/maps?q=${latF},${lonF}&z=17&t=k&output=embed&hl=pt-BR`;
+    mapFrame.src=embedUrl;
+    mapFrame.onload=()=>{
+      mapWrap.classList.add('show');
+      setTimeout(()=>{ mapWrap.classList.add('orbiting'); },300);
+    };
+
+    // Scan flash
+    setTimeout(()=>{ document.getElementById('scanFlash').classList.add('flash'); setTimeout(()=>document.getElementById('scanFlash').classList.remove('flash'),800); },600);
+
+    // Intel delay
+    setTimeout(()=>{
+      log('Analisando terreno…','warn');
+      const intel=getIntel(addr);
+      intel.forEach((line,i)=>{ setTimeout(()=>log(line),i*500+300); });
+    },800);
+
+    dot.className='status-dot active';
+    document.getElementById('camStatus').textContent='ATIVO';
+    document.getElementById('signalVal').textContent='████████ 99%';
+    btn.disabled=false;
+
+    // Start orbit
+    setTimeout(()=>{ startOrbit(parseFloat(lat),parseFloat(lon),addr); },500);
+
+  }catch(e){
+    log('FALHA DE CONEXÃO','err');
+    dot.className='status-dot idle';
+    btn.disabled=false;
+  }
+}
 </script>
 </body>
 </html>
