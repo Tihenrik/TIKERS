@@ -3,217 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AereoVista — Explore o Mundo do Alto</title>
+<title>AereoVista — Vista Aérea 360°</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --sky: #0a0f1e;
-    --horizon: #0d1f3c;
-    --accent: #00d4ff;
-    --accent2: #ff6b35;
+    --sky: #0a0f1e; --horizon: #0d1f3c;
+    --accent: #00d4ff; --accent2: #ff6b35;
     --glass: rgba(255,255,255,0.04);
     --glass-border: rgba(255,255,255,0.10);
-    --text: #e8f4ff;
-    --muted: #6a8ba8;
+    --text: #e8f4ff; --muted: #6a8ba8;
   }
+  html, body { height: 100%; background: var(--sky); color: var(--text); font-family: 'DM Sans', sans-serif; overflow: hidden; }
 
-  html, body {
-    height: 100%;
-    background: var(--sky);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    overflow: hidden;
-  }
-
-  /* ── Starfield ── */
   .stars {
     position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background:
       radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.6) 0%, transparent 100%),
       radial-gradient(1px 1px at 34% 72%, rgba(255,255,255,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 57% 9%,  rgba(255,255,255,.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 57%  9%, rgba(255,255,255,.5) 0%, transparent 100%),
       radial-gradient(1px 1px at 78% 55%, rgba(255,255,255,.3) 0%, transparent 100%),
       radial-gradient(1px 1px at 91% 30%, rgba(255,255,255,.6) 0%, transparent 100%),
-      radial-gradient(1px 1px at 6%  85%, rgba(255,255,255,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 45% 42%, rgba(255,255,255,.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 67% 88%, rgba(255,255,255,.3) 0%, transparent 100%),
       radial-gradient(2px 2px at 23% 51%, rgba(0,212,255,.4)   0%, transparent 100%),
       radial-gradient(2px 2px at 83% 14%, rgba(0,212,255,.3)   0%, transparent 100%),
       var(--sky);
   }
-
-  /* ── Glow orbs ── */
-  .orb {
-    position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
-    filter: blur(80px); opacity: .18;
-  }
+  .orb { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(80px); opacity: .15; }
   .orb-1 { width: 500px; height: 500px; background: var(--accent);  top: -150px; left: -150px; animation: drift 14s ease-in-out infinite alternate; }
   .orb-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -100px; animation: drift 18s ease-in-out infinite alternate-reverse; }
   @keyframes drift { from { transform: translate(0,0); } to { transform: translate(60px,40px); } }
 
-  /* ── Layout ── */
-  #app {
-    position: relative; z-index: 1;
-    display: flex; flex-direction: column;
-    height: 100vh; padding: 0 20px;
-  }
+  #app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; padding: 0 16px; }
 
-  /* ── Header ── */
   header {
-    display: flex; align-items: center; gap: 14px;
-    padding: 22px 0 16px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 0 14px;
     border-bottom: 1px solid var(--glass-border);
     animation: fadeDown .6s ease both;
   }
-  .logo-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, var(--accent), #0066aa);
-    border-radius: 10px;
-    display: grid; place-items: center;
-    font-size: 20px;
-    box-shadow: 0 0 20px rgba(0,212,255,.35);
-  }
-  .logo-text {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px; letter-spacing: 3px;
-    background: linear-gradient(90deg, var(--accent), #ffffff);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .logo-sub {
-    margin-left: auto; font-size: 11px;
-    color: var(--muted); letter-spacing: 1px; text-transform: uppercase;
-  }
+  .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent), #0066aa); border-radius: 10px; display: grid; place-items: center; font-size: 19px; box-shadow: 0 0 18px rgba(0,212,255,.35); }
+  .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; background: linear-gradient(90deg, var(--accent), #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo-sub { margin-left: auto; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
 
-  /* ── Search bar ── */
-  .search-wrap {
-    display: flex; gap: 10px; margin: 18px 0 14px;
-    animation: fadeDown .6s .1s ease both;
-  }
+  .search-wrap { display: flex; gap: 8px; margin: 14px 0 10px; animation: fadeDown .6s .1s ease both; }
   .search-input {
-    flex: 1;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    padding: 13px 18px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    outline: none;
-    transition: border-color .25s, box-shadow .25s;
-    backdrop-filter: blur(12px);
+    flex: 1; background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 12px; padding: 12px 16px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none;
+    transition: border-color .25s, box-shadow .25s; backdrop-filter: blur(12px);
   }
   .search-input::placeholder { color: var(--muted); }
-  .search-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(0,212,255,.12);
-  }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,255,.12); }
   .btn-search {
-    background: linear-gradient(135deg, var(--accent), #0088cc);
-    border: none; border-radius: 12px;
-    padding: 13px 22px;
-    color: #fff; font-family: 'DM Sans', sans-serif;
-    font-size: 14px; font-weight: 500;
-    cursor: pointer; white-space: nowrap;
-    transition: transform .15s, box-shadow .15s, opacity .15s;
+    background: linear-gradient(135deg, var(--accent), #0088cc); border: none; border-radius: 12px;
+    padding: 12px 20px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; white-space: nowrap; transition: transform .15s, box-shadow .15s;
     box-shadow: 0 4px 20px rgba(0,212,255,.3);
   }
-  .btn-search:hover  { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,212,255,.45); }
+  .btn-search:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,212,255,.45); }
   .btn-search:active { transform: translateY(0); opacity: .85; }
 
-  /* ── Quick tips ── */
-  .tips {
-    display: flex; gap: 8px; flex-wrap: wrap;
-    margin-bottom: 14px;
-    animation: fadeDown .6s .15s ease both;
-  }
-  .tip-btn {
-    background: var(--glass); border: 1px solid var(--glass-border);
-    border-radius: 20px; padding: 5px 13px;
-    font-size: 12px; color: var(--muted);
-    cursor: pointer; transition: all .2s;
-    backdrop-filter: blur(8px);
-  }
+  .tips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; animation: fadeDown .6s .15s ease both; align-items: center; }
+  .tips-label { font-size: 11px; color: var(--muted); }
+  .tip-btn { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--muted); cursor: pointer; transition: all .2s; backdrop-filter: blur(8px); }
   .tip-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* ── Viewer ── */
   .viewer-wrap {
-    flex: 1; min-height: 0;
-    border-radius: 16px; overflow: hidden;
-    border: 1px solid var(--glass-border);
-    position: relative;
-    box-shadow: 0 8px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04);
+    flex: 1; min-height: 0; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--glass-border); position: relative;
+    box-shadow: 0 8px 48px rgba(0,0,0,.5);
     animation: fadeUp .7s .2s ease both;
   }
 
-  /* placeholder */
+  /* ── Placeholder ── */
   .placeholder {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
+    position: absolute; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 16px;
-    background: var(--horizon);
-    transition: opacity .4s;
+    background: var(--horizon); z-index: 2;
+    transition: opacity .4s, visibility .4s;
   }
-  .placeholder.hidden { opacity: 0; pointer-events: none; }
+  .placeholder.hidden { opacity: 0; visibility: hidden; }
   .globe-anim {
-    width: 90px; height: 90px;
-    border: 3px solid var(--accent);
-    border-radius: 50%;
-    position: relative;
-    animation: spin 6s linear infinite;
-    box-shadow: 0 0 30px rgba(0,212,255,.3), inset 0 0 30px rgba(0,212,255,.08);
+    width: 88px; height: 88px; border: 3px solid var(--accent); border-radius: 50%;
+    position: relative; animation: spin 6s linear infinite;
+    box-shadow: 0 0 28px rgba(0,212,255,.3), inset 0 0 28px rgba(0,212,255,.08);
   }
-  .globe-anim::before {
-    content:''; position: absolute; inset: -3px;
-    border-radius: 50%;
-    border: 3px dashed rgba(0,212,255,.25);
-    animation: spin 12s linear infinite reverse;
-  }
-  .globe-anim::after {
-    content:'🌍'; font-size: 42px;
-    position: absolute; inset: 0;
-    display: grid; place-items: center;
-    animation: spin 6s linear infinite reverse;
-  }
+  .globe-anim::before { content:''; position: absolute; inset: -3px; border-radius: 50%; border: 3px dashed rgba(0,212,255,.25); animation: spin 12s linear infinite reverse; }
+  .globe-anim::after  { content:'🌍'; font-size: 40px; position: absolute; inset: 0; display: grid; place-items: center; animation: spin 6s linear infinite reverse; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .placeholder p { color: var(--muted); font-size: 14px; text-align: center; line-height: 1.6; }
+  .placeholder p { color: var(--muted); font-size: 13px; text-align: center; line-height: 1.7; max-width: 280px; }
   .placeholder strong { color: var(--text); }
 
-  #earth-frame {
-    width: 100%; height: 100%; border: none; display: block;
+  /* ── Loading overlay ── */
+  .loading {
+    position: absolute; inset: 0; background: var(--horizon);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    z-index: 3; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s;
   }
+  .loading.show { opacity: 1; visibility: visible; }
+  .spinner { width: 44px; height: 44px; border: 3px solid rgba(0,212,255,.2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  .loading p { font-size: 13px; color: var(--muted); }
 
-  /* ── Overlay controls ── */
+  #map-frame { width: 100%; height: 100%; border: none; display: block; }
+
   .overlay-bar {
     position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 8px; align-items: center;
-    background: rgba(10,15,30,.75); backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    border-radius: 40px; padding: 8px 14px;
-    opacity: 0; pointer-events: none;
-    transition: opacity .3s;
-    white-space: nowrap; font-size: 12px; color: var(--muted);
+    background: rgba(10,15,30,.8); backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border); border-radius: 40px; padding: 7px 16px;
+    opacity: 0; pointer-events: none; transition: opacity .4s;
+    white-space: nowrap; font-size: 12px; color: var(--muted); z-index: 4;
   }
-  .overlay-bar.visible { opacity: 1; pointer-events: auto; }
+  .overlay-bar.visible { opacity: 1; }
   .overlay-bar span { color: var(--accent); font-weight: 500; }
 
-  /* ── Footer ── */
-  footer {
-    text-align: center; padding: 10px 0 14px;
-    font-size: 11px; color: var(--muted);
-    animation: fadeDown .6s .3s ease both;
+  /* ── Open button ── */
+  .open-btn {
+    position: absolute; top: 14px; right: 14px; z-index: 5;
+    background: rgba(10,15,30,.8); backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border); border-radius: 10px;
+    padding: 8px 14px; font-size: 12px; color: var(--accent);
+    cursor: pointer; text-decoration: none; display: none;
+    transition: background .2s;
   }
+  .open-btn:hover { background: rgba(0,212,255,.12); }
+  .open-btn.visible { display: block; }
 
-  /* ── Anims ── */
-  @keyframes fadeDown {
-    from { opacity:0; transform: translateY(-10px); }
-    to   { opacity:1; transform: translateY(0); }
-  }
-  @keyframes fadeUp {
-    from { opacity:0; transform: translateY(12px); }
-    to   { opacity:1; transform: translateY(0); }
-  }
+  footer { text-align: center; padding: 8px 0 12px; font-size: 11px; color: var(--muted); animation: fadeDown .6s .3s ease both; }
+
+  @keyframes fadeDown { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
+  @keyframes fadeUp   { from { opacity:0; transform: translateY(12px);  } to { opacity:1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -230,18 +149,18 @@
 
   <div class="search-wrap">
     <input id="addr" class="search-input" type="text"
-      placeholder="Digite um endereço, cidade ou ponto de referência…"
+      placeholder="Digite um endereço, cidade ou ponto turístico…"
       autocomplete="off" spellcheck="false">
     <button class="btn-search" onclick="fly()">🛸 Voar</button>
   </div>
 
   <div class="tips">
-    <span style="font-size:12px;color:var(--muted);align-self:center;">Exemplos:</span>
-    <button class="tip-btn" onclick="preset('Cristo Redentor, Rio de Janeiro')">Cristo Redentor</button>
-    <button class="tip-btn" onclick="preset('Torre Eiffel, Paris')">Torre Eiffel</button>
-    <button class="tip-btn" onclick="preset('Coliseu, Roma')">Coliseu</button>
-    <button class="tip-btn" onclick="preset('Amazônia, Brasil')">Amazônia</button>
-    <button class="tip-btn" onclick="preset('Grand Canyon, USA')">Grand Canyon</button>
+    <span class="tips-label">Exemplos:</span>
+    <button class="tip-btn" onclick="preset('Cristo Redentor, Rio de Janeiro, Brasil')">Cristo Redentor</button>
+    <button class="tip-btn" onclick="preset('Torre Eiffel, Paris, França')">Torre Eiffel</button>
+    <button class="tip-btn" onclick="preset('Coliseu, Roma, Itália')">Coliseu</button>
+    <button class="tip-btn" onclick="preset('Floresta Amazônica, Brasil')">Amazônia</button>
+    <button class="tip-btn" onclick="preset('Grand Canyon, Arizona, USA')">Grand Canyon</button>
     <button class="tip-btn" onclick="preset('Machu Picchu, Peru')">Machu Picchu</button>
   </div>
 
@@ -249,58 +168,104 @@
     <div class="placeholder" id="placeholder">
       <div class="globe-anim"></div>
       <p>
-        <strong>Digite um endereço acima e clique em Voar</strong><br>
-        O Google Earth abrirá com a visão aérea do local.<br>
-        Use o mouse para girar, aproximar e explorar em 3D.
+        <strong>Digite um endereço e clique em Voar</strong><br>
+        O mapa abre em visão de satélite.<br>
+        Clique em <strong>"Abrir no Google Maps"</strong> para a experiência 3D completa com rotação 360°.
       </p>
     </div>
 
-    <iframe id="earth-frame" allowfullscreen
-      allow="geolocation; fullscreen"
-      title="Google Earth"></iframe>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p id="loading-text">Localizando…</p>
+    </div>
+
+    <iframe id="map-frame" allowfullscreen title="Google Maps Satélite"></iframe>
+
+    <a id="open-link" class="open-btn" target="_blank" rel="noopener">🗺️ Abrir no Google Maps</a>
 
     <div class="overlay-bar" id="tips-bar">
-      🖱️ <span>Arrastar</span> para girar &nbsp;|&nbsp;
+      🖱️ <span>Arrastar</span> para mover &nbsp;|&nbsp;
       🔍 <span>Scroll</span> para zoom &nbsp;|&nbsp;
-      ✋ <span>Ctrl+arrastar</span> para inclinar
+      🌐 <span>Abrir no Maps</span> para 3D completo
     </div>
   </div>
 
   <footer>
-    Powered by Google Earth Web · Sem cadastro · Sem instalação
+    Powered by Google Maps · Sem cadastro · Sem instalação
   </footer>
 </div>
 
 <script>
-  const input = document.getElementById('addr');
-  const frame = document.getElementById('earth-frame');
-  const placeholder = document.getElementById('placeholder');
-  const tipsBar = document.getElementById('tips-bar');
+  const input    = document.getElementById('addr');
+  const frame    = document.getElementById('map-frame');
+  const ph       = document.getElementById('placeholder');
+  const loading  = document.getElementById('loading');
+  const loadTxt  = document.getElementById('loading-text');
+  const tipsBar  = document.getElementById('tips-bar');
+  const openLink = document.getElementById('open-link');
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') fly(); });
 
-  function preset(addr) {
-    input.value = addr;
-    fly();
-  }
+  function preset(addr) { input.value = addr; fly(); }
 
-  function fly() {
+  async function fly() {
     const addr = input.value.trim();
     if (!addr) {
       input.focus();
       input.style.borderColor = 'var(--accent2)';
-      setTimeout(() => input.style.borderColor = '', 800);
+      setTimeout(() => input.style.borderColor = '', 900);
       return;
     }
 
-    // Build Google Earth Web URL with the search query
-    const encoded = encodeURIComponent(addr);
-    const url = `https://earth.google.com/web/search/${encoded}/@0,0,0a,35000000d,35y,0h,0t,0r`;
+    // Show loading
+    ph.classList.remove('hidden');
+    loading.classList.add('show');
+    loadTxt.textContent = 'Localizando "' + addr + '"…';
+    tipsBar.classList.remove('visible');
+    openLink.classList.remove('visible');
 
-    placeholder.classList.add('hidden');
-    frame.src = url;
+    try {
+      // Use Nominatim (OpenStreetMap) geocoder — free, no key needed
+      const geo = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }
+      );
+      const results = await geo.json();
 
-    setTimeout(() => tipsBar.classList.add('visible'), 1200);
+      if (!results.length) {
+        loading.classList.remove('show');
+        loadTxt.textContent = 'Localização não encontrada. Tente outro endereço.';
+        loading.classList.add('show');
+        setTimeout(() => { loading.classList.remove('show'); }, 2500);
+        return;
+      }
+
+      const { lat, lon, display_name } = results[0];
+      const latF = parseFloat(lat).toFixed(6);
+      const lonF = parseFloat(lon).toFixed(6);
+
+      // Google Maps embed — satellite view, high zoom
+      const embedUrl = `https://maps.google.com/maps?q=${latF},${lonF}&z=17&t=k&output=embed&hl=pt-BR`;
+      const mapsUrl  = `https://www.google.com/maps/@${latF},${lonF},500m/data=!3m1!1e3`;
+
+      loadTxt.textContent = 'Abrindo visão aérea…';
+
+      frame.onload = () => {
+        loading.classList.remove('show');
+        ph.classList.add('hidden');
+        setTimeout(() => {
+          tipsBar.classList.add('visible');
+          openLink.classList.add('visible');
+        }, 600);
+      };
+
+      frame.src = embedUrl;
+      openLink.href = mapsUrl;
+
+    } catch (err) {
+      loading.classList.remove('show');
+      alert('Erro ao buscar localização. Verifique sua conexão.');
+    }
   }
 </script>
 </body>
