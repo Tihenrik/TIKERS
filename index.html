@@ -3,422 +3,305 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ANC Experimental</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<title>AereoVista — Explore o Mundo do Alto</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #080c10;
-    --surface: #0e141b;
-    --border: #1e2d3d;
-    --accent: #00e5ff;
-    --accent2: #ff3d71;
-    --text: #c8d8e8;
-    --text-dim: #4a6278;
-    --green: #00ffaa;
+    --sky: #0a0f1e;
+    --horizon: #0d1f3c;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.10);
+    --text: #e8f4ff;
+    --muted: #6a8ba8;
   }
 
-  body {
-    background: var(--bg);
+  html, body {
+    height: 100%;
+    background: var(--sky);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-    padding: 24px;
-    position: relative;
+    font-family: 'DM Sans', sans-serif;
     overflow: hidden;
   }
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
+  /* ── Starfield ── */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 34% 72%, rgba(255,255,255,.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 57% 9%,  rgba(255,255,255,.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 78% 55%, rgba(255,255,255,.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 91% 30%, rgba(255,255,255,.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 6%  85%, rgba(255,255,255,.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 42%, rgba(255,255,255,.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 67% 88%, rgba(255,255,255,.3) 0%, transparent 100%),
+      radial-gradient(2px 2px at 23% 51%, rgba(0,212,255,.4)   0%, transparent 100%),
+      radial-gradient(2px 2px at 83% 14%, rgba(0,212,255,.3)   0%, transparent 100%),
+      var(--sky);
   }
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    width: 100%;
-    max-width: 420px;
+  /* ── Glow orbs ── */
+  .orb {
+    position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+    filter: blur(80px); opacity: .18;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--accent);  top: -150px; left: -150px; animation: drift 14s ease-in-out infinite alternate; }
+  .orb-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -100px; animation: drift 18s ease-in-out infinite alternate-reverse; }
+  @keyframes drift { from { transform: translate(0,0); } to { transform: translate(60px,40px); } }
+
+  /* ── Layout ── */
+  #app {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    height: 100vh; padding: 0 20px;
   }
 
-  h1 {
-    font-size: 36px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-align: center;
+  /* ── Header ── */
+  header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 22px 0 16px;
+    border-bottom: 1px solid var(--glass-border);
+    animation: fadeDown .6s ease both;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), #0066aa);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(0,212,255,.35);
+  }
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 3px;
+    background: linear-gradient(90deg, var(--accent), #ffffff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .logo-sub {
+    margin-left: auto; font-size: 11px;
+    color: var(--muted); letter-spacing: 1px; text-transform: uppercase;
   }
 
-  .subtitle {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    text-align: center;
-    letter-spacing: 2px;
-    margin-top: 4px;
+  /* ── Search bar ── */
+  .search-wrap {
+    display: flex; gap: 10px; margin: 18px 0 14px;
+    animation: fadeDown .6s .1s ease both;
   }
-
-  /* Big power button */
-  .power-wrap {
-    display: flex;
-    justify-content: center;
-    padding: 10px 0;
-  }
-
-  .power-btn {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 3px solid var(--border);
-    background: var(--surface);
-    color: var(--text-dim);
-    font-size: 44px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.25s;
-    box-shadow: 0 0 0 0 transparent;
-  }
-
-  .power-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    box-shadow: 0 0 24px rgba(0,229,255,0.2);
-  }
-
-  .power-btn.on {
-    border-color: var(--green);
-    color: var(--green);
-    box-shadow: 0 0 32px rgba(0,255,170,0.35), inset 0 0 20px rgba(0,255,170,0.05);
-    animation: pulse-btn 2s ease-in-out infinite;
-  }
-
-  .power-btn.stopping {
-    border-color: var(--accent2);
-    color: var(--accent2);
-    box-shadow: 0 0 24px rgba(255,61,113,0.3);
-    animation: none;
-  }
-
-  @keyframes pulse-btn {
-    0%, 100% { box-shadow: 0 0 32px rgba(0,255,170,0.35), inset 0 0 20px rgba(0,255,170,0.05); }
-    50%       { box-shadow: 0 0 60px rgba(0,255,170,0.6), inset 0 0 30px rgba(0,255,170,0.1); }
-  }
-
-  .state-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-align: center;
-    margin-top: 10px;
-    color: var(--text-dim);
-    transition: color 0.3s;
-  }
-
-  .state-label.on  { color: var(--green); }
-  .state-label.err { color: var(--accent2); }
-
-  /* Waveform */
-  canvas {
-    display: block;
-    width: 100%;
-    height: 80px;
-    border-radius: 8px;
-    background: #0a1018;
-  }
-
-  .canvas-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 3px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
-  /* Sliders */
-  .slider-row { display: flex; flex-direction: column; gap: 14px; }
-
-  .sl { display: flex; flex-direction: column; gap: 5px; }
-
-  .sl-top { display: flex; justify-content: space-between; }
-
-  .sl-name { font-size: 13px; font-weight: 700; }
-
-  .sl-val {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-  }
-
-  input[type=range] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
+  .search-input {
+    flex: 1;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 13px 18px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
     outline: none;
-    cursor: pointer;
+    transition: border-color .25s, box-shadow .25s;
+    backdrop-filter: blur(12px);
   }
-
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
-    cursor: pointer;
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,255,.12);
   }
-
-  .warning {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    text-align: center;
-    line-height: 1.8;
-    max-width: 420px;
+  .btn-search {
+    background: linear-gradient(135deg, var(--accent), #0088cc);
+    border: none; border-radius: 12px;
+    padding: 13px 22px;
+    color: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    transition: transform .15s, box-shadow .15s, opacity .15s;
+    box-shadow: 0 4px 20px rgba(0,212,255,.3);
   }
+  .btn-search:hover  { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(0,212,255,.45); }
+  .btn-search:active { transform: translateY(0); opacity: .85; }
 
-  .warning strong { color: var(--accent2); }
-
-  .section-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 3px;
-    color: var(--text-dim);
-    text-transform: uppercase;
+  /* ── Quick tips ── */
+  .tips {
+    display: flex; gap: 8px; flex-wrap: wrap;
     margin-bottom: 14px;
+    animation: fadeDown .6s .15s ease both;
+  }
+  .tip-btn {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 20px; padding: 5px 13px;
+    font-size: 12px; color: var(--muted);
+    cursor: pointer; transition: all .2s;
+    backdrop-filter: blur(8px);
+  }
+  .tip-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Viewer ── */
+  .viewer-wrap {
+    flex: 1; min-height: 0;
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--glass-border);
+    position: relative;
+    box-shadow: 0 8px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04);
+    animation: fadeUp .7s .2s ease both;
+  }
+
+  /* placeholder */
+  .placeholder {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    background: var(--horizon);
+    transition: opacity .4s;
+  }
+  .placeholder.hidden { opacity: 0; pointer-events: none; }
+  .globe-anim {
+    width: 90px; height: 90px;
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    position: relative;
+    animation: spin 6s linear infinite;
+    box-shadow: 0 0 30px rgba(0,212,255,.3), inset 0 0 30px rgba(0,212,255,.08);
+  }
+  .globe-anim::before {
+    content:''; position: absolute; inset: -3px;
+    border-radius: 50%;
+    border: 3px dashed rgba(0,212,255,.25);
+    animation: spin 12s linear infinite reverse;
+  }
+  .globe-anim::after {
+    content:'🌍'; font-size: 42px;
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    animation: spin 6s linear infinite reverse;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .placeholder p { color: var(--muted); font-size: 14px; text-align: center; line-height: 1.6; }
+  .placeholder strong { color: var(--text); }
+
+  #earth-frame {
+    width: 100%; height: 100%; border: none; display: block;
+  }
+
+  /* ── Overlay controls ── */
+  .overlay-bar {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; align-items: center;
+    background: rgba(10,15,30,.75); backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 40px; padding: 8px 14px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s;
+    white-space: nowrap; font-size: 12px; color: var(--muted);
+  }
+  .overlay-bar.visible { opacity: 1; pointer-events: auto; }
+  .overlay-bar span { color: var(--accent); font-weight: 500; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center; padding: 10px 0 14px;
+    font-size: 11px; color: var(--muted);
+    animation: fadeDown .6s .3s ease both;
+  }
+
+  /* ── Anims ── */
+  @keyframes fadeDown {
+    from { opacity:0; transform: translateY(-10px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
   }
 </style>
 </head>
 <body>
+<div class="stars"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-<div style="text-align:center">
-  <h1>ANC Experimental</h1>
-  <div class="subtitle">CANCELAMENTO ATIVO DE RUÍDO</div>
-</div>
+<div id="app">
+  <header>
+    <div class="logo-icon">🛰️</div>
+    <div class="logo-text">AereoVista</div>
+    <div class="logo-sub">Vista Aérea 360°</div>
+  </header>
 
-<div class="card" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-  <div class="power-wrap">
-    <button class="power-btn" id="powerBtn" title="Ligar / Desligar ANC">⏻</button>
+  <div class="search-wrap">
+    <input id="addr" class="search-input" type="text"
+      placeholder="Digite um endereço, cidade ou ponto de referência…"
+      autocomplete="off" spellcheck="false">
+    <button class="btn-search" onclick="fly()">🛸 Voar</button>
   </div>
-  <div class="state-label" id="stateLabel">DESLIGADO — clique para ligar</div>
-</div>
 
-<div class="card">
-  <div class="canvas-label">WAVEFORM — ENTRADA DO MICROFONE</div>
-  <canvas id="canvas" width="800" height="160"></canvas>
-</div>
+  <div class="tips">
+    <span style="font-size:12px;color:var(--muted);align-self:center;">Exemplos:</span>
+    <button class="tip-btn" onclick="preset('Cristo Redentor, Rio de Janeiro')">Cristo Redentor</button>
+    <button class="tip-btn" onclick="preset('Torre Eiffel, Paris')">Torre Eiffel</button>
+    <button class="tip-btn" onclick="preset('Coliseu, Roma')">Coliseu</button>
+    <button class="tip-btn" onclick="preset('Amazônia, Brasil')">Amazônia</button>
+    <button class="tip-btn" onclick="preset('Grand Canyon, USA')">Grand Canyon</button>
+    <button class="tip-btn" onclick="preset('Machu Picchu, Peru')">Machu Picchu</button>
+  </div>
 
-<div class="card">
-  <div class="section-title">Controles</div>
-  <div class="slider-row">
-    <div class="sl">
-      <div class="sl-top">
-        <span class="sl-name">Volume de Saída</span>
-        <span class="sl-val" id="volVal">50%</span>
-      </div>
-      <input type="range" id="volSlider" min="0" max="100" value="50">
+  <div class="viewer-wrap">
+    <div class="placeholder" id="placeholder">
+      <div class="globe-anim"></div>
+      <p>
+        <strong>Digite um endereço acima e clique em Voar</strong><br>
+        O Google Earth abrirá com a visão aérea do local.<br>
+        Use o mouse para girar, aproximar e explorar em 3D.
+      </p>
     </div>
-    <div class="sl">
-      <div class="sl-top">
-        <span class="sl-name">Intensidade da Inversão</span>
-        <span class="sl-val" id="invVal">1.00×</span>
-      </div>
-      <input type="range" id="invSlider" min="50" max="150" value="100">
+
+    <iframe id="earth-frame" allowfullscreen
+      allow="geolocation; fullscreen"
+      title="Google Earth"></iframe>
+
+    <div class="overlay-bar" id="tips-bar">
+      🖱️ <span>Arrastar</span> para girar &nbsp;|&nbsp;
+      🔍 <span>Scroll</span> para zoom &nbsp;|&nbsp;
+      ✋ <span>Ctrl+arrastar</span> para inclinar
     </div>
   </div>
-</div>
 
-<p class="warning">
-  <strong>⚠ Use fones fechados.</strong><br>
-  Volume alto pode causar feedback intenso nos fones.
-</p>
+  <footer>
+    Powered by Google Earth Web · Sem cadastro · Sem instalação
+  </footer>
+</div>
 
 <script>
-const powerBtn   = document.getElementById('powerBtn');
-const stateLabel = document.getElementById('stateLabel');
-const canvas     = document.getElementById('canvas');
-const ctx2d      = canvas.getContext('2d');
-const volSlider  = document.getElementById('volSlider');
-const invSlider  = document.getElementById('invSlider');
-const volVal     = document.getElementById('volVal');
-const invVal     = document.getElementById('invVal');
+  const input = document.getElementById('addr');
+  const frame = document.getElementById('earth-frame');
+  const placeholder = document.getElementById('placeholder');
+  const tipsBar = document.getElementById('tips-bar');
 
-let audioCtx  = null;
-let analyser  = null;
-let processor = null;
-let source    = null;
-let gainNode  = null;
-let stream    = null;
-let animId    = null;
-let running   = false;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') fly(); });
 
-volSlider.oninput = () => {
-  volVal.textContent = volSlider.value + '%';
-  if (gainNode) gainNode.gain.value = volSlider.value / 100;
-};
-
-invSlider.oninput = () => {
-  invVal.textContent = (invSlider.value / 100).toFixed(2) + '×';
-};
-
-powerBtn.onclick = async () => {
-  if (running) { stop(); } else { await start(); }
-};
-
-async function start() {
-  try {
-    setLabel('AGUARDANDO MICROFONE…', '');
-    powerBtn.disabled = true;
-
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      }
-    });
-
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    await audioCtx.resume();
-
-    source   = audioCtx.createMediaStreamSource(stream);
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 1024;
-
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = volSlider.value / 100;
-
-    // ScriptProcessor: inverte cada sample do buffer
-    processor = audioCtx.createScriptProcessor(2048, 1, 1);
-    processor.onaudioprocess = (e) => {
-      const input  = e.inputBuffer.getChannelData(0);
-      const output = e.outputBuffer.getChannelData(0);
-      const factor = -(invSlider.value / 100);
-      for (let i = 0; i < input.length; i++) {
-        output[i] = input[i] * factor;
-      }
-    };
-
-    // mic → analyser (visualização)
-    // mic → processor (inversão) → gain → saída
-    source.connect(analyser);
-    source.connect(processor);
-    processor.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    running = true;
-    powerBtn.disabled = false;
-    powerBtn.classList.add('on');
-    setLabel('● LIGADO — ANC ATIVO', 'on');
-    drawWave();
-
-  } catch (e) {
-    powerBtn.disabled = false;
-    setLabel('ERRO: ' + (e.message || 'Microfone negado'), 'err');
+  function preset(addr) {
+    input.value = addr;
+    fly();
   }
-}
 
-function stop() {
-  powerBtn.classList.remove('on');
-  powerBtn.classList.add('stopping');
-  powerBtn.disabled = true;
-  setLabel('DESLIGANDO…', '');
+  function fly() {
+    const addr = input.value.trim();
+    if (!addr) {
+      input.focus();
+      input.style.borderColor = 'var(--accent2)';
+      setTimeout(() => input.style.borderColor = '', 800);
+      return;
+    }
 
-  cancelAnimationFrame(animId);
+    // Build Google Earth Web URL with the search query
+    const encoded = encodeURIComponent(addr);
+    const url = `https://earth.google.com/web/search/${encoded}/@0,0,0a,35000000d,35y,0h,0t,0r`;
 
-  try { processor && processor.disconnect(); } catch(_) {}
-  try { gainNode  && gainNode.disconnect();  } catch(_) {}
-  try { source    && source.disconnect();    } catch(_) {}
-  try { analyser  && analyser.disconnect();  } catch(_) {}
-  if (stream) stream.getTracks().forEach(t => t.stop());
-  if (audioCtx) audioCtx.close();
+    placeholder.classList.add('hidden');
+    frame.src = url;
 
-  audioCtx = processor = gainNode = source = analyser = stream = null;
-  running = false;
-
-  setTimeout(() => {
-    powerBtn.classList.remove('stopping');
-    powerBtn.disabled = false;
-    setLabel('DESLIGADO — clique para ligar', '');
-    drawIdle();
-  }, 400);
-}
-
-function setLabel(text, cls) {
-  stateLabel.textContent = text;
-  stateLabel.className = 'state-label ' + cls;
-}
-
-function drawWave() {
-  animId = requestAnimationFrame(drawWave);
-  if (!analyser) return;
-
-  const W = canvas.width, H = canvas.height;
-  const buf = new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteTimeDomainData(buf);
-
-  ctx2d.fillStyle = '#0a1018';
-  ctx2d.fillRect(0, 0, W, H);
-
-  ctx2d.strokeStyle = 'rgba(0,229,255,0.07)';
-  ctx2d.lineWidth = 1;
-  ctx2d.beginPath();
-  ctx2d.moveTo(0, H/2); ctx2d.lineTo(W, H/2);
-  ctx2d.stroke();
-
-  const grad = ctx2d.createLinearGradient(0, 0, W, 0);
-  grad.addColorStop(0,   'rgba(0,229,255,0.15)');
-  grad.addColorStop(0.5, 'rgba(0,229,255,1)');
-  grad.addColorStop(1,   'rgba(0,229,255,0.15)');
-
-  ctx2d.beginPath();
-  ctx2d.strokeStyle = grad;
-  ctx2d.lineWidth = 2;
-  ctx2d.shadowBlur = 10;
-  ctx2d.shadowColor = '#00e5ff';
-
-  const step = W / buf.length;
-  for (let i = 0; i < buf.length; i++) {
-    const y = (buf[i] / 128) * (H / 2);
-    i === 0 ? ctx2d.moveTo(0, y) : ctx2d.lineTo(i * step, y);
+    setTimeout(() => tipsBar.classList.add('visible'), 1200);
   }
-  ctx2d.stroke();
-  ctx2d.shadowBlur = 0;
-}
-
-function drawIdle() {
-  const W = canvas.width, H = canvas.height;
-  ctx2d.fillStyle = '#0a1018';
-  ctx2d.fillRect(0, 0, W, H);
-  ctx2d.strokeStyle = 'rgba(0,229,255,0.1)';
-  ctx2d.lineWidth = 1;
-  ctx2d.setLineDash([6, 10]);
-  ctx2d.beginPath();
-  ctx2d.moveTo(0, H/2); ctx2d.lineTo(W, H/2);
-  ctx2d.stroke();
-  ctx2d.setLineDash([]);
-}
-
-drawIdle();
 </script>
 </body>
 </html>
