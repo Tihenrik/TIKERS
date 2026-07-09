@@ -3,1921 +3,952 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MINDMESH — O Universo da Sua Mente</title>
+<title>Prancheta Tática</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
 
-:root {
-  --void: #02040a;
-  --deep: #060c18;
-  --surface: #0a1628;
-  --glass: rgba(10,22,40,0.7);
-  --glass-light: rgba(255,255,255,0.04);
-  --glass-border: rgba(255,255,255,0.08);
-  --cyan: #00d4ff;
-  --cyan-dim: rgba(0,212,255,0.15);
-  --violet: #7c3aed;
-  --violet-dim: rgba(124,58,237,0.2);
-  --aurora: #00ffc8;
-  --aurora-dim: rgba(0,255,200,0.1);
-  --rose: #ff4f8b;
-  --amber: #ffb347;
-  --text: #e8edf5;
-  --text-dim: rgba(232,237,245,0.5);
-  --text-ghost: rgba(232,237,245,0.2);
-  --node-glow: 0 0 30px rgba(0,212,255,0.4), 0 0 60px rgba(0,212,255,0.1);
-  --panel-shadow: 0 25px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
-}
+  :root{
+    --bg: #0A0F0C;
+    --panel: #131A16;
+    --panel-2: #1A2320;
+    --line: #263229;
+    --pitch: #2F6B3A;
+    --pitch-light: #3E8A4C;
+    --chalk: #F3F1EA;
+    --chalk-dim: #8C948C;
+    --whistle: #E8B923;
+    --team-a: #D64545;
+    --team-b: #3B7DD8;
+    --danger: #E5484D;
+    --radius: 8px;
+    --mono: 'JetBrains Mono', monospace;
+    --disp: 'Oswald', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--chalk); font-family:var(--body); overflow:hidden; }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .app{ display:flex; flex-direction:column; height:100vh; }
 
-html { scroll-behavior: smooth; }
+  /* TOP BAR */
+  .topbar{
+    display:flex; align-items:center; gap:16px;
+    padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; margin-right:8px; }
+  .brand .dot{ width:12px; height:12px; border-radius:50%; background:var(--whistle); box-shadow:0 0 8px var(--whistle); }
+  .brand h1{ font-family:var(--disp); font-size:18px; letter-spacing:.5px; text-transform:uppercase; margin:0; font-weight:600; }
+  .brand span{ color:var(--chalk-dim); font-size:11px; font-family:var(--mono); }
 
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--void);
-  color: var(--text);
-  overflow-x: hidden;
-  cursor: none;
-}
+  .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--panel-2); color:var(--chalk); border:1px solid var(--line);
+    padding:8px 12px; border-radius:var(--radius); cursor:pointer; font-size:13px; font-weight:500;
+    font-family:var(--body); transition:.15s;
+  }
+  .btn:hover{ border-color:var(--pitch-light); background:#20291F; }
+  .btn:active{ transform:scale(.97); }
+  .btn.primary{ background:var(--pitch); border-color:var(--pitch); color:#fff; }
+  .btn.primary:hover{ background:var(--pitch-light); }
+  .btn.rec{ background:var(--danger); border-color:var(--danger); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  input[type=file]{ display:none; }
 
-/* ─── CUSTOM CURSOR ─── */
-#cursor {
-  position: fixed; width: 12px; height: 12px;
-  background: var(--cyan); border-radius: 50%;
-  pointer-events: none; z-index: 99999;
-  transform: translate(-50%,-50%);
-  transition: transform 0.08s, width 0.2s, height 0.2s, background 0.2s;
-  mix-blend-mode: screen;
-}
-#cursor-ring {
-  position: fixed; width: 36px; height: 36px;
-  border: 1px solid rgba(0,212,255,0.4); border-radius: 50%;
-  pointer-events: none; z-index: 99998;
-  transform: translate(-50%,-50%);
-  transition: transform 0.18s cubic-bezier(0.25,0.46,0.45,0.94), width 0.3s, height 0.3s;
-}
-body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 20px; height: 20px; background: var(--aurora); }
-body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width: 56px; height: 56px; border-color: var(--aurora); }
+  .topbar .fname{ font-family:var(--mono); font-size:12px; color:var(--chalk-dim); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .spacer{ flex:1; }
 
-/* ─── NEBULA BACKGROUND ─── */
-#nebula {
-  position: fixed; inset: 0; z-index: 0;
-  background: radial-gradient(ellipse 100% 80% at 20% 10%, rgba(124,58,237,0.12) 0%, transparent 60%),
-              radial-gradient(ellipse 80% 60% at 80% 80%, rgba(0,212,255,0.08) 0%, transparent 50%),
-              radial-gradient(ellipse 60% 100% at 50% 50%, rgba(0,255,200,0.04) 0%, transparent 70%),
-              var(--void);
-  animation: nebulaDrift 20s ease-in-out infinite alternate;
-}
-@keyframes nebulaDrift {
-  0% { background-position: 0% 0%, 100% 100%, 50% 50%; }
-  100% { background-position: 5% 5%, 95% 95%, 52% 48%; }
-}
+  /* MAIN LAYOUT */
+  .main{ flex:1; display:flex; min-height:0; }
 
-/* ─── STAR FIELD ─── */
-#stars { position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
-.star { position: absolute; border-radius: 50%; animation: twinkle var(--d, 3s) ease-in-out infinite alternate; }
-@keyframes twinkle { 0% { opacity: 0.1; transform: scale(1); } 100% { opacity: 0.9; transform: scale(1.4); } }
+  /* TOOL RAIL */
+  .toolrail{
+    width:64px; background:var(--panel); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:6px; flex-shrink:0;
+    overflow-y:auto;
+  }
+  .tool{
+    width:44px; height:44px; border-radius:var(--radius); border:1px solid transparent;
+    background:transparent; color:var(--chalk-dim); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; position:relative;
+  }
+  .tool svg{ width:20px; height:20px; }
+  .tool:hover{ background:var(--panel-2); color:var(--chalk); }
+  .tool.active{ background:var(--pitch); color:#fff; border-color:var(--pitch-light); }
+  .tool .tip{
+    position:absolute; left:52px; top:50%; transform:translateY(-50%);
+    background:#000; color:#fff; font-size:11px; padding:4px 8px; border-radius:4px;
+    white-space:nowrap; opacity:0; pointer-events:none; transition:.1s; z-index:20;
+  }
+  .tool:hover .tip{ opacity:1; }
+  .railsep{ width:32px; height:1px; background:var(--line); margin:4px 0; }
 
-/* ─── CANVAS ─── */
-#universe-canvas {
-  position: fixed; inset: 0; z-index: 2;
-  pointer-events: none;
-}
+  /* STAGE */
+  .stage-wrap{ flex:1; display:flex; flex-direction:column; min-width:0; background:#000; position:relative; }
+  .stage{
+    flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+    background:
+      repeating-linear-gradient(0deg, #060907 0 2px, #05070600 2px 40px),
+      repeating-linear-gradient(90deg, #060907 0 2px, #05070600 2px 40px);
+  }
+  .canvas-box{ position:relative; }
+  canvas{ display:block; max-width:100%; max-height:100%; background:#111; cursor:crosshair; }
+  .empty-state{
+    color:var(--chalk-dim); text-align:center; font-family:var(--body); max-width:340px;
+  }
+  .empty-state .disp{ font-family:var(--disp); font-size:22px; color:var(--chalk); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+  .empty-state svg{ width:56px; height:56px; margin-bottom:14px; opacity:.5; }
 
-/* ─── LANDING ─── */
-#landing {
-  position: relative; z-index: 10;
-  min-height: 100vh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  text-align: center; padding: 40px 24px;
-}
+  .rec-indicator{
+    position:absolute; top:12px; left:12px; display:none; align-items:center; gap:6px;
+    background:rgba(0,0,0,.6); padding:6px 10px; border-radius:20px; font-size:12px; font-family:var(--mono);
+  }
+  .rec-indicator .pulse{ width:9px; height:9px; border-radius:50%; background:var(--danger); animation:pulse 1s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
 
-.landing-eyebrow {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px; letter-spacing: 0.35em;
-  color: var(--aurora); text-transform: uppercase;
-  margin-bottom: 28px;
-  animation: fadeUp 1s 0.3s both;
-  display: flex; align-items: center; gap: 12px;
-}
-.landing-eyebrow::before, .landing-eyebrow::after {
-  content: ''; display: block; width: 30px; height: 1px;
-  background: linear-gradient(to right, transparent, var(--aurora));
-}
-.landing-eyebrow::after { background: linear-gradient(to left, transparent, var(--aurora)); }
+  .hint-bar{
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,.65); color:var(--chalk); font-size:12px; padding:6px 14px; border-radius:20px;
+    font-family:var(--body); pointer-events:none; opacity:0; transition:.2s; white-space:nowrap;
+  }
+  .hint-bar.show{ opacity:1; }
 
-.landing-title {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(72px, 14vw, 160px);
-  font-weight: 800; line-height: 0.9;
-  letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #fff 0%, var(--cyan) 40%, var(--violet) 80%, var(--aurora) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: fadeUp 1s 0.5s both;
-  position: relative;
-}
-.landing-title .shimmer-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text; background-clip: text;
-  animation: shimmer 3s 2s infinite;
-}
-@keyframes shimmer { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
+  /* PROPS BAR (contextual, above timeline) */
+  .props-bar{
+    display:flex; align-items:center; gap:14px; padding:8px 16px; background:var(--panel);
+    border-top:1px solid var(--line); flex-wrap:wrap; flex-shrink:0;
+  }
+  .props-group{ display:flex; align-items:center; gap:8px; }
+  .props-group label{ font-size:11px; color:var(--chalk-dim); font-family:var(--mono); text-transform:uppercase; letter-spacing:.5px; }
+  .swatch{
+    width:22px; height:22px; border-radius:50%; border:2px solid transparent; cursor:pointer; flex-shrink:0;
+  }
+  .swatch.sel{ border-color:#fff; box-shadow:0 0 0 2px var(--bg); }
+  input[type=color]{ width:28px; height:28px; border:none; border-radius:50%; background:none; cursor:pointer; padding:0; }
+  input[type=color]::-webkit-color-swatch-wrapper{ padding:0; }
+  input[type=color]::-webkit-color-swatch{ border-radius:50%; border:2px solid var(--line); }
+  input[type=range]{ accent-color: var(--pitch-light); }
+  .num-input{ width:48px; background:var(--panel-2); border:1px solid var(--line); color:var(--chalk); border-radius:4px; padding:4px 6px; font-family:var(--mono); font-size:12px; }
+  .chk{ display:flex; align-items:center; gap:5px; font-size:12px; color:var(--chalk-dim); cursor:pointer; }
 
-.landing-sub {
-  font-family: 'DM Sans', sans-serif;
-  font-size: clamp(16px, 2.5vw, 22px);
-  font-weight: 300; color: var(--text-dim);
-  max-width: 600px; line-height: 1.6;
-  margin: 28px auto 0;
-  animation: fadeUp 1s 0.7s both;
-}
-.landing-sub em { color: var(--cyan); font-style: normal; font-weight: 500; }
+  /* TIMELINE */
+  .timeline-bar{
+    display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--panel-2);
+    border-top:1px solid var(--line); flex-shrink:0;
+  }
+  .tc{ font-family:var(--mono); font-size:12px; color:var(--chalk-dim); min-width:52px; text-align:center; }
+  .timeline-track{ flex:1; position:relative; height:26px; display:flex; align-items:center; }
+  .timeline-track input[type=range]{
+    width:100%; height:8px; -webkit-appearance:none; appearance:none;
+    background: linear-gradient(90deg, var(--pitch) 0%, var(--pitch) var(--pct,0%), #263229 var(--pct,0%), #263229 100%);
+    border-radius:5px; outline:none; position:relative; z-index:2;
+  }
+  .timeline-track input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--whistle);
+    border:2px solid #000; cursor:pointer; margin-top:-1px;
+  }
+  .markers{ position:absolute; top:0; left:0; right:0; height:26px; pointer-events:none; }
+  .marker{ position:absolute; top:-2px; width:2px; height:8px; border-radius:1px; }
+  .marker::after{ content:''; position:absolute; top:8px; left:-2px; width:6px; height:6px; border-radius:50%; background:inherit; }
 
-.landing-cta {
-  margin-top: 52px;
-  display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center;
-  animation: fadeUp 1s 1s both;
-}
+  .icon-btn{
+    width:34px; height:34px; border-radius:50%; background:var(--panel); border:1px solid var(--line);
+    color:var(--chalk); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .icon-btn:hover{ background:var(--panel-2); }
+  .icon-btn svg{ width:16px; height:16px; }
 
-.btn-primary {
-  position: relative; overflow: hidden;
-  padding: 16px 40px; border: none; border-radius: 100px;
-  background: linear-gradient(135deg, var(--violet), var(--cyan));
-  color: #fff; font-family: 'Syne', sans-serif;
-  font-size: 15px; font-weight: 700; letter-spacing: 0.05em;
-  cursor: none; transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 0 40px rgba(124,58,237,0.5), 0 0 80px rgba(0,212,255,0.2);
-}
-.btn-primary::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15));
-  opacity: 0; transition: opacity 0.3s;
-}
-.btn-primary:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 60px rgba(124,58,237,0.7), 0 0 120px rgba(0,212,255,0.3); }
-.btn-primary:hover::after { opacity: 1; }
+  select{ background:var(--panel-2); color:var(--chalk); border:1px solid var(--line); border-radius:4px; padding:5px 8px; font-size:12px; font-family:var(--mono); }
 
-.btn-ghost {
-  padding: 16px 32px; border: 1px solid var(--glass-border); border-radius: 100px;
-  background: var(--glass-light); color: var(--text-dim);
-  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 400;
-  cursor: none; transition: all 0.3s; backdrop-filter: blur(10px);
-}
-.btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  /* SIDEBAR */
+  .sidebar{
+    width:260px; background:var(--panel); border-left:1px solid var(--line);
+    display:flex; flex-direction:column; flex-shrink:0;
+  }
+  .sidebar h2{
+    font-family:var(--disp); font-size:13px; text-transform:uppercase; letter-spacing:.8px;
+    padding:14px 16px 10px; margin:0; color:var(--chalk-dim); border-bottom:1px solid var(--line);
+  }
+  .ann-list{ flex:1; overflow-y:auto; padding:8px; }
+  .ann-item{
+    display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px; margin-bottom:4px;
+    background:var(--panel-2); cursor:pointer; border:1px solid transparent;
+  }
+  .ann-item:hover{ border-color:var(--pitch-light); }
+  .ann-item .ic{ width:16px; height:16px; flex-shrink:0; }
+  .ann-item .meta{ flex:1; min-width:0; }
+  .ann-item .meta .t1{ font-size:12px; font-weight:500; text-transform:capitalize; }
+  .ann-item .meta .t2{ font-size:10px; color:var(--chalk-dim); font-family:var(--mono); }
+  .ann-item .del{ color:var(--chalk-dim); cursor:pointer; padding:2px; }
+  .ann-item .del:hover{ color:var(--danger); }
+  .ann-empty{ color:var(--chalk-dim); font-size:12px; text-align:center; padding:30px 14px; line-height:1.5; }
 
-.landing-stats {
-  margin-top: 80px; display: flex; gap: 48px; flex-wrap: wrap; justify-content: center;
-  animation: fadeUp 1s 1.2s both;
-}
-.stat { text-align: center; }
-.stat-num { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800;
-  background: linear-gradient(135deg, var(--cyan), var(--aurora)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.stat-label { font-size: 12px; letter-spacing: 0.1em; color: var(--text-ghost); text-transform: uppercase; margin-top: 4px; }
+  .sidebar-footer{ padding:12px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
 
-.scroll-hint {
-  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  color: var(--text-ghost); font-size: 11px; letter-spacing: 0.15em;
-  animation: fadeUp 1s 1.5s both, float 2s ease-in-out infinite;
-}
-.scroll-hint-line {
-  width: 1px; height: 40px;
-  background: linear-gradient(to bottom, var(--text-ghost), transparent);
-  animation: scrollPulse 2s ease-in-out infinite;
-}
-@keyframes scrollPulse { 0%,100% { transform: scaleY(1); opacity: 0.5; } 50% { transform: scaleY(0.5); opacity: 1; } }
-@keyframes float { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-8px); } }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
 
-/* ─── APP SHELL ─── */
-#app {
-  position: relative; z-index: 10;
-  min-height: 100vh; display: none;
-  flex-direction: column;
-}
-
-/* ─── TOPBAR ─── */
-#topbar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: 64px; padding: 0 24px;
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(6,12,24,0.8); backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--glass-border);
-}
-.logo {
-  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px;
-  letter-spacing: 0.08em;
-  background: linear-gradient(135deg, var(--cyan), var(--aurora));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.logo span { -webkit-text-fill-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.3); }
-
-.topbar-center {
-  display: flex; gap: 4px; align-items: center;
-  background: var(--glass-light); border: 1px solid var(--glass-border);
-  border-radius: 100px; padding: 4px;
-}
-.mode-btn {
-  padding: 6px 16px; border-radius: 100px; border: none;
-  background: transparent; color: var(--text-dim);
-  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-  cursor: none; transition: all 0.3s;
-}
-.mode-btn.active { background: var(--violet); color: #fff; box-shadow: 0 0 20px rgba(124,58,237,0.5); }
-
-.topbar-right { display: flex; gap: 12px; align-items: center; }
-
-.icon-btn {
-  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--glass-border);
-  background: var(--glass-light); display: flex; align-items: center; justify-content: center;
-  cursor: none; transition: all 0.3s; color: var(--text-dim); font-size: 16px;
-}
-.icon-btn:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); box-shadow: 0 0 20px rgba(0,212,255,0.2); }
-
-/* ─── MAIN AREA ─── */
-#main-area {
-  flex: 1; padding-top: 64px;
-  display: flex; height: 100vh; overflow: hidden;
-}
-
-/* ─── SIDEBAR ─── */
-#sidebar {
-  width: 320px; height: 100%;
-  background: rgba(6,12,24,0.95); backdrop-filter: blur(24px);
-  border-right: 1px solid var(--glass-border);
-  display: flex; flex-direction: column;
-  overflow: hidden; flex-shrink: 0;
-  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-#sidebar.collapsed { width: 0; }
-
-.sidebar-header {
-  padding: 20px 20px 12px;
-  border-bottom: 1px solid var(--glass-border);
-}
-.sidebar-title {
-  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--text-ghost);
-}
-
-.input-zone {
-  padding: 16px;
-  border-bottom: 1px solid var(--glass-border);
-}
-.thought-input-wrap {
-  position: relative;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-  border-radius: 16px; padding: 14px 14px 44px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.thought-input-wrap:focus-within {
-  border-color: rgba(0,212,255,0.4);
-  box-shadow: 0 0 30px rgba(0,212,255,0.1), inset 0 0 20px rgba(0,212,255,0.03);
-}
-#thought-input {
-  width: 100%; background: transparent; border: none; outline: none;
-  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
-  line-height: 1.6; resize: none; min-height: 60px;
-}
-#thought-input::placeholder { color: var(--text-ghost); }
-.input-actions {
-  position: absolute; bottom: 10px; right: 10px; left: 10px;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.input-meta {
-  font-family: 'Space Mono', monospace; font-size: 10px;
-  color: var(--text-ghost);
-}
-.send-btn {
-  padding: 6px 16px; border-radius: 100px; border: none;
-  background: linear-gradient(135deg, var(--violet), var(--cyan));
-  color: #fff; font-family: 'Syne', sans-serif;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
-  cursor: none; transition: all 0.3s;
-  box-shadow: 0 0 20px rgba(124,58,237,0.4);
-}
-.send-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0,212,255,0.5); }
-
-.ai-processing {
-  padding: 10px 16px;
-  display: none; align-items: center; gap: 10px;
-  background: rgba(0,212,255,0.05); border-radius: 10px;
-  margin: 0 16px 12px;
-  border: 1px solid rgba(0,212,255,0.15);
-}
-.ai-processing.show { display: flex; }
-.ai-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); animation: aiPulse 1s ease-in-out infinite; }
-.ai-dot:nth-child(2) { animation-delay: 0.2s; }
-.ai-dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes aiPulse { 0%,100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
-.ai-text { font-size: 12px; color: var(--cyan); font-family: 'Space Mono', monospace; }
-
-/* ─── NODES LIST ─── */
-#nodes-list {
-  flex: 1; overflow-y: auto; padding: 12px;
-  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
-}
-#nodes-list::-webkit-scrollbar { width: 4px; }
-#nodes-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-
-.node-card {
-  padding: 14px; border-radius: 14px;
-  background: var(--glass-light); border: 1px solid var(--glass-border);
-  margin-bottom: 10px; cursor: none;
-  transition: all 0.3s; position: relative; overflow: hidden;
-}
-.node-card::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: var(--node-color, var(--cyan));
-  border-radius: 3px 0 0 3px;
-}
-.node-card:hover {
-  border-color: rgba(0,212,255,0.3);
-  background: rgba(0,212,255,0.05);
-  transform: translateX(4px);
-}
-.node-card.active {
-  border-color: rgba(0,212,255,0.5);
-  background: rgba(0,212,255,0.08);
-  box-shadow: 0 0 20px rgba(0,212,255,0.1);
-}
-.node-type {
-  font-family: 'Space Mono', monospace; font-size: 9px;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--node-color, var(--cyan));
-  margin-bottom: 6px;
-  display: flex; align-items: center; gap: 6px;
-}
-.node-type-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-.node-text { font-size: 13px; line-height: 1.5; color: var(--text); }
-.node-time { font-size: 10px; color: var(--text-ghost); margin-top: 8px;
-  font-family: 'Space Mono', monospace; }
-.node-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
-.tag {
-  padding: 2px 8px; border-radius: 100px; font-size: 10px;
-  background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.3);
-  color: rgba(180,140,255,0.9); font-family: 'Space Mono', monospace;
-}
-
-/* ─── UNIVERSE VIEWPORT ─── */
-#universe-viewport {
-  flex: 1; position: relative; overflow: hidden;
-  background: transparent;
-}
-
-#universe-svg {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-}
-
-/* SVG elements */
-.connection-line {
-  stroke: rgba(0,212,255,0.15); stroke-width: 1;
-  fill: none; stroke-dasharray: 4 6;
-  animation: dashFlow 20s linear infinite;
-}
-.connection-line.strong { stroke: rgba(0,212,255,0.4); stroke-width: 1.5; stroke-dasharray: none; }
-.connection-line.weak { stroke: rgba(124,58,237,0.15); stroke-width: 0.5; }
-@keyframes dashFlow { to { stroke-dashoffset: -100; } }
-
-.planet-group { cursor: none; }
-.planet-orbit {
-  fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 1;
-  animation: orbitRotate 30s linear infinite;
-  transform-origin: center;
-}
-.planet-body {
-  transition: r 0.5s, filter 0.3s;
-  filter: drop-shadow(0 0 8px rgba(0,212,255,0.5));
-}
-.planet-group:hover .planet-body { filter: drop-shadow(0 0 20px rgba(0,212,255,0.9)); }
-.planet-label {
-  fill: rgba(232,237,245,0.8); font-family: 'DM Sans', sans-serif;
-  font-size: 11px; text-anchor: middle;
-  pointer-events: none; dominant-baseline: auto;
-}
-.planet-pulse {
-  fill: none; stroke: currentColor;
-  animation: planetPulse 2s ease-out infinite;
-  opacity: 0;
-}
-@keyframes planetPulse {
-  0% { r: 10px; opacity: 0.8; }
-  100% { r: 40px; opacity: 0; }
-}
-
-/* ─── RIGHT PANEL ─── */
-#insight-panel {
-  width: 300px; height: 100%;
-  background: rgba(6,12,24,0.95); backdrop-filter: blur(24px);
-  border-left: 1px solid var(--glass-border);
-  display: flex; flex-direction: column;
-  overflow: hidden; flex-shrink: 0;
-  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-#insight-panel.collapsed { width: 0; }
-
-.panel-section {
-  padding: 16px; border-bottom: 1px solid var(--glass-border);
-}
-.panel-section-title {
-  font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--text-ghost); margin-bottom: 12px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.panel-badge {
-  padding: 2px 8px; border-radius: 100px; font-size: 9px;
-  background: rgba(0,255,200,0.15); border: 1px solid rgba(0,255,200,0.3);
-  color: var(--aurora);
-}
-
-.insight-card {
-  padding: 12px; border-radius: 12px;
-  background: var(--glass-light); border: 1px solid var(--glass-border);
-  margin-bottom: 8px; transition: all 0.3s;
-}
-.insight-card:hover { border-color: rgba(0,255,200,0.3); background: rgba(0,255,200,0.04); }
-.insight-icon { font-size: 20px; margin-bottom: 6px; }
-.insight-title { font-size: 12px; font-weight: 600; color: var(--aurora); margin-bottom: 4px; }
-.insight-body { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-
-/* ─── AI INSIGHT BOX ─── */
-.ai-insight-box {
-  margin: 0 16px 12px;
-  padding: 14px; border-radius: 14px;
-  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(0,212,255,0.05));
-  border: 1px solid rgba(124,58,237,0.3);
-  position: relative; overflow: hidden;
-  display: none;
-}
-.ai-insight-box.show { display: block; }
-.ai-insight-box::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(to right, transparent, var(--violet), transparent);
-}
-.ai-insight-label {
-  font-family: 'Space Mono', monospace; font-size: 9px;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--violet); margin-bottom: 8px;
-  display: flex; align-items: center; gap: 6px;
-}
-.ai-insight-label::before { content: '⬡'; font-size: 12px; }
-.ai-insight-text { font-size: 13px; color: var(--text); line-height: 1.6; }
-.ai-insight-text strong { color: var(--aurora); font-weight: 500; }
-
-/* ─── FOCUS MODE ─── */
-#focus-overlay {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(2,4,10,0.97); backdrop-filter: blur(40px);
-  display: none; flex-direction: column; align-items: center; justify-content: center;
-  padding: 40px 24px;
-}
-#focus-overlay.active { display: flex; }
-.focus-label {
-  font-family: 'Space Mono', monospace; font-size: 11px;
-  letter-spacing: 0.3em; text-transform: uppercase;
-  color: var(--aurora); margin-bottom: 32px;
-  animation: focusPulse 3s ease-in-out infinite;
-}
-@keyframes focusPulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
-.focus-thought {
-  font-family: 'Syne', sans-serif; font-size: clamp(32px, 6vw, 64px);
-  font-weight: 700; text-align: center; line-height: 1.2;
-  max-width: 800px;
-  background: linear-gradient(135deg, #fff, var(--cyan));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  margin-bottom: 40px;
-}
-.focus-connections {
-  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
-  max-width: 700px;
-}
-.focus-connection-tag {
-  padding: 10px 20px; border-radius: 100px;
-  background: var(--glass-light); border: 1px solid var(--glass-border);
-  font-size: 14px; color: var(--text-dim);
-  animation: tagFloat 3s ease-in-out infinite;
-}
-.focus-connection-tag:nth-child(odd) { animation-delay: -1.5s; }
-@keyframes tagFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-.focus-exit {
-  position: fixed; top: 24px; right: 24px;
-  width: 40px; height: 40px; border-radius: 50%;
-  background: var(--glass-light); border: 1px solid var(--glass-border);
-  display: flex; align-items: center; justify-content: center;
-  cursor: none; color: var(--text-dim); font-size: 18px;
-  transition: all 0.3s;
-}
-.focus-exit:hover { border-color: var(--rose); color: var(--rose); }
-
-/* ─── TIMELINE ─── */
-#timeline-view {
-  position: fixed; inset: 0; z-index: 150;
-  background: rgba(2,4,10,0.98); backdrop-filter: blur(40px);
-  display: none; flex-direction: column;
-  padding: 80px 40px 40px;
-  overflow-y: auto;
-}
-#timeline-view.active { display: flex; }
-.timeline-title {
-  font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800;
-  margin-bottom: 48px;
-  background: linear-gradient(135deg, var(--cyan), var(--aurora));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.timeline-close {
-  position: fixed; top: 24px; right: 24px;
-  width: 40px; height: 40px; border-radius: 50%;
-  background: var(--glass-light); border: 1px solid var(--glass-border);
-  display: flex; align-items: center; justify-content: center;
-  cursor: none; color: var(--text-dim); font-size: 18px;
-  transition: all 0.3s;
-}
-.timeline-close:hover { border-color: var(--rose); color: var(--rose); }
-.timeline-track {
-  position: relative;
-  border-left: 2px solid rgba(255,255,255,0.08);
-  padding-left: 32px;
-  margin-left: 40px;
-}
-.timeline-item {
-  position: relative; margin-bottom: 40px;
-  animation: fadeUp 0.5s both;
-}
-.timeline-item::before {
-  content: ''; position: absolute; left: -39px; top: 8px;
-  width: 12px; height: 12px; border-radius: 50%;
-  background: var(--timeline-color, var(--cyan));
-  box-shadow: 0 0 15px var(--timeline-color, var(--cyan));
-  border: 2px solid var(--deep);
-}
-.timeline-item::after {
-  content: ''; position: absolute; left: -33px; top: 14px;
-  width: 33px; height: 1px;
-  background: linear-gradient(to right, var(--timeline-color, var(--cyan)), transparent);
-}
-.timeline-date {
-  font-family: 'Space Mono', monospace; font-size: 10px;
-  color: var(--text-ghost); margin-bottom: 6px; letter-spacing: 0.1em;
-}
-.timeline-content {
-  padding: 16px; border-radius: 14px;
-  background: var(--glass-light); border: 1px solid var(--glass-border);
-}
-.timeline-content-text { font-size: 14px; line-height: 1.6; color: var(--text); margin-bottom: 8px; }
-.timeline-cluster {
-  font-size: 11px; color: var(--text-ghost);
-  display: flex; align-items: center; gap: 6px;
-}
-.cluster-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--timeline-color, var(--cyan)); }
-
-/* ─── WHATIF PANEL ─── */
-#whatif-panel {
-  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-  z-index: 120; width: min(700px, calc(100vw - 48px));
-  background: rgba(6,12,24,0.95); backdrop-filter: blur(24px);
-  border: 1px solid rgba(124,58,237,0.4); border-radius: 20px;
-  padding: 20px; display: none;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.15);
-}
-#whatif-panel.show { display: block; animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-@keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
-.whatif-header {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
-}
-.whatif-title {
-  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
-  color: var(--violet);
-  display: flex; align-items: center; gap: 8px;
-}
-.whatif-close { color: var(--text-ghost); cursor: none; font-size: 18px; transition: color 0.2s; }
-.whatif-close:hover { color: var(--rose); }
-.whatif-scenarios { display: flex; gap: 10px; flex-wrap: wrap; }
-.scenario-card {
-  flex: 1; min-width: 160px; padding: 14px; border-radius: 12px;
-  background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2);
-  cursor: none; transition: all 0.3s;
-}
-.scenario-card:hover { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.5); transform: translateY(-3px); }
-.scenario-emoji { font-size: 24px; margin-bottom: 8px; }
-.scenario-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.scenario-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
-
-/* ─── NOTIFICATION TOAST ─── */
-#toast-container {
-  position: fixed; bottom: 100px; right: 24px; z-index: 300;
-  display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
-}
-.toast {
-  padding: 14px 18px; border-radius: 14px;
-  background: rgba(6,12,24,0.95); backdrop-filter: blur(20px);
-  border: 1px solid var(--toast-color, var(--cyan));
-  max-width: 300px;
-  animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  box-shadow: 0 0 20px rgba(0,0,0,0.3), 0 0 30px var(--toast-glow, rgba(0,212,255,0.1));
-}
-@keyframes toastIn { from { transform: translateX(30px); opacity: 0; } }
-.toast-label {
-  font-family: 'Space Mono', monospace; font-size: 9px;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--toast-color, var(--cyan)); margin-bottom: 6px;
-}
-.toast-text { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
-
-/* ─── EMPTY STATE ─── */
-.universe-empty {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; padding: 40px;
-  pointer-events: none;
-}
-.universe-empty-icon {
-  font-size: 64px; margin-bottom: 20px;
-  animation: float 4s ease-in-out infinite;
-}
-.universe-empty-title {
-  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;
-  color: var(--text-dim); margin-bottom: 8px;
-}
-.universe-empty-sub { font-size: 14px; color: var(--text-ghost); max-width: 300px; }
-
-/* ─── PROGRESS BAR ─── */
-.goal-progress-wrap { margin-top: 8px; }
-.goal-progress-bar {
-  height: 3px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden;
-}
-.goal-progress-fill {
-  height: 100%; border-radius: 100px;
-  background: linear-gradient(to right, var(--violet), var(--cyan));
-  transition: width 1s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: 0 0 10px rgba(0,212,255,0.5);
-}
-.goal-progress-label {
-  font-size: 11px; color: var(--text-ghost);
-  display: flex; justify-content: space-between; margin-top: 4px;
-  font-family: 'Space Mono', monospace;
-}
-
-/* ─── ANIMATIONS ─── */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes orbitRotate { to { transform: rotate(360deg); } }
-
-/* ─── TRANSITION ─── */
-#transition-overlay {
-  position: fixed; inset: 0; z-index: 9999;
-  background: var(--void); pointer-events: none;
-  opacity: 0;
-}
-#transition-overlay.active { animation: transitionFade 0.8s forwards; }
-@keyframes transitionFade {
-  0% { opacity: 0; }
-  50% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-/* ─── RESPONSIVE ─── */
-@media (max-width: 768px) {
-  #sidebar { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; height: 50vh; z-index: 50; border-right: none; border-top: 1px solid var(--glass-border); }
-  #insight-panel { display: none; }
-  #main-area { flex-direction: column; }
-  #universe-viewport { height: 50vh; }
-  .topbar-center { display: none; }
-}
-
-/* ─── MINI CONTEXT MENU ─── */
-#context-menu {
-  position: fixed; z-index: 500;
-  background: rgba(6,12,24,0.97); backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border); border-radius: 14px;
-  padding: 8px;
-  min-width: 180px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  display: none;
-}
-.ctx-item {
-  padding: 10px 14px; border-radius: 8px; cursor: none;
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; color: var(--text-dim);
-  transition: all 0.2s;
-}
-.ctx-item:hover { background: var(--glass-light); color: var(--text); }
-.ctx-item-icon { width: 16px; text-align: center; font-size: 14px; }
-
-/* Cluster group highlight */
-.cluster-highlight {
-  fill: none; stroke: rgba(0,212,255,0.1); stroke-width: 1;
-  rx: 20;
-}
-
-/* Loading ring */
-.loading-ring {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: var(--cyan);
-  border-right-color: var(--violet);
-  animation: spin 1.5s linear infinite;
-  display: none;
-}
-.loading-ring.show { display: block; }
-@keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
-
-/* Scroll bar thin */
-* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
+  @media (max-width: 860px){
+    .sidebar{ display:none; }
+    .toolrail{ width:52px; }
+  }
 </style>
 </head>
 <body>
+<div class="app">
 
-<!-- Cursor -->
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
-
-<!-- Background -->
-<div id="nebula"></div>
-<div id="stars"></div>
-<canvas id="universe-canvas"></canvas>
-
-<!-- Transition overlay -->
-<div id="transition-overlay"></div>
-
-<!-- ══════ LANDING ══════ -->
-<section id="landing">
-  <div class="landing-eyebrow">Tecnologia Cognitiva · 2025</div>
-  <h1 class="landing-title">
-    MINDMESH
-    <div class="shimmer-overlay"></div>
-  </h1>
-  <p class="landing-sub">
-    Seu pensamento tem padrões que você nunca percebeu.<br>
-    A IA vê tudo. Conecta tudo.<br>
-    <em>Transforma caos mental em clareza absoluta.</em>
-  </p>
-  <div class="landing-cta">
-    <button class="btn-primary" onclick="enterApp()">Entrar no Universo →</button>
-    <button class="btn-ghost" onclick="scrollToDemo()">Ver como funciona</button>
-  </div>
-  <div class="landing-stats">
-    <div class="stat"><div class="stat-num" data-count="847">0</div><div class="stat-label">Conexões detectadas</div></div>
-    <div class="stat"><div class="stat-num" data-count="12">0</div><div class="stat-label">Padrões ocultos</div></div>
-    <div class="stat"><div class="stat-num" data-count="94">0</div><div class="stat-label">% de precisão contextual</div></div>
-  </div>
-  <div class="scroll-hint">
-    <div class="scroll-hint-line"></div>
-    EXPLORAR
-  </div>
-</section>
-
-<!-- ══════ APP ══════ -->
-<div id="app">
-  <!-- Topbar -->
-  <div id="topbar">
-    <div class="logo">MIND<span>MESH</span></div>
-    <div class="topbar-center">
-      <button class="mode-btn active" onclick="setMode('universe')">🌌 Universo</button>
-      <button class="mode-btn" onclick="setMode('timeline')">⏳ Linha do Tempo</button>
-      <button class="mode-btn" onclick="setMode('focus')">🎯 Foco Profundo</button>
-      <button class="mode-btn" onclick="setMode('whatif')">🔮 E se?</button>
+  <div class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>Prancheta Tática</h1>
+        <span id="statusText">nenhum vídeo carregado</span>
+      </div>
     </div>
-    <div class="topbar-right">
-      <div class="icon-btn" title="Replay Mental" onclick="triggerReplay()">⏮</div>
-      <div class="icon-btn" title="Detectar Oportunidades" onclick="detectOpportunities()">💡</div>
-      <div class="icon-btn" title="Colapsar Painel" onclick="toggleSidebar()">◀</div>
-    </div>
+    <label class="btn primary" for="videoInput">⤴ Carregar vídeo</label>
+    <input type="file" id="videoInput" accept="video/*">
+    <span class="fname" id="fname"></span>
+    <div class="spacer"></div>
+    <button class="btn" id="undoBtn" title="Desfazer (Ctrl+Z)">↺ Desfazer</button>
+    <button class="btn" id="clearBtn">🗑 Limpar tudo</button>
+    <button class="btn" id="snapBtn" disabled>📷 Exportar frame</button>
+    <button class="btn primary" id="exportBtn" disabled>🎬 Exportar vídeo</button>
   </div>
 
-  <!-- Main -->
-  <div id="main-area">
-    <!-- Sidebar -->
-    <div id="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-title">✦ Central de Pensamentos</div>
+  <div class="main">
+
+    <div class="toolrail" id="toolrail"></div>
+
+    <div class="stage-wrap">
+      <div class="stage" id="stage">
+        <div class="empty-state" id="emptyState">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M6 6l4 3-1.5 4.7h-5L2 9.7 6 6zm12 0l-4 3 1.5 4.7h5l1.5-4.7L18 6z"/></svg>
+          <div class="disp">Carregue um vídeo do jogo</div>
+          <div>Depois use as ferramentas à esquerda para desenhar setas de movimento, linhas de marcação, zonas e rastrear jogadores.</div>
+        </div>
+        <div class="canvas-box" id="canvasBox" style="display:none;">
+          <canvas id="cv"></canvas>
+        </div>
+        <div class="rec-indicator" id="recIndicator"><span class="pulse"></span> Gravando exportação…</div>
+        <div class="hint-bar" id="hintBar"></div>
       </div>
 
-      <div class="input-zone">
-        <div class="thought-input-wrap">
-          <textarea id="thought-input" placeholder="Digite qualquer pensamento, sonho, objetivo, ideia... A IA conecta automaticamente." rows="3"></textarea>
-          <div class="input-actions">
-            <div class="input-meta" id="input-meta">○ IA aguardando</div>
-            <button class="send-btn" onclick="addThought()">ENVIAR →</button>
-          </div>
+      <div class="props-bar" id="propsBar">
+        <div class="props-group">
+          <label>Cor</label>
+          <div class="swatch sel" style="background:#E8B923" data-color="#E8B923"></div>
+          <div class="swatch" style="background:#D64545" data-color="#D64545"></div>
+          <div class="swatch" style="background:#3B7DD8" data-color="#3B7DD8"></div>
+          <div class="swatch" style="background:#F3F1EA" data-color="#F3F1EA"></div>
+          <div class="swatch" style="background:#3E8A4C" data-color="#3E8A4C"></div>
+          <input type="color" id="customColor" value="#E8B923" title="Cor personalizada">
+        </div>
+        <div class="props-group">
+          <label>Espessura</label>
+          <input type="range" id="widthRange" min="1" max="12" value="4">
+        </div>
+        <div class="props-group">
+          <label>Duração (s)</label>
+          <input type="number" class="num-input" id="durationInput" min="0.5" max="30" step="0.5" value="3">
+        </div>
+        <div class="props-group">
+          <label class="chk"><input type="checkbox" id="dashChk"> Tracejado</label>
+        </div>
+        <div class="props-group">
+          <label class="chk"><input type="checkbox" id="fillChk"> Preencher zona</label>
+        </div>
+        <div class="props-group">
+          <label class="chk"><input type="checkbox" id="glowChk" checked> Brilho</label>
+        </div>
+        <div class="spacer"></div>
+        <div class="props-group" id="trackControls" style="display:none;">
+          <button class="btn" id="trackAddBtn">+ Ponto no frame atual</button>
+          <button class="btn primary" id="trackDoneBtn">✓ Concluir rastreio</button>
         </div>
       </div>
 
-      <div class="ai-processing" id="ai-processing">
-        <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
-        <div class="ai-text" id="ai-text">Analisando contexto...</div>
-      </div>
-
-      <div class="ai-insight-box" id="ai-insight-box">
-        <div class="ai-insight-label">Inteligência Contextual</div>
-        <div class="ai-insight-text" id="ai-insight-text"></div>
-      </div>
-
-      <div id="nodes-list"></div>
-    </div>
-
-    <!-- Universe -->
-    <div id="universe-viewport">
-      <svg id="universe-svg"></svg>
-      <div class="loading-ring" id="loading-ring"></div>
-      <div class="universe-empty" id="universe-empty">
-        <div class="universe-empty-icon">🌌</div>
-        <div class="universe-empty-title">Seu universo mental está vazio</div>
-        <div class="universe-empty-sub">Digite seu primeiro pensamento e veja a magia acontecer</div>
-      </div>
-    </div>
-
-    <!-- Insight Panel -->
-    <div id="insight-panel">
-      <div class="panel-section">
-        <div class="panel-section-title">
-          Clusters Detectados
-          <span class="panel-badge" id="cluster-count">0</span>
+      <div class="timeline-bar">
+        <button class="icon-btn" id="stepBackBtn" title="Voltar 1 frame">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6v12l-8.5-6z"/></svg>
+        </button>
+        <button class="icon-btn" id="playBtn" title="Play/Pause">
+          <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="icon-btn" id="stepFwdBtn" title="Avançar 1 frame">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6v12l8.5-6z"/></svg>
+        </button>
+        <span class="tc" id="curTime">00:00.0</span>
+        <div class="timeline-track">
+          <input type="range" id="seek" min="0" max="1000" value="0" step="1">
+          <div class="markers" id="markers"></div>
         </div>
-        <div id="clusters-list"></div>
-      </div>
-      <div class="panel-section">
-        <div class="panel-section-title">
-          Previsão de Metas
-          <span class="panel-badge">IA</span>
-        </div>
-        <div id="goals-list"></div>
-      </div>
-      <div class="panel-section" style="flex:1;overflow-y:auto">
-        <div class="panel-section-title">Oportunidades Ocultas</div>
-        <div id="opportunities-list"></div>
+        <span class="tc" id="durTime">00:00.0</span>
+        <select id="speedSel">
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
       </div>
     </div>
+
+    <div class="sidebar">
+      <h2>Anotações táticas</h2>
+      <div class="ann-list" id="annList">
+        <div class="ann-empty">As setas, linhas, zonas e rastreios que você criar vão aparecer aqui. Clique em um item para pular direto para o momento dele.</div>
+      </div>
+      <div class="sidebar-footer">
+        <div style="font-size:11px; color:var(--chalk-dim); line-height:1.5;">
+          A exportação de vídeo grava tela + som no formato WebM, no navegador. Isso pode levar o tempo de duração do vídeo.
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
-
-<!-- Focus Overlay -->
-<div id="focus-overlay">
-  <div class="focus-label">● MODO FOCO PROFUNDO ATIVADO</div>
-  <div class="focus-thought" id="focus-thought">Selecione um pensamento para focar</div>
-  <div class="focus-connections" id="focus-connections"></div>
-  <div class="focus-exit" onclick="exitFocus()">✕</div>
-</div>
-
-<!-- Timeline View -->
-<div id="timeline-view">
-  <div class="timeline-title">Linha do Tempo da Sua Mente</div>
-  <div class="timeline-track" id="timeline-track"></div>
-  <div class="timeline-close" onclick="exitTimeline()">✕</div>
-</div>
-
-<!-- What If Panel -->
-<div id="whatif-panel">
-  <div class="whatif-header">
-    <div class="whatif-title">🔮 Simulador de Futuros Possíveis</div>
-    <div class="whatif-close" onclick="closeWhatif()">✕</div>
-  </div>
-  <div class="whatif-scenarios" id="whatif-scenarios"></div>
-</div>
-
-<!-- Context Menu -->
-<div id="context-menu">
-  <div class="ctx-item" onclick="ctxFocus()"><span class="ctx-item-icon">🎯</span> Modo Foco</div>
-  <div class="ctx-item" onclick="ctxConnect()"><span class="ctx-item-icon">🔗</span> Conectar</div>
-  <div class="ctx-item" onclick="ctxExpand()"><span class="ctx-item-icon">🌐</span> Expandir Cluster</div>
-  <div class="ctx-item" onclick="ctxWhatif()"><span class="ctx-item-icon">🔮</span> E se isso...?</div>
-  <div class="ctx-item" onclick="ctxDelete()"><span class="ctx-item-icon">🗑</span> Remover</div>
-</div>
-
-<!-- Toast Container -->
-<div id="toast-container"></div>
 
 <script>
-// ══════════════════════════════════════════════════════════
-//  MINDMESH — Core Engine
-// ══════════════════════════════════════════════════════════
+(function(){
+  "use strict";
 
-const STATE = {
-  nodes: [],
-  connections: [],
-  clusters: [],
-  selectedNode: null,
-  mode: 'universe',
-  universeW: 0,
-  universeH: 0,
-  animFrame: null,
-  replayMode: false,
-};
-
-const COLORS = {
-  idea:     '#00d4ff',
-  goal:     '#7c3aed',
-  dream:    '#ff4f8b',
-  plan:     '#00ffc8',
-  problem:  '#ffb347',
-  memory:   '#a78bfa',
-  insight:  '#34d399',
-};
-
-const TYPE_LABELS = {
-  idea: 'IDEIA', goal: 'OBJETIVO', dream: 'SONHO',
-  plan: 'PLANO', problem: 'DESAFIO', memory: 'MEMÓRIA', insight: 'INSIGHT',
-};
-
-const KEYWORDS = {
-  goal:    ['quero','preciso','vou','objetivo','meta','sonho','desejo','pretendo','planejo','almejo'],
-  dream:   ['sonho','imagino','seria incrível','gostaria','adoraria','um dia','futuro','onírico'],
-  plan:    ['plano','estratégia','como','etapa','passo','cronograma','implementar','executar','fazer'],
-  problem: ['problema','dificuldade','não consigo','estou travado','bloqueio','desafio','obstáculo','difícil'],
-  memory:  ['lembrei','me lembro','antes','antigamente','era uma vez','quando eu','memória','recordo'],
-  insight: ['percebi','entendi','aprendi','descobri','insight','revelação','aha','compreendi','conexão'],
-};
-
-// ─── AI ANALYSIS ENGINE ───────────────────────────────────
-function detectNodeType(text) {
-  const lower = text.toLowerCase();
-  for (const [type, words] of Object.entries(KEYWORDS)) {
-    if (words.some(w => lower.includes(w))) return type;
-  }
-  return 'idea';
-}
-
-function extractTags(text) {
-  const lower = text.toLowerCase();
-  const tags = [];
-  const domainMap = {
-    '💼 negócios': ['negócio','empresa','empreend','cafeteria','loja','serviço','produto','marca','startup','investimento'],
-    '📚 aprendizado': ['aprend','estudar','curso','livro','conhecimento','habilidade','marketing','gestão'],
-    '❤️ relações': ['pessoa','amigo','família','relacionamento','parceiro','equipe','sócio','rede'],
-    '💰 finanças': ['dinheiro','custo','investir','capital','renda','lucro','financeiro','preço'],
-    '🏠 espaço': ['local','lugar','espaço','endereço','imóvel','ponto','localização'],
-    '🧠 saúde mental': ['ansiedade','stress','foco','bem-estar','motivação','energia','criatividade'],
-    '🎯 metas': ['meta','objetivo','prazo','resultado','conquista','sucesso'],
+  // ---------- Tool definitions ----------
+  const ICONS = {
+    select: '<path d="M4 3l7 17 2.5-7L20 10z" fill="currentColor" stroke="none"/>',
+    line: '<circle cx="5" cy="19" r="1.8" fill="currentColor" stroke="none"/><line x1="5" y1="19" x2="19" y2="5"/><circle cx="19" cy="5" r="1.8" fill="currentColor" stroke="none"/>',
+    arrow: '<line x1="4" y1="20" x2="18" y2="6"/><path d="M9 6h9v9" />',
+    circle: '<circle cx="12" cy="12" r="8"/>',
+    rect: '<rect x="4" y="6" width="16" height="12" rx="1"/>',
+    pen: '<path d="M3 17c2-4 3-2 5-5s2-5 5-2 3 5 6 1" /><circle cx="19" cy="6" r="1.6" fill="currentColor" stroke="none"/>',
+    text: '<path d="M5 5h14M12 5v14" />',
+    track: '<circle cx="7" cy="17" r="2" fill="currentColor" stroke="none"/><circle cx="17" cy="7" r="2" fill="currentColor" stroke="none"/><path d="M8.5 15.5C11 12 13 10 15.5 8.5" stroke-dasharray="2 2"/>'
   };
-  for (const [tag, words] of Object.entries(domainMap)) {
-    if (words.some(w => lower.includes(w))) tags.push(tag);
+  const TOOLS = [
+    {id:'select', label:'Selecionar / mover'},
+    {id:'sep'},
+    {id:'line', label:'Linha (marcação, linha de impedimento)'},
+    {id:'arrow', label:'Seta (movimento / passe)'},
+    {id:'circle', label:'Círculo (destacar jogador)'},
+    {id:'rect', label:'Zona (área tática)'},
+    {id:'pen', label:'Caneta livre'},
+    {id:'text', label:'Texto'},
+    {id:'sep'},
+    {id:'track', label:'Rastreamento de jogador'},
+  ];
+
+  const rail = document.getElementById('toolrail');
+  TOOLS.forEach(t=>{
+    if(t.id==='sep'){ const s=document.createElement('div'); s.className='railsep'; rail.appendChild(s); return; }
+    const b=document.createElement('button');
+    b.className='tool'; b.dataset.tool=t.id;
+    b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[t.id]}</svg><span class="tip">${t.label}</span>`;
+    b.addEventListener('click', ()=>setTool(t.id));
+    rail.appendChild(b);
+  });
+
+  // ---------- State ----------
+  let video = null;
+  let canvas = document.getElementById('cv');
+  let ctx = canvas.getContext('2d');
+  let annotations = [];
+  let undoStack = [];
+  let currentTool = 'select';
+  let currentColor = '#E8B923';
+  let currentWidth = 4;
+  let selectedId = null;
+
+  // in-progress drawing state
+  let drawing = false;
+  let dragStart = null;
+  let penPoints = null;
+  let dragOffset = null;
+
+  // tracking mode state
+  let trackingAnn = null;
+
+  const els = {
+    fname: document.getElementById('fname'),
+    statusText: document.getElementById('statusText'),
+    emptyState: document.getElementById('emptyState'),
+    canvasBox: document.getElementById('canvasBox'),
+    stage: document.getElementById('stage'),
+    seek: document.getElementById('seek'),
+    curTime: document.getElementById('curTime'),
+    durTime: document.getElementById('durTime'),
+    playBtn: document.getElementById('playBtn'),
+    playIcon: document.getElementById('playIcon'),
+    speedSel: document.getElementById('speedSel'),
+    annList: document.getElementById('annList'),
+    markers: document.getElementById('markers'),
+    durationInput: document.getElementById('durationInput'),
+    widthRange: document.getElementById('widthRange'),
+    dashChk: document.getElementById('dashChk'),
+    fillChk: document.getElementById('fillChk'),
+    glowChk: document.getElementById('glowChk'),
+    customColor: document.getElementById('customColor'),
+    trackControls: document.getElementById('trackControls'),
+    trackAddBtn: document.getElementById('trackAddBtn'),
+    trackDoneBtn: document.getElementById('trackDoneBtn'),
+    snapBtn: document.getElementById('snapBtn'),
+    exportBtn: document.getElementById('exportBtn'),
+    recIndicator: document.getElementById('recIndicator'),
+    hintBar: document.getElementById('hintBar'),
+    undoBtn: document.getElementById('undoBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+  };
+
+  function hint(msg, ms){
+    els.hintBar.textContent = msg;
+    els.hintBar.classList.add('show');
+    clearTimeout(hint._t);
+    hint._t = setTimeout(()=>els.hintBar.classList.remove('show'), ms||2200);
   }
-  return tags.slice(0, 3);
-}
 
-function findConnections(newNode) {
-  const connections = [];
-  const lower = newNode.text.toLowerCase();
-  const newTags = new Set(newNode.tags);
-  const newType = newNode.type;
-
-  STATE.nodes.forEach(node => {
-    if (node.id === newNode.id) return;
-    let strength = 0;
-
-    // Tag overlap
-    const tagOverlap = node.tags.filter(t => newTags.has(t)).length;
-    strength += tagOverlap * 3;
-
-    // Type affinity
-    const typeAffinity = {
-      goal: ['plan','insight','problem'],
-      dream: ['goal','idea'],
-      plan: ['goal','insight'],
-      problem: ['insight','plan'],
+  // ---------- Tool selection ----------
+  function setTool(id){
+    currentTool = id;
+    document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('active', b.dataset.tool===id));
+    els.trackControls.style.display = id==='track' ? 'flex' : 'none';
+    canvas.style.cursor = id==='select' ? 'default' : 'crosshair';
+    const hints = {
+      select:'Clique numa forma para selecionar. Arraste para mover. Delete para apagar.',
+      line:'Clique e arraste para desenhar uma linha.',
+      arrow:'Clique na origem e arraste até o destino do movimento.',
+      circle:'Clique no centro do jogador e arraste para definir o raio.',
+      rect:'Arraste para marcar uma zona do campo.',
+      pen:'Segure e desenhe livremente.',
+      text:'Clique no ponto onde o texto deve aparecer.',
+      track:'Pause no momento certo, clique "+ Ponto", mova o vídeo um pouco e repita. Depois "Concluir".'
     };
-    if (typeAffinity[newType]?.includes(node.type)) strength += 2;
-    if (typeAffinity[node.type]?.includes(newType)) strength += 2;
+    if(hints[id]) hint(hints[id]);
+  }
+  setTool('select');
 
-    // Keyword overlap in text
-    const nodeWords = new Set(node.text.toLowerCase().split(/\s+/).filter(w => w.length > 4));
-    const newWords = lower.split(/\s+/).filter(w => w.length > 4);
-    const wordOverlap = newWords.filter(w => nodeWords.has(w)).length;
-    strength += wordOverlap * 2;
+  document.querySelectorAll('.swatch').forEach(s=>{
+    s.addEventListener('click', ()=>{
+      document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('sel'));
+      s.classList.add('sel');
+      currentColor = s.dataset.color;
+      els.customColor.value = currentColor;
+    });
+  });
+  els.customColor.addEventListener('input', e=>{
+    currentColor = e.target.value;
+    document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('sel'));
+  });
+  els.widthRange.addEventListener('input', e=> currentWidth = parseFloat(e.target.value));
 
-    // Recent temporal proximity (same cluster)
-    const timeDiff = Math.abs(newNode.timestamp - node.timestamp) / (1000*60*60*24);
-    if (timeDiff < 1) strength += 1;
+  // ---------- Video load ----------
+  document.getElementById('videoInput').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(video){ URL.revokeObjectURL(video.src); }
+    video = document.createElement('video');
+    video.src = URL.createObjectURL(file);
+    video.crossOrigin = 'anonymous';
+    video.playsInline = true;
+    video.muted = false;
+    els.fname.textContent = file.name;
+    els.statusText.textContent = 'carregando…';
 
-    if (strength >= 2) {
-      connections.push({ from: newNode.id, to: node.id, strength: Math.min(strength, 10) });
-    }
+    video.addEventListener('loadedmetadata', ()=>{
+      els.emptyState.style.display='none';
+      els.canvasBox.style.display='block';
+      const maxW = 1280;
+      const scale = Math.min(1, maxW/video.videoWidth);
+      canvas.width = Math.round(video.videoWidth*scale);
+      canvas.height = Math.round(video.videoHeight*scale);
+      els.seek.max = Math.round(video.duration*1000);
+      els.durTime.textContent = fmt(video.duration);
+      els.statusText.textContent = `${video.videoWidth}×${video.videoHeight} · ${fmt(video.duration)}`;
+      els.snapBtn.disabled = false;
+      els.exportBtn.disabled = false;
+      resizeCanvasCss();
+      annotations = []; undoStack=[]; renderAnnList(); renderMarkers();
+      requestAnimationFrame(loop);
+    });
+    video.addEventListener('timeupdate', ()=>{
+      if(!seeking) els.seek.value = Math.round(video.currentTime*1000);
+      els.curTime.textContent = fmt(video.currentTime);
+      updateSeekPct();
+    });
+    video.addEventListener('play', ()=> els.playIcon.innerHTML='<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>');
+    video.addEventListener('pause', ()=> els.playIcon.innerHTML='<path d="M8 5v14l11-7z"/>');
   });
 
-  return connections;
-}
-
-function generateCluster(nodes, connections) {
-  const clusters = [];
-  const visited = new Set();
-
-  const adj = {};
-  nodes.forEach(n => { adj[n.id] = []; });
-  connections.forEach(c => {
-    adj[c.from]?.push(c.to);
-    adj[c.to]?.push(c.from);
-  });
-
-  function bfs(startId) {
-    const group = [startId];
-    const queue = [startId];
-    visited.add(startId);
-    while (queue.length) {
-      const curr = queue.shift();
-      (adj[curr] || []).forEach(nb => {
-        if (!visited.has(nb)) { visited.add(nb); queue.push(nb); group.push(nb); }
-      });
-    }
-    return group;
+  window.addEventListener('resize', resizeCanvasCss);
+  function resizeCanvasCss(){
+    if(!video) return;
+    const wrap = els.stage;
+    const maxW = wrap.clientWidth - 24;
+    const maxH = wrap.clientHeight - 24;
+    const ratio = canvas.width/canvas.height;
+    let w = maxW, h = w/ratio;
+    if(h>maxH){ h=maxH; w=h*ratio; }
+    canvas.style.width = w+'px';
+    canvas.style.height = h+'px';
   }
 
-  nodes.forEach(n => {
-    if (!visited.has(n.id)) {
-      const group = bfs(n.id);
-      if (group.length >= 1) {
-        const types = group.map(id => nodes.find(n=>n.id===id)?.type);
-        const dominant = types.sort((a,b) => types.filter(t=>t===b).length - types.filter(t=>t===a).length)[0];
-        const tags = [...new Set(group.flatMap(id => nodes.find(n=>n.id===id)?.tags || []))];
-        clusters.push({
-          id: 'cluster_'+Date.now()+'_'+Math.random(),
-          nodeIds: group,
-          label: deriveClusterLabel(group, nodes, tags),
-          color: COLORS[dominant] || COLORS.idea,
-          tags,
-        });
+  function fmt(t){
+    if(isNaN(t)) return '00:00.0';
+    const m = Math.floor(t/60);
+    const s = (t%60).toFixed(1).padStart(4,'0');
+    return String(m).padStart(2,'0')+':'+s;
+  }
+
+  // ---------- Playback controls ----------
+  let seeking=false;
+  els.seek.addEventListener('input', ()=>{
+    seeking=true;
+    if(video){ video.currentTime = els.seek.value/1000; els.curTime.textContent=fmt(video.currentTime); updateSeekPct(); }
+  });
+  els.seek.addEventListener('change', ()=> seeking=false);
+  function updateSeekPct(){
+    const pct = video ? (video.currentTime/video.duration*100) : 0;
+    els.seek.style.setProperty('--pct', pct+'%');
+  }
+  els.playBtn.addEventListener('click', ()=>{
+    if(!video) return;
+    if(video.paused) video.play(); else video.pause();
+  });
+  els.speedSel.addEventListener('change', ()=>{ if(video) video.playbackRate = parseFloat(els.speedSel.value); });
+  const FRAME = 1/30;
+  document.getElementById('stepBackBtn').addEventListener('click', ()=>{ if(!video) return; video.pause(); video.currentTime=Math.max(0,video.currentTime-FRAME); });
+  document.getElementById('stepFwdBtn').addEventListener('click', ()=>{ if(!video) return; video.pause(); video.currentTime=Math.min(video.duration,video.currentTime+FRAME); });
+  document.addEventListener('keydown', e=>{
+    if(!video) return;
+    if(e.code==='Space' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); video.paused?video.play():video.pause(); }
+    if(e.code==='ArrowLeft'){ video.pause(); video.currentTime=Math.max(0,video.currentTime-FRAME); }
+    if(e.code==='ArrowRight'){ video.pause(); video.currentTime=Math.min(video.duration,video.currentTime+FRAME); }
+    if((e.ctrlKey||e.metaKey) && e.key==='z'){ undo(); }
+    if((e.key==='Delete'||e.key==='Backspace') && selectedId && document.activeElement.tagName!=='INPUT'){ deleteAnn(selectedId); }
+  });
+
+  // ---------- Annotation helpers ----------
+  function uid(){ return 'a'+Math.random().toString(36).slice(2,9); }
+  function pushHistory(){ undoStack.push(JSON.stringify(annotations)); if(undoStack.length>50) undoStack.shift(); }
+  function undo(){ if(undoStack.length){ annotations = JSON.parse(undoStack.pop()); renderAnnList(); renderMarkers(); } }
+  els.undoBtn.addEventListener('click', undo);
+  els.clearBtn.addEventListener('click', ()=>{
+    if(!annotations.length) return;
+    if(confirm('Remover todas as anotações?')){ pushHistory(); annotations=[]; renderAnnList(); renderMarkers(); }
+  });
+
+  function canvasPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.touches? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches? e.touches[0].clientY : e.clientY);
+    return { x:(cx-rect.left)/rect.width, y:(cy-rect.top)/rect.height };
+  }
+
+  function hitTest(p){
+    // iterate reverse (topmost first)
+    for(let i=annotations.length-1;i>=0;i--){
+      const a = annotations[i];
+      if(a.type==='circle'){
+        const d = Math.hypot((p.x-a.cx), (p.y-a.cy)*(canvas.height/canvas.width));
+        if(Math.abs(d - a.r) < 0.02 || d < a.r) return a;
+      } else if(a.type==='rect'){
+        if(p.x>=Math.min(a.x,a.x+a.w) && p.x<=Math.max(a.x,a.x+a.w) && p.y>=Math.min(a.y,a.y+a.h) && p.y<=Math.max(a.y,a.y+a.h)) return a;
+      } else if(a.type==='line' || a.type==='arrow'){
+        const d = pointToSeg(p, a.p1, a.p2);
+        if(d<0.02) return a;
+      } else if(a.type==='text'){
+        if(Math.hypot(p.x-a.x,p.y-a.y)<0.05) return a;
+      } else if(a.type==='pen'){
+        for(let j=0;j<a.points.length-1;j++){ if(pointToSeg(p,a.points[j],a.points[j+1])<0.02) return a; }
+      } else if(a.type==='track'){
+        const pos = trackPosAt(a, video?video.currentTime:0);
+        if(pos && Math.hypot(p.x-pos.x,p.y-pos.y)<0.04) return a;
+      }
+    }
+    return null;
+  }
+  function pointToSeg(p,a,b){
+    const A=p.x-a.x, B=p.y-a.y, C=b.x-a.x, D=b.y-a.y;
+    const dot=A*C+B*D, len=C*C+D*D;
+    let t = len? dot/len : 0; t=Math.max(0,Math.min(1,t));
+    const x=a.x+t*C, y=a.y+t*D;
+    return Math.hypot(p.x-x,p.y-y);
+  }
+
+  // ---------- Pointer events on canvas ----------
+  canvas.addEventListener('pointerdown', e=>{
+    if(!video) return;
+    const p = canvasPos(e);
+    if(currentTool==='select'){
+      const hit = hitTest(p);
+      selectedId = hit ? hit.id : null;
+      if(hit){
+        drawing=true;
+        dragOffset = getAnchor(hit, p);
+      }
+      renderAnnList();
+      return;
+    }
+    if(currentTool==='track'){
+      return; // track points added via button, not pointer
+    }
+    drawing = true;
+    dragStart = p;
+    if(currentTool==='pen') penPoints=[p];
+    if(currentTool==='text'){
+      drawing=false;
+      const txt = prompt('Texto da anotação:','');
+      if(txt){
+        pushHistory();
+        annotations.push(commonProps({id:uid(), type:'text', x:p.x, y:p.y, text:txt}));
+        renderAnnList(); renderMarkers();
       }
     }
   });
-  return clusters;
-}
-
-function deriveClusterLabel(groupIds, nodes, tags) {
-  const tagNames = tags.map(t => t.split(' ').slice(1).join(' ')).filter(Boolean);
-  if (tagNames.length >= 2) return tagNames.slice(0,2).join(' + ');
-  if (tagNames.length === 1) return tagNames[0];
-  const types = groupIds.map(id => nodes.find(n=>n.id===id)?.type);
-  if (types.includes('goal') && types.includes('plan')) return 'Projeto em formação';
-  if (types.includes('dream')) return 'Visão de futuro';
-  return 'Constelação de ideias';
-}
-
-function generateInsight(nodes, connections) {
-  if (nodes.length < 2) return null;
-  const latest = nodes[nodes.length-1];
-  const connected = connections.filter(c => c.from === latest.id || c.to === latest.id);
-
-  if (connected.length === 0) {
-    const templates = [
-      `Novo pensamento detectado. Aguardando padrão para criar conexões automáticas.`,
-      `Este pensamento está flutuando isolado no seu universo. À medida que você adicionar mais ideias, conexões emergirão.`,
-    ];
-    return templates[Math.floor(Math.random()*templates.length)];
-  }
-
-  const connectedNodes = connected.map(c => {
-    const otherId = c.from === latest.id ? c.to : c.from;
-    return nodes.find(n => n.id === otherId);
-  }).filter(Boolean);
-
-  const insights = [];
-
-  if (latest.type === 'goal' && connectedNodes.some(n=>n.type==='plan'))
-    insights.push(`<strong>Padrão detectado:</strong> Seu objetivo está ganhando estrutura — já existe um plano conectado a ele.`);
-  if (latest.type === 'problem' && connectedNodes.some(n=>n.type==='insight'))
-    insights.push(`<strong>Solução emergindo:</strong> Você já teve insights que podem resolver este desafio.`);
-  if (connectedNodes.length >= 3)
-    insights.push(`<strong>Cluster denso detectado:</strong> ${connectedNodes.length} pensamentos se atraem em torno desta ideia — isso indica um projeto inconsciente se formando.`);
-
-  const tags = [...new Set(latest.tags.concat(...connectedNodes.map(n=>n.tags)))];
-  if (tags.includes('💼 negócios') && tags.includes('💰 finanças'))
-    insights.push(`<strong>Oportunidade detectada:</strong> Ideias de negócios e finanças estão convergindo — momento de criar um plano de viabilidade.`);
-  if (tags.includes('📚 aprendizado') && tags.includes('💼 negócios'))
-    insights.push(`<strong>Lacuna de habilidade:</strong> Você percebeu que precisa aprender algo para avançar no negócio.`);
-
-  if (insights.length === 0)
-    insights.push(`<strong>${connectedNodes.length} conexão${connectedNodes.length>1?'ões':''} criada${connectedNodes.length>1?'s':''}.</strong> Seu universo mental está expandindo.`);
-
-  return insights[Math.floor(Math.random()*insights.length)];
-}
-
-function generateOpportunity(nodes) {
-  const ops = [];
-  const types = nodes.map(n => n.type);
-  const tags = [...new Set(nodes.flatMap(n => n.tags))];
-
-  if (types.filter(t=>t==='goal').length >= 2 && !types.includes('plan'))
-    ops.push({ icon:'⚡', title:'Plano de Ação Ausente', body:'Você tem múltiplos objetivos mas nenhum plano conectado. Adicione uma estratégia.' });
-  if (tags.includes('💼 negócios') && !tags.includes('💰 finanças'))
-    ops.push({ icon:'💰', title:'Falta dimensão financeira', body:'Suas ideias de negócio não têm análise financeira. Isso pode ser um ponto cego.' });
-  if (types.filter(t=>t==='dream').length >= 1 && types.filter(t=>t==='plan').length === 0)
-    ops.push({ icon:'🌉', title:'Sonhos sem pontes', body:'Você tem visões claras mas faltam etapas concretas conectando sonho à realidade.' });
-  if (nodes.length >= 5 && STATE.connections.filter(c=>c.strength>=7).length === 0)
-    ops.push({ icon:'🔮', title:'Conexões fracas detectadas', body:'Muitas ideias soltas. Tente encontrar o fio condutor entre elas.' });
-
-  if (ops.length === 0 && nodes.length > 0)
-    ops.push({ icon:'✨', title:'Universo em crescimento', body:'Continue adicionando pensamentos. A IA está aprendendo seus padrões.' });
-
-  return ops;
-}
-
-// ─── POSITION ENGINE ──────────────────────────────────────
-function calculatePosition(index, total, existingNodes) {
-  const vp = document.getElementById('universe-viewport');
-  const W = vp.clientWidth;
-  const H = vp.clientHeight;
-  const cx = W / 2, cy = H / 2;
-
-  if (total === 1) return { x: cx, y: cy };
-
-  // Physics-based positioning: repel existing nodes
-  let bestX = cx + (Math.random()-0.5)*300;
-  let bestY = cy + (Math.random()-0.5)*200;
-  let bestScore = -Infinity;
-
-  for (let attempt = 0; attempt < 50; attempt++) {
-    const angle = (Math.random() * Math.PI * 2);
-    const radius = 120 + Math.random() * Math.min(W,H) * 0.35;
-    const x = cx + Math.cos(angle) * radius;
-    const y = cy + Math.sin(angle) * radius;
-
-    if (x < 60 || x > W-60 || y < 60 || y > H-60) continue;
-
-    let minDist = Infinity;
-    existingNodes.forEach(n => {
-      const d = Math.hypot(n.x-x, n.y-y);
-      if (d < minDist) minDist = d;
-    });
-
-    const score = minDist;
-    if (score > bestScore) { bestScore = score; bestX = x; bestY = y; }
-  }
-
-  return { x: bestX, y: bestY };
-}
-
-// ─── ADD THOUGHT ─────────────────────────────────────────
-async function addThought() {
-  const input = document.getElementById('thought-input');
-  const text = input.value.trim();
-  if (!text) return;
-
-  input.value = '';
-  document.getElementById('input-meta').textContent = '◉ Processando...';
-
-  // Show AI processing
-  const proc = document.getElementById('ai-processing');
-  const aiText = document.getElementById('ai-text');
-  proc.classList.add('show');
-
-  const steps = ['Analisando semântica...', 'Detectando padrões...', 'Criando conexões...', 'Atualizando universo...'];
-  let step = 0;
-  const stepInt = setInterval(() => {
-    aiText.textContent = steps[step++ % steps.length];
-  }, 400);
-
-  await delay(1600);
-  clearInterval(stepInt);
-  proc.classList.remove('show');
-
-  // Create node
-  const type = detectNodeType(text);
-  const tags = extractTags(text);
-  const pos = calculatePosition(STATE.nodes.length, STATE.nodes.length+1, STATE.nodes);
-
-  const node = {
-    id: 'n_' + Date.now(),
-    text, type, tags,
-    x: pos.x, y: pos.y,
-    radius: 16 + Math.min(text.length / 8, 14),
-    timestamp: Date.now(),
-    color: COLORS[type],
-    velocity: { x: (Math.random()-0.5)*0.5, y: (Math.random()-0.5)*0.5 },
-    pulsePhase: Math.random()*Math.PI*2,
-  };
-
-  STATE.nodes.push(node);
-
-  // Find connections
-  const newConns = findConnections(node);
-  STATE.connections.push(...newConns);
-
-  // Recompute clusters
-  STATE.clusters = generateCluster(STATE.nodes, STATE.connections);
-
-  // Render
-  renderNodeCard(node);
-  renderUniverse();
-  updateInsightPanel();
-
-  // AI insight
-  const insight = generateInsight(STATE.nodes, STATE.connections);
-  if (insight) {
-    const box = document.getElementById('ai-insight-box');
-    document.getElementById('ai-insight-text').innerHTML = insight;
-    box.classList.add('show');
-    setTimeout(() => box.classList.remove('show'), 6000);
-  }
-
-  document.getElementById('input-meta').textContent = '○ IA aguardando';
-
-  // Toast for connections
-  if (newConns.length > 0) {
-    showToast('🔗 Conexão Detectada', `${newConns.length} ligação${newConns.length>1?'ões':''} automática${newConns.length>1?'s':''} criada${newConns.length>1?'s':''}!`, COLORS.plan, 'rgba(0,255,200,0.15)');
-  }
-
-  // Hide empty state
-  document.getElementById('universe-empty').style.display = 'none';
-
-  // Special patterns
-  if (STATE.nodes.length === 5) {
-    setTimeout(() => showToast('✨ Padrão Emergente', 'Sua mente está criando um ecossistema. A IA detectou 1 cluster primário.', COLORS.insight, 'rgba(52,211,153,0.15)'), 1000);
-  }
-}
-
-// ─── RENDER NODE CARD ─────────────────────────────────────
-function renderNodeCard(node) {
-  const list = document.getElementById('nodes-list');
-  const card = document.createElement('div');
-  card.className = 'node-card';
-  card.id = 'card_'+node.id;
-  card.style.setProperty('--node-color', node.color);
-  card.onclick = () => selectNode(node.id);
-
-  const timeStr = new Date(node.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-  const tagsHTML = node.tags.map(t=>`<span class="tag">${t}</span>`).join('');
-
-  card.innerHTML = `
-    <div class="node-type"><div class="node-type-dot"></div>${TYPE_LABELS[node.type]}</div>
-    <div class="node-text">${node.text}</div>
-    ${tagsHTML ? `<div class="node-tags">${tagsHTML}</div>` : ''}
-    <div class="node-time">⏱ ${timeStr}</div>
-  `;
-
-  card.style.animation = 'fadeUp 0.4s both';
-  list.prepend(card);
-}
-
-// ─── RENDER UNIVERSE SVG ─────────────────────────────────
-function renderUniverse() {
-  const svg = document.getElementById('universe-svg');
-  const vp = document.getElementById('universe-viewport');
-  const W = vp.clientWidth, H = vp.clientHeight;
-
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-  // Clear
-  while (svg.firstChild) svg.removeChild(svg.firstChild);
-
-  if (STATE.nodes.length === 0) return;
-
-  // Defs for glows
-  const defs = svgEl('defs');
-  STATE.nodes.forEach(n => {
-    const filter = svgEl('filter', {id:`glow_${n.id}`, x:'-50%', y:'-50%', width:'200%', height:'200%'});
-    const blur = svgEl('feGaussianBlur', {stdDeviation:'4', result:'coloredBlur'});
-    const merge = svgEl('feMerge');
-    const m1 = svgEl('feMergeNode', {in:'coloredBlur'});
-    const m2 = svgEl('feMergeNode', {in:'SourceGraphic'});
-    merge.appendChild(m1); merge.appendChild(m2);
-    filter.appendChild(blur); filter.appendChild(merge);
-    defs.appendChild(filter);
+  canvas.addEventListener('pointermove', e=>{
+    if(!drawing || !video) return;
+    const p = canvasPos(e);
+    if(currentTool==='select' && selectedId){
+      moveAnn(selectedId, p);
+      return;
+    }
+    if(currentTool==='pen'){ penPoints.push(p); return; }
+    dragPreview = p;
   });
-  svg.appendChild(defs);
+  window.addEventListener('pointerup', e=>{
+    if(!drawing || !video){ drawing=false; return; }
+    drawing=false;
+    if(currentTool==='select'){ dragOffset=null; return; }
+    const p = dragPreview || dragStart;
+    commitShape(dragStart, p);
+    dragStart=null; dragPreview=null; penPoints=null;
+  });
+  let dragPreview=null;
 
-  // Draw cluster halos
-  STATE.clusters.forEach(cluster => {
-    if (cluster.nodeIds.length < 2) return;
-    const clusterNodes = cluster.nodeIds.map(id=>STATE.nodes.find(n=>n.id===id)).filter(Boolean);
-    if (clusterNodes.length < 2) return;
-    const cx = clusterNodes.reduce((s,n)=>s+n.x,0)/clusterNodes.length;
-    const cy = clusterNodes.reduce((s,n)=>s+n.y,0)/clusterNodes.length;
-    const maxDist = Math.max(...clusterNodes.map(n=>Math.hypot(n.x-cx,n.y-cy))) + 40;
-    const halo = svgEl('ellipse', {
-      cx, cy, rx: maxDist, ry: maxDist * 0.7,
-      fill: 'none', stroke: cluster.color,
-      'stroke-opacity': '0.06',
-      'stroke-width': '1',
-      'stroke-dasharray': '8 12',
-    });
-    svg.appendChild(halo);
+  function getAnchor(a,p){ return {x:p.x,y:p.y}; }
+  function moveAnn(id,p){
+    const a = annotations.find(x=>x.id===id); if(!a) return;
+    if(!moveAnn._last) moveAnn._last=p;
+    const dx = p.x-moveAnn._last.x, dy = p.y-moveAnn._last.y;
+    if(a.type==='circle'){ a.cx+=dx; a.cy+=dy; }
+    else if(a.type==='rect'){ a.x+=dx; a.y+=dy; }
+    else if(a.type==='text'){ a.x+=dx; a.y+=dy; }
+    else if(a.type==='line'||a.type==='arrow'){ a.p1.x+=dx;a.p1.y+=dy;a.p2.x+=dx;a.p2.y+=dy; }
+    else if(a.type==='pen'){ a.points.forEach(pt=>{pt.x+=dx;pt.y+=dy;}); }
+    moveAnn._last=p;
+  }
+  window.addEventListener('pointerup', ()=> moveAnn._last=null);
+
+  function commonProps(a){
+    a.color = currentColor;
+    a.width = currentWidth;
+    a.dash = els.dashChk.checked;
+    a.fill = els.fillChk.checked;
+    a.glow = els.glowChk.checked;
+    if(a.type!=='track'){
+      const dur = parseFloat(els.durationInput.value)||3;
+      a.start = video.currentTime;
+      a.end = Math.min(video.duration, video.currentTime+dur);
+    }
+    return a;
+  }
+
+  function commitShape(p1,p2){
+    if(!p1||!p2) return;
+    if(Math.hypot(p2.x-p1.x,p2.y-p1.y)<0.005 && currentTool!=='pen') return;
+    pushHistory();
+    let a;
+    if(currentTool==='line') a = commonProps({id:uid(), type:'line', p1:{...p1}, p2:{...p2}});
+    else if(currentTool==='arrow') a = commonProps({id:uid(), type:'arrow', p1:{...p1}, p2:{...p2}});
+    else if(currentTool==='circle') a = commonProps({id:uid(), type:'circle', cx:p1.x, cy:p1.y, r:Math.hypot(p2.x-p1.x,(p2.y-p1.y)*(canvas.height/canvas.width))});
+    else if(currentTool==='rect') a = commonProps({id:uid(), type:'rect', x:p1.x, y:p1.y, w:p2.x-p1.x, h:p2.y-p1.y});
+    else if(currentTool==='pen') a = commonProps({id:uid(), type:'pen', points: penPoints.map(pt=>({...pt}))});
+    if(a){ annotations.push(a); renderAnnList(); renderMarkers(); }
+  }
+
+  // ---------- Tracking (keyframes) ----------
+  els.trackAddBtn.addEventListener('click', ()=>{
+    if(!video) return;
+    hint('Clique no vídeo para marcar a posição do jogador neste instante.',3000);
+    canvas.addEventListener('pointerdown', trackClickOnce, {once:true});
+  });
+  function trackClickOnce(e){
+    const p = canvasPos(e);
+    if(!trackingAnn){
+      pushHistory();
+      trackingAnn = commonProps({id:uid(), type:'track', keyframes:[]});
+      annotations.push(trackingAnn);
+    }
+    trackingAnn.keyframes.push({t:video.currentTime, x:p.x, y:p.y});
+    trackingAnn.keyframes.sort((a,b)=>a.t-b.t);
+    renderMarkers();
+    hint(`Ponto adicionado em ${fmt(video.currentTime)}. Avance o vídeo e adicione outro, ou conclua.`,2600);
+  }
+  els.trackDoneBtn.addEventListener('click', ()=>{
+    if(trackingAnn && trackingAnn.keyframes.length<2){
+      annotations = annotations.filter(a=>a!==trackingAnn);
+      hint('Rastreio precisa de ao menos 2 pontos. Cancelado.');
+    } else if(trackingAnn){
+      hint('Rastreio concluído.');
+      renderAnnList();
+    }
+    trackingAnn = null;
   });
 
-  // Draw connections
-  STATE.connections.forEach(conn => {
-    const from = STATE.nodes.find(n=>n.id===conn.from);
-    const to = STATE.nodes.find(n=>n.id===conn.to);
-    if (!from || !to) return;
+  function trackPosAt(a, t){
+    const kf = a.keyframes;
+    if(!kf.length) return null;
+    if(t<=kf[0].t) return kf.length>1 && t<kf[0].t ? null : kf[0];
+    if(t>=kf[kf.length-1].t) return null;
+    for(let i=0;i<kf.length-1;i++){
+      if(t>=kf[i].t && t<=kf[i+1].t){
+        const span = kf[i+1].t-kf[i].t;
+        const f = span? (t-kf[i].t)/span : 0;
+        return { x: kf[i].x+(kf[i+1].x-kf[i].x)*f, y: kf[i].y+(kf[i+1].y-kf[i].y)*f };
+      }
+    }
+    return null;
+  }
 
-    const strength = conn.strength;
-    const mid = {
-      x: (from.x + to.x) / 2 + (Math.random()-0.5)*40,
-      y: (from.y + to.y) / 2 + (Math.random()-0.5)*40,
+  // ---------- Delete ----------
+  function deleteAnn(id){
+    pushHistory();
+    annotations = annotations.filter(a=>a.id!==id);
+    if(selectedId===id) selectedId=null;
+    renderAnnList(); renderMarkers();
+  }
+
+  // ---------- Sidebar list ----------
+  const TYPE_LABEL = {line:'Linha', arrow:'Seta', circle:'Círculo', rect:'Zona', pen:'Caneta', text:'Texto', track:'Rastreio'};
+  function renderAnnList(){
+    els.annList.innerHTML='';
+    if(!annotations.length){
+      els.annList.innerHTML = '<div class="ann-empty">As setas, linhas, zonas e rastreios que você criar vão aparecer aqui. Clique em um item para pular direto para o momento dele.</div>';
+      return;
+    }
+    annotations.forEach(a=>{
+      const div = document.createElement('div');
+      div.className='ann-item';
+      const start = a.type==='track' ? (a.keyframes[0]?.t||0) : a.start;
+      const end = a.type==='track' ? (a.keyframes[a.keyframes.length-1]?.t||0) : a.end;
+      div.innerHTML = `
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="${a.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[a.type]}</svg>
+        <div class="meta">
+          <div class="t1">${TYPE_LABEL[a.type]}${a.type==='text' ? ': '+a.text.slice(0,16):''}</div>
+          <div class="t2">${fmt(start)} → ${fmt(end)}</div>
+        </div>
+        <div class="del" data-id="${a.id}">✕</div>
+      `;
+      div.addEventListener('click', ev=>{
+        if(ev.target.closest('.del')){ deleteAnn(a.id); return; }
+        video.currentTime = start;
+      });
+      els.annList.appendChild(div);
+    });
+  }
+
+  function renderMarkers(){
+    els.markers.innerHTML='';
+    if(!video || !video.duration) return;
+    annotations.forEach(a=>{
+      const start = a.type==='track' ? (a.keyframes[0]?.t||0) : a.start;
+      const pct = (start/video.duration*100);
+      const m = document.createElement('div');
+      m.className='marker';
+      m.style.left = pct+'%';
+      m.style.background = a.color;
+      els.markers.appendChild(m);
+    });
+  }
+
+  // ---------- Render loop ----------
+  function loop(){
+    if(video && canvas.width){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      try{ ctx.drawImage(video,0,0,canvas.width,canvas.height); }catch(e){}
+      const t = video.currentTime;
+      annotations.forEach(a=> drawAnn(a,t));
+      if(drawing && dragStart && dragPreview && currentTool!=='select' && currentTool!=='pen'){
+        drawPreviewShape(dragStart, dragPreview);
+      }
+      if(drawing && currentTool==='pen' && penPoints && penPoints.length>1){
+        strokePath(penPoints, currentColor, currentWidth, els.dashChk.checked, els.glowChk.checked);
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function fadeAlpha(a,t){
+    const fade=0.35;
+    if(t < a.start+fade) return Math.max(0,(t-a.start)/fade);
+    if(t > a.end-fade) return Math.max(0,(a.end-t)/fade);
+    return 1;
+  }
+
+  function setStroke(color,width,dash,glow){
+    ctx.strokeStyle=color; ctx.lineWidth=width*(canvas.width/640);
+    ctx.setLineDash(dash?[width*3,width*2]:[]);
+    ctx.shadowBlur = glow? 12:0; ctx.shadowColor=color;
+    ctx.lineCap='round'; ctx.lineJoin='round';
+  }
+  function toXY(p){ return {x:p.x*canvas.width, y:p.y*canvas.height}; }
+
+  function drawAnn(a,t){
+    if(a.type==='track'){
+      const pos = trackPosAt(a,t);
+      const kf = a.keyframes;
+      if(!kf.length) return;
+      // trail
+      ctx.save();
+      setStroke(a.color, Math.max(1.5,a.width*0.5), true, a.glow);
+      ctx.globalAlpha=0.7;
+      ctx.beginPath();
+      let started=false;
+      kf.forEach(k=>{
+        if(k.t<=t){ const xy=toXY(k); if(!started){ctx.moveTo(xy.x,xy.y); started=true;} else ctx.lineTo(xy.x,xy.y); }
+      });
+      if(pos){ const xy=toXY(pos); if(started) ctx.lineTo(xy.x,xy.y); }
+      ctx.stroke();
+      ctx.restore();
+      if(pos){
+        const xy = toXY(pos);
+        ctx.save();
+        ctx.shadowBlur = a.glow?16:0; ctx.shadowColor=a.color;
+        ctx.fillStyle = a.color;
+        ctx.beginPath(); ctx.arc(xy.x,xy.y, Math.max(6,a.width*1.6), 0, Math.PI*2); ctx.fill();
+        ctx.lineWidth=2; ctx.strokeStyle='#00000080'; ctx.stroke();
+        ctx.restore();
+      }
+      return;
+    }
+    if(t<a.start || t>a.end) return;
+    const alpha = fadeAlpha(a,t);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if(a.type==='line'){
+      setStroke(a.color,a.width,a.dash,a.glow);
+      const p1=toXY(a.p1), p2=toXY(a.p2);
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    } else if(a.type==='arrow'){
+      setStroke(a.color,a.width,a.dash,a.glow);
+      drawArrow(toXY(a.p1),toXY(a.p2));
+    } else if(a.type==='circle'){
+      setStroke(a.color,a.width,a.dash,a.glow);
+      const cx=a.cx*canvas.width, cy=a.cy*canvas.height, r=a.r*canvas.width;
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+      if(a.fill){ ctx.globalAlpha=alpha*0.25; ctx.fillStyle=a.color; ctx.fill(); ctx.globalAlpha=alpha; }
+      ctx.stroke();
+    } else if(a.type==='rect'){
+      setStroke(a.color,a.width,a.dash,a.glow);
+      const x=a.x*canvas.width, y=a.y*canvas.height, w=a.w*canvas.width, h=a.h*canvas.height;
+      if(a.fill){ ctx.globalAlpha=alpha*0.22; ctx.fillStyle=a.color; ctx.fillRect(x,y,w,h); ctx.globalAlpha=alpha; }
+      ctx.strokeRect(x,y,w,h);
+    } else if(a.type==='pen'){
+      strokePath(a.points, a.color, a.width, a.dash, a.glow);
+    } else if(a.type==='text'){
+      const xy = toXY(a);
+      ctx.shadowBlur = a.glow?10:0; ctx.shadowColor=a.color;
+      ctx.fillStyle=a.color;
+      ctx.font = `700 ${Math.max(16,a.width*6)}px Oswald, sans-serif`;
+      ctx.textBaseline='middle';
+      ctx.fillText(a.text, xy.x, xy.y);
+    }
+    ctx.restore();
+  }
+
+  function strokePath(points,color,width,dash,glow){
+    ctx.save();
+    setStroke(color,width,dash,glow);
+    ctx.beginPath();
+    points.forEach((p,i)=>{ const xy=toXY(p); i===0?ctx.moveTo(xy.x,xy.y):ctx.lineTo(xy.x,xy.y); });
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawArrow(p1,p2){
+    const headlen = Math.max(14, currentWidthScale());
+    const angle = Math.atan2(p2.y-p1.y,p2.x-p1.x);
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    ctx.save();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(p2.x,p2.y);
+    ctx.lineTo(p2.x-headlen*Math.cos(angle-Math.PI/7), p2.y-headlen*Math.sin(angle-Math.PI/7));
+    ctx.lineTo(p2.x-headlen*Math.cos(angle+Math.PI/7), p2.y-headlen*Math.sin(angle+Math.PI/7));
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.fill();
+    ctx.restore();
+  }
+  function currentWidthScale(){ return (ctx.lineWidth||4)*3.2; }
+
+  function drawPreviewShape(p1,p2){
+    ctx.save();
+    ctx.globalAlpha=0.85;
+    setStroke(currentColor,currentWidth,els.dashChk.checked,els.glowChk.checked);
+    const P1=toXY(p1), P2=toXY(p2);
+    if(currentTool==='line'){ ctx.beginPath(); ctx.moveTo(P1.x,P1.y); ctx.lineTo(P2.x,P2.y); ctx.stroke(); }
+    else if(currentTool==='arrow'){ drawArrow(P1,P2); }
+    else if(currentTool==='circle'){ const r=Math.hypot(P2.x-P1.x,P2.y-P1.y); ctx.beginPath(); ctx.arc(P1.x,P1.y,r,0,Math.PI*2); ctx.stroke(); }
+    else if(currentTool==='rect'){ ctx.strokeRect(Math.min(P1.x,P2.x),Math.min(P1.y,P2.y),Math.abs(P2.x-P1.x),Math.abs(P2.y-P1.y)); }
+    ctx.restore();
+  }
+
+  // ---------- Export frame ----------
+  els.snapBtn.addEventListener('click', ()=>{
+    canvas.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download = 'analise-tatica-frame.png'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }, 'image/png');
+  });
+
+  // ---------- Export video ----------
+  els.exportBtn.addEventListener('click', async ()=>{
+    if(!video) return;
+    if(!canvas.captureStream){
+      alert('Seu navegador não suporta exportação de vídeo (captureStream). Tente Chrome ou Edge atualizados.');
+      return;
+    }
+    const wasTime = video.currentTime;
+    const wasRate = video.playbackRate;
+    video.playbackRate = 1;
+    video.pause();
+    video.currentTime = 0;
+
+    const canvasStream = canvas.captureStream(30);
+    let audioTracks = [];
+    try{ audioTracks = video.captureStream ? video.captureStream().getAudioTracks() : []; }catch(e){}
+    const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+
+    let recorder;
+    try{
+      recorder = new MediaRecorder(combined, {mimeType:'video/webm;codecs=vp9,opus'});
+    }catch(e){
+      recorder = new MediaRecorder(combined);
+    }
+    const chunks=[];
+    recorder.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data); };
+    recorder.onstop = ()=>{
+      els.recIndicator.style.display='none';
+      els.exportBtn.disabled=false;
+      const blob = new Blob(chunks, {type:'video/webm'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download='analise-tatica.webm'; a.click();
+      video.playbackRate = wasRate;
+      hint('Vídeo exportado com sucesso.');
     };
 
-    const line = svgEl('path', {
-      d: `M${from.x},${from.y} Q${mid.x},${mid.y} ${to.x},${to.y}`,
-      fill: 'none',
-      stroke: strength >= 7 ? 'rgba(0,212,255,0.5)' : strength >= 4 ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.1)',
-      'stroke-width': strength >= 7 ? 1.5 : 1,
-      'stroke-dasharray': strength >= 7 ? 'none' : '4 8',
-    });
-    svg.appendChild(line);
+    els.recIndicator.style.display='flex';
+    els.exportBtn.disabled=true;
+    hint('Gravando exportação — aguarde o vídeo terminar…', 4000);
 
-    // Animated particle along connection
-    if (strength >= 5) {
-      const particle = svgEl('circle', { r: 2, fill: from.color, opacity: 0.8 });
-      const animEl = svgEl('animateMotion', {
-        dur: `${4 + Math.random()*3}s`,
-        repeatCount: 'indefinite',
-        path: `M${from.x},${from.y} Q${mid.x},${mid.y} ${to.x},${to.y}`,
-      });
-      particle.appendChild(animEl);
-      svg.appendChild(particle);
-    }
+    recorder.start();
+    await video.play();
+    video.onended = ()=>{ recorder.stop(); video.onended=null; };
   });
 
-  // Draw nodes (planets)
-  STATE.nodes.forEach(node => {
-    const g = svgEl('g', { class: 'planet-group', id: 'planet_'+node.id });
-    g.setAttribute('transform', `translate(0,0)`);
-
-    // Orbit ring (decorative)
-    if (STATE.connections.filter(c=>c.from===node.id||c.to===node.id).length >= 2) {
-      const orbit = svgEl('ellipse', {
-        cx: node.x, cy: node.y,
-        rx: node.radius + 14, ry: (node.radius + 14) * 0.5,
-        fill: 'none', stroke: 'rgba(255,255,255,0.06)', 'stroke-width': 0.5,
-      });
-      const animEl = svgEl('animateTransform', {
-        attributeName: 'transform', type: 'rotate',
-        values: `0 ${node.x} ${node.y};360 ${node.x} ${node.y}`,
-        dur: `${20 + Math.random()*20}s`, repeatCount: 'indefinite',
-      });
-      orbit.appendChild(animEl);
-      svg.appendChild(orbit);
-    }
-
-    // Pulse ring
-    const pulse = svgEl('circle', {
-      cx: node.x, cy: node.y, r: node.radius,
-      fill: 'none', stroke: node.color, 'stroke-width': 1, opacity: 0,
-    });
-    const pAnim = svgEl('animate', {
-      attributeName: 'r',
-      values: `${node.radius};${node.radius+30}`,
-      dur: `${2+Math.random()}s`, repeatCount: 'indefinite',
-    });
-    const pAnim2 = svgEl('animate', {
-      attributeName: 'opacity',
-      values: '0.6;0', dur: `${2+Math.random()}s`, repeatCount: 'indefinite',
-    });
-    pulse.appendChild(pAnim); pulse.appendChild(pAnim2);
-    g.appendChild(pulse);
-
-    // Main planet body
-    const circle = svgEl('circle', {
-      cx: node.x, cy: node.y, r: node.radius,
-      fill: node.id === STATE.selectedNode ? node.color : 'transparent',
-      stroke: node.color, 'stroke-width': node.id === STATE.selectedNode ? 0 : 1.5,
-      filter: `url(#glow_${node.id})`,
-      style: `cursor:pointer`,
-    });
-
-    // Inner gradient circle
-    const inner = svgEl('circle', {
-      cx: node.x, cy: node.y, r: node.radius * 0.6,
-      fill: node.color, opacity: '0.25',
-    });
-
-    // Type icon
-    const icons = { idea:'💡', goal:'🎯', dream:'✨', plan:'📋', problem:'⚡', memory:'💭', insight:'🔮' };
-    const text = svgEl('text', {
-      x: node.x, y: node.y + 4,
-      'text-anchor': 'middle', 'dominant-baseline': 'middle',
-      style: 'font-size:14px; pointer-events:none;',
-    });
-    text.textContent = icons[node.type];
-
-    // Label
-    const label = svgEl('text', {
-      x: node.x, y: node.y + node.radius + 16,
-      fill: 'rgba(232,237,245,0.7)',
-      style: 'font-family: DM Sans, sans-serif; font-size: 11px; pointer-events:none;',
-      'text-anchor': 'middle',
-    });
-    const words = node.text.split(' ');
-    label.textContent = words.slice(0,4).join(' ') + (words.length>4?'...':'');
-
-    g.appendChild(inner);
-    g.appendChild(circle);
-    g.appendChild(text);
-    g.appendChild(label);
-
-    // Interaction
-    circle.addEventListener('click', (e) => { e.stopPropagation(); selectNode(node.id); });
-    circle.addEventListener('contextmenu', (e) => { e.preventDefault(); showContextMenu(e, node.id); });
-
-    svg.appendChild(g);
-  });
-
-  // Animate floating
-  startFloatAnimation();
-}
-
-function svgEl(tag, attrs={}) {
-  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, v));
-  return el;
-}
-
-// ─── FLOAT ANIMATION ─────────────────────────────────────
-let floatAnimId = null;
-function startFloatAnimation() {
-  if (floatAnimId) cancelAnimationFrame(floatAnimId);
-
-  function animate(t) {
-    STATE.nodes.forEach(node => {
-      const svg = document.getElementById('universe-svg');
-      const g = svg?.querySelector('#planet_' + node.id);
-      if (!g) return;
-
-      const dx = Math.sin((t * 0.001 + node.pulsePhase) * 0.5) * 3;
-      const dy = Math.cos((t * 0.001 + node.pulsePhase) * 0.7) * 2;
-
-      const circles = g.querySelectorAll('circle');
-      const texts = g.querySelectorAll('text');
-
-      circles.forEach(c => {
-        const cx = parseFloat(c.getAttribute('cx'));
-        const cy = parseFloat(c.getAttribute('cy'));
-        if (!c._origX) { c._origX = cx; c._origY = cy; }
-        c.setAttribute('cx', c._origX + dx);
-        c.setAttribute('cy', c._origY + dy);
-      });
-      texts.forEach(tx => {
-        const x = parseFloat(tx.getAttribute('x'));
-        const y = parseFloat(tx.getAttribute('y'));
-        if (!tx._origX) { tx._origX = x; tx._origY = y; }
-        tx.setAttribute('x', tx._origX + dx);
-        tx.setAttribute('y', tx._origY + dy);
-      });
-    });
-
-    floatAnimId = requestAnimationFrame(animate);
-  }
-
-  floatAnimId = requestAnimationFrame(animate);
-}
-
-// ─── SELECT NODE ─────────────────────────────────────────
-function selectNode(id) {
-  const prev = STATE.selectedNode;
-  STATE.selectedNode = id;
-
-  if (prev) {
-    const prevCard = document.getElementById('card_'+prev);
-    prevCard?.classList.remove('active');
-  }
-
-  const card = document.getElementById('card_'+id);
-  card?.classList.add('active');
-  card?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  renderUniverse();
-
-  const node = STATE.nodes.find(n=>n.id===id);
-  if (node) {
-    showToast(TYPE_LABELS[node.type], node.text.slice(0,80)+(node.text.length>80?'...':''), node.color, `${node.color}22`);
-  }
-}
-
-// ─── UPDATE INSIGHT PANEL ────────────────────────────────
-function updateInsightPanel() {
-  // Clusters
-  const clusterList = document.getElementById('clusters-list');
-  const clusterCount = document.getElementById('cluster-count');
-  clusterList.innerHTML = '';
-  clusterCount.textContent = STATE.clusters.length;
-
-  STATE.clusters.forEach(cluster => {
-    const card = document.createElement('div');
-    card.className = 'insight-card';
-    card.innerHTML = `
-      <div class="insight-title" style="color:${cluster.color}">${cluster.label}</div>
-      <div class="insight-body">${cluster.nodeIds.length} pensamento${cluster.nodeIds.length>1?'s':''} conectado${cluster.nodeIds.length>1?'s':''}</div>
-      <div class="node-tags">${cluster.tags.slice(0,2).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-    `;
-    clusterList.appendChild(card);
-  });
-
-  // Goals progress
-  const goalsList = document.getElementById('goals-list');
-  goalsList.innerHTML = '';
-  const goals = STATE.nodes.filter(n=>n.type==='goal');
-  goals.forEach(goal => {
-    const conns = STATE.connections.filter(c=>c.from===goal.id||c.to===goal.id);
-    const progress = Math.min(conns.length * 15 + (STATE.nodes.filter(n=>n.id!==goal.id && n.tags.some(t=>goal.tags.includes(t))).length * 10), 100);
-    const card = document.createElement('div');
-    card.className = 'insight-card';
-    card.innerHTML = `
-      <div class="insight-title" style="color:${COLORS.goal}">🎯 ${goal.text.slice(0,40)+(goal.text.length>40?'...':'')}</div>
-      <div class="goal-progress-wrap">
-        <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${progress}%"></div></div>
-        <div class="goal-progress-label"><span>progresso</span><span>${progress}%</span></div>
-      </div>
-    `;
-    goalsList.appendChild(card);
-  });
-  if (goals.length===0) goalsList.innerHTML = '<div style="font-size:12px;color:var(--text-ghost);padding:8px">Nenhum objetivo detectado ainda.</div>';
-
-  // Opportunities
-  const opsList = document.getElementById('opportunities-list');
-  opsList.innerHTML = '';
-  const ops = generateOpportunity(STATE.nodes);
-  ops.forEach(op => {
-    const card = document.createElement('div');
-    card.className = 'insight-card';
-    card.innerHTML = `
-      <div class="insight-icon">${op.icon}</div>
-      <div class="insight-title">${op.title}</div>
-      <div class="insight-body">${op.body}</div>
-    `;
-    opsList.appendChild(card);
-  });
-}
-
-// ─── MODES ───────────────────────────────────────────────
-function setMode(mode) {
-  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-  event?.target?.classList.add('active');
-
-  STATE.mode = mode;
-
-  if (mode === 'universe') { /* default */ }
-  else if (mode === 'timeline') { showTimeline(); }
-  else if (mode === 'focus') { showFocus(); }
-  else if (mode === 'whatif') { showWhatif(); }
-}
-
-function showFocus() {
-  const overlay = document.getElementById('focus-overlay');
-  overlay.classList.add('active');
-
-  const node = STATE.nodes.find(n=>n.id===STATE.selectedNode) || STATE.nodes[STATE.nodes.length-1];
-  if (!node) return;
-
-  document.getElementById('focus-thought').textContent = node.text;
-
-  const conns = STATE.connections.filter(c=>c.from===node.id||c.to===node.id);
-  const connNodes = conns.map(c=>{
-    const otherId = c.from===node.id?c.to:c.from;
-    return STATE.nodes.find(n=>n.id===otherId);
-  }).filter(Boolean);
-
-  const focusConns = document.getElementById('focus-connections');
-  focusConns.innerHTML = '';
-  [...node.tags, ...connNodes.map(n=>n.text.split(' ').slice(0,3).join(' ')+'...')].slice(0,8).forEach(label => {
-    const tag = document.createElement('div');
-    tag.className = 'focus-connection-tag';
-    tag.textContent = label;
-    focusConns.appendChild(tag);
-  });
-}
-function exitFocus() {
-  document.getElementById('focus-overlay').classList.remove('active');
-  document.querySelectorAll('.mode-btn')[0].classList.add('active');
-}
-
-function showTimeline() {
-  const view = document.getElementById('timeline-view');
-  view.classList.add('active');
-
-  const track = document.getElementById('timeline-track');
-  track.innerHTML = '';
-
-  const sorted = [...STATE.nodes].sort((a,b)=>a.timestamp-b.timestamp);
-  sorted.forEach((node, i) => {
-    const item = document.createElement('div');
-    item.className = 'timeline-item';
-    item.style.setProperty('--timeline-color', node.color);
-    item.style.animationDelay = `${i*0.1}s`;
-
-    const date = new Date(node.timestamp).toLocaleString('pt-BR', {
-      day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'
-    });
-
-    const cluster = STATE.clusters.find(c=>c.nodeIds.includes(node.id));
-
-    item.innerHTML = `
-      <div class="timeline-date">${date}</div>
-      <div class="timeline-content">
-        <div class="node-type" style="--node-color:${node.color}; margin-bottom:8px">
-          <div class="node-type-dot"></div>${TYPE_LABELS[node.type]}
-        </div>
-        <div class="timeline-content-text">${node.text}</div>
-        ${cluster ? `<div class="timeline-cluster"><div class="cluster-dot"></div>Cluster: ${cluster.label}</div>` : ''}
-      </div>
-    `;
-    track.appendChild(item);
-  });
-}
-function exitTimeline() {
-  document.getElementById('timeline-view').classList.remove('active');
-  document.querySelectorAll('.mode-btn')[0].classList.add('active');
-}
-
-function showWhatif() {
-  if (STATE.nodes.length === 0) {
-    showToast('💡 Dica', 'Adicione alguns pensamentos primeiro para simular futuros!', COLORS.idea, COLORS.idea+'22');
-    document.querySelectorAll('.mode-btn')[0].classList.add('active');
-    return;
-  }
-
-  const panel = document.getElementById('whatif-panel');
-  panel.classList.add('show');
-
-  const scenarios = generateScenarios();
-  const container = document.getElementById('whatif-scenarios');
-  container.innerHTML = '';
-
-  scenarios.forEach(s => {
-    const card = document.createElement('div');
-    card.className = 'scenario-card';
-    card.innerHTML = `
-      <div class="scenario-emoji">${s.emoji}</div>
-      <div class="scenario-title">${s.title}</div>
-      <div class="scenario-desc">${s.desc}</div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function generateScenarios() {
-  const tags = [...new Set(STATE.nodes.flatMap(n=>n.tags))];
-  const types = STATE.nodes.map(n=>n.type);
-
-  const base = [
-    { emoji:'🚀', title:'Executar Agora', desc:'Você age hoje. Em 30 dias, qual seria o primeiro resultado visível baseado no seu padrão atual?' },
-    { emoji:'⏸️', title:'Procrastinar 6 Meses', desc:'Se você esperar 6 meses, quais oportunidades do seu universo mental expirarão?' },
-    { emoji:'🤝', title:'Buscar um Parceiro', desc:'Você encontra alguém com as habilidades que faltam. Como seus clusters mudariam?' },
-  ];
-
-  if (tags.includes('💼 negócios'))
-    base.push({ emoji:'🏪', title:'Abrir o Negócio', desc:'Você executa o plano de negócios. Em 1 ano, seu universo mental seria dominado por qual cluster?' });
-  if (types.includes('dream'))
-    base.push({ emoji:'🌟', title:'Perseguir o Sonho', desc:'Você abandona a zona de conforto. Quais dos seus pensamentos atuais seriam seus maiores aliados?' });
-
-  return base.slice(0,4);
-}
-
-function closeWhatif() {
-  document.getElementById('whatif-panel').classList.remove('show');
-  document.querySelectorAll('.mode-btn')[0].classList.add('active');
-}
-
-// ─── CONTEXT MENU ────────────────────────────────────────
-let ctxNodeId = null;
-function showContextMenu(e, nodeId) {
-  ctxNodeId = nodeId;
-  const menu = document.getElementById('context-menu');
-  menu.style.display = 'block';
-  menu.style.left = `${Math.min(e.clientX, window.innerWidth-200)}px`;
-  menu.style.top = `${Math.min(e.clientY, window.innerHeight-200)}px`;
-}
-function hideContextMenu() { document.getElementById('context-menu').style.display = 'none'; }
-function ctxFocus() { hideContextMenu(); STATE.selectedNode=ctxNodeId; showFocus(); }
-function ctxConnect() { hideContextMenu(); showToast('🔗 Modo Conexão', 'Clique em outro pensamento para criar uma conexão manual.', COLORS.plan, COLORS.plan+'22'); }
-function ctxExpand() { hideContextMenu(); const cluster=STATE.clusters.find(c=>c.nodeIds.includes(ctxNodeId)); if(cluster) showToast('🌐 Cluster', `Cluster: "${cluster.label}" com ${cluster.nodeIds.length} pensamentos.`, cluster.color, cluster.color+'22'); }
-function ctxWhatif() { hideContextMenu(); STATE.selectedNode=ctxNodeId; showWhatif(); }
-function ctxDelete() {
-  hideContextMenu();
-  STATE.nodes = STATE.nodes.filter(n=>n.id!==ctxNodeId);
-  STATE.connections = STATE.connections.filter(c=>c.from!==ctxNodeId&&c.to!==ctxNodeId);
-  STATE.clusters = generateCluster(STATE.nodes, STATE.connections);
-  const card = document.getElementById('card_'+ctxNodeId);
-  if(card) card.remove();
-  renderUniverse();
-  updateInsightPanel();
-  if(STATE.nodes.length===0) document.getElementById('universe-empty').style.display='flex';
-}
-document.addEventListener('click', hideContextMenu);
-
-// ─── REPLAY ──────────────────────────────────────────────
-async function triggerReplay() {
-  if (STATE.nodes.length === 0) { showToast('⏮ Replay', 'Adicione pensamentos para ver o replay da sua mente.', COLORS.idea, COLORS.idea+'22'); return; }
-  showToast('⏮ Replay Mental', 'Revivendo a evolução do seu universo mental...', COLORS.violet, COLORS.violet+'22');
-
-  const originalNodes = [...STATE.nodes];
-  const originalConns = [...STATE.connections];
-  STATE.nodes = [];
-  STATE.connections = [];
-  renderUniverse();
-
-  for (let i=0; i<originalNodes.length; i++) {
-    await delay(600);
-    STATE.nodes.push(originalNodes[i]);
-    STATE.connections = originalConns.filter(c =>
-      STATE.nodes.find(n=>n.id===c.from) && STATE.nodes.find(n=>n.id===c.to)
-    );
-    renderUniverse();
-  }
-}
-
-// ─── DETECT OPPORTUNITIES ────────────────────────────────
-function detectOpportunities() {
-  const ops = generateOpportunity(STATE.nodes);
-  const op = ops[Math.floor(Math.random()*ops.length)];
-  if (op) showToast(`${op.icon} ${op.title}`, op.body, COLORS.insight, COLORS.insight+'22');
-  updateInsightPanel();
-}
-
-// ─── TOAST ───────────────────────────────────────────────
-function showToast(label, text, color=COLORS.cyan, glow='rgba(0,212,255,0.15)') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.style.setProperty('--toast-color', color);
-  toast.style.setProperty('--toast-glow', glow);
-  toast.innerHTML = `<div class="toast-label">${label}</div><div class="toast-text">${text}</div>`;
-  container.appendChild(toast);
-  setTimeout(() => { toast.style.transition='opacity 0.5s,transform 0.5s'; toast.style.opacity='0'; toast.style.transform='translateX(30px)'; setTimeout(()=>toast.remove(), 500); }, 4000);
-}
-
-// ─── MISC UI ─────────────────────────────────────────────
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('collapsed');
-}
-
-// ─── ENTER APP ───────────────────────────────────────────
-function enterApp() {
-  const overlay = document.getElementById('transition-overlay');
-  overlay.classList.add('active');
-
-  setTimeout(() => {
-    document.getElementById('landing').style.display = 'none';
-    const app = document.getElementById('app');
-    app.style.display = 'flex';
-    app.style.animation = 'fadeIn 0.8s';
-    overlay.classList.remove('active');
-
-    // Demo hint
-    setTimeout(() => {
-      showToast('✦ MINDMESH ativo', 'Diga algo para sua mente. Tente: "Quero abrir uma cafeteria"', COLORS.aurora, COLORS.aurora+'22');
-    }, 800);
-
-    // Pre-populate demo
-    setTimeout(() => addDemoData(), 1500);
-  }, 400);
-}
-
-async function addDemoData() {
-  const demos = [
-    'Quero abrir uma cafeteria no centro da cidade',
-    'Vi um ponto comercial com aluguel barato perto da universidade',
-    'Preciso aprender sobre marketing digital para o negócio',
-  ];
-
-  // Don't auto-add, just hint
-}
-
-function scrollToDemo() {
-  showToast('💡 Como funciona', 'O MINDMESH usa IA para conectar automaticamente seus pensamentos, detectar padrões e revelar oportunidades ocultas.', COLORS.violet, COLORS.violet+'22');
-}
-
-// ─── STARS ───────────────────────────────────────────────
-function createStars() {
-  const container = document.getElementById('stars');
-  for (let i=0; i<200; i++) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    const size = Math.random()*2+0.5;
-    star.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${Math.random()*100}%;
-      top:${Math.random()*100}%;
-      background:rgba(255,255,255,${0.3+Math.random()*0.7});
-      --d:${2+Math.random()*4}s;
-      animation-delay:${Math.random()*4}s;
-    `;
-    container.appendChild(star);
-  }
-}
-
-// ─── CANVAS PARTICLES ────────────────────────────────────
-function initCanvas() {
-  const canvas = document.getElementById('universe-canvas');
-  const ctx = canvas.getContext('2d');
-  const particles = [];
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  for (let i=0; i<60; i++) {
-    particles.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      vx: (Math.random()-0.5)*0.3,
-      vy: (Math.random()-0.5)*0.3,
-      size: Math.random()*1.5+0.3,
-      alpha: Math.random()*0.4+0.1,
-      color: Math.random()>0.5?'0,212,255':'124,58,237',
-    });
-  }
-
-  function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x<0) p.x=canvas.width; if (p.x>canvas.width) p.x=0;
-      if (p.y<0) p.y=canvas.height; if (p.y>canvas.height) p.y=0;
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${p.color},${p.alpha})`;
-      ctx.fill();
-    });
-
-    // Connect nearby particles
-    particles.forEach((p1,i) => {
-      particles.slice(i+1).forEach(p2 => {
-        const d = Math.hypot(p1.x-p2.x,p1.y-p2.y);
-        if (d<120) {
-          ctx.beginPath();
-          ctx.moveTo(p1.x,p1.y);
-          ctx.lineTo(p2.x,p2.y);
-          ctx.strokeStyle=`rgba(0,212,255,${(1-d/120)*0.05})`;
-          ctx.stroke();
-        }
-      });
-    });
-
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
-
-// ─── CURSOR ──────────────────────────────────────────────
-function initCursor() {
-  const cursor = document.getElementById('cursor');
-  const ring = document.getElementById('cursor-ring');
-  let mx=0, my=0, rx=0, ry=0;
-
-  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
-
-  function animate() {
-    cursor.style.left = `${mx}px`; cursor.style.top = `${my}px`;
-    rx += (mx-rx)*0.12; ry += (my-ry)*0.12;
-    ring.style.left = `${rx}px`; ring.style.top = `${ry}px`;
-    requestAnimationFrame(animate);
-  }
-  animate();
-}
-
-// ─── STATS COUNTER ───────────────────────────────────────
-function animateStats() {
-  document.querySelectorAll('[data-count]').forEach(el => {
-    const target = parseInt(el.dataset.count);
-    let current = 0;
-    const step = target / 60;
-    const interval = setInterval(() => {
-      current = Math.min(current+step, target);
-      el.textContent = Math.floor(current) + (el.textContent.includes('%')? '%' : '');
-      if (current >= target) clearInterval(interval);
-    }, 16);
-  });
-}
-
-// ─── KEYBOARD ────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey && document.activeElement.id === 'thought-input') {
-    e.preventDefault();
-    addThought();
-  }
-  if (e.key === 'Escape') { exitFocus(); exitTimeline(); closeWhatif(); }
-});
-
-// ─── RESIZE ──────────────────────────────────────────────
-window.addEventListener('resize', () => { if(STATE.nodes.length>0) renderUniverse(); });
-
-// ─── INPUT LIVE HINTS ────────────────────────────────────
-document.getElementById('thought-input').addEventListener('input', function() {
-  const text = this.value;
-  if (text.length > 10) {
-    const type = detectNodeType(text);
-    const tags = extractTags(text);
-    document.getElementById('input-meta').textContent = `◉ ${TYPE_LABELS[type]} detectado`;
-  } else {
-    document.getElementById('input-meta').textContent = '○ IA aguardando';
-  }
-});
-
-// ─── UTILITIES ───────────────────────────────────────────
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ─── INIT ────────────────────────────────────────────────
-createStars();
-initCanvas();
-initCursor();
-setTimeout(animateStats, 500);
+})();
 </script>
 </body>
 </html>
