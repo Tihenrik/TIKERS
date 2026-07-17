@@ -3,951 +3,1020 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prancheta Tática</title>
+<title>Prancheta Tática Pro — Editor de Lances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
-
   :root{
-    --bg: #0A0F0C;
-    --panel: #131A16;
-    --panel-2: #1A2320;
-    --line: #263229;
-    --pitch: #2F6B3A;
-    --pitch-light: #3E8A4C;
-    --chalk: #F3F1EA;
-    --chalk-dim: #8C948C;
-    --whistle: #E8B923;
-    --team-a: #D64545;
-    --team-b: #3B7DD8;
-    --danger: #E5484D;
-    --radius: 8px;
-    --mono: 'JetBrains Mono', monospace;
-    --disp: 'Oswald', sans-serif;
-    --body: 'Inter', sans-serif;
+    --bg:#0a0e13;
+    --panel:#121920;
+    --panel-2:#161f27;
+    --panel-3:#1b2530;
+    --border:#232e38;
+    --green:#2fae66;
+    --gold:#f2b134;
+    --red:#e2493d;
+    --blue:#3d8ff2;
+    --text:#eef3f6;
+    --muted:#8a97a3;
+    --font-display:'Barlow Condensed', sans-serif;
+    --font-body:'Inter', sans-serif;
   }
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; height:100%; background:var(--bg); color:var(--chalk); font-family:var(--body); overflow:hidden; }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  button{font-family:inherit;}
+  ::selection{background:rgba(242,177,52,0.35);}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
 
-  .app{ display:flex; flex-direction:column; height:100vh; }
-
-  /* TOP BAR */
+  /* ---------- topbar ---------- */
   .topbar{
-    display:flex; align-items:center; gap:16px;
-    padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line);
-    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 20px;
+    background:linear-gradient(180deg,#141c24,#101720);
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
   }
-  .brand{ display:flex; align-items:center; gap:10px; margin-right:8px; }
-  .brand .dot{ width:12px; height:12px; border-radius:50%; background:var(--whistle); box-shadow:0 0 8px var(--whistle); }
-  .brand h1{ font-family:var(--disp); font-size:18px; letter-spacing:.5px; text-transform:uppercase; margin:0; font-weight:600; }
-  .brand span{ color:var(--chalk-dim); font-size:11px; font-family:var(--mono); }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.5rem;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    color:var(--text);
+  }
+  .brand-mark span{color:var(--gold);}
+  .pro-badge{
+    background:var(--gold);
+    color:#1a1200;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.08em;
+    padding:2px 8px;
+    border-radius:3px;
+  }
+  .scorebug{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--font-display);
+    font-size:0.72rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--muted);
+    border-left:1px solid var(--border);
+    padding-left:14px;
+    margin-left:4px;
+  }
+  .rec-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--red);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+  @media (prefers-reduced-motion: reduce){ .rec-dot{animation:none;} }
 
+  .actions{display:flex;gap:8px;flex-wrap:wrap;}
   .btn{
-    display:inline-flex; align-items:center; gap:6px;
-    background:var(--panel-2); color:var(--chalk); border:1px solid var(--line);
-    padding:8px 12px; border-radius:var(--radius); cursor:pointer; font-size:13px; font-weight:500;
-    font-family:var(--body); transition:.15s;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:9px 14px;
+    border-radius:8px;
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:border-color .15s, background .15s, transform .1s;
   }
-  .btn:hover{ border-color:var(--pitch-light); background:#20291F; }
-  .btn:active{ transform:scale(.97); }
-  .btn.primary{ background:var(--pitch); border-color:var(--pitch); color:#fff; }
-  .btn.primary:hover{ background:var(--pitch-light); }
-  .btn.rec{ background:var(--danger); border-color:var(--danger); }
-  .btn:disabled{ opacity:.4; cursor:not-allowed; }
-  input[type=file]{ display:none; }
+  .btn:hover{border-color:var(--gold);}
+  .btn:active{transform:translateY(1px);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn:disabled:hover{border-color:var(--border);}
+  .btn-primary{background:var(--gold);color:#1a1200;border-color:var(--gold);}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-danger{background:var(--red);color:#fff;border-color:var(--red);}
+  .btn-ghost{background:transparent;}
 
-  .topbar .fname{ font-family:var(--mono); font-size:12px; color:var(--chalk-dim); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .spacer{ flex:1; }
-
-  /* MAIN LAYOUT */
-  .main{ flex:1; display:flex; min-height:0; }
-
-  /* TOOL RAIL */
-  .toolrail{
-    width:64px; background:var(--panel); border-right:1px solid var(--line);
-    display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:6px; flex-shrink:0;
+  /* ---------- workspace ---------- */
+  .workspace{
+    flex:1;
+    display:flex;
+    min-height:0;
+  }
+  .tools-dock{
+    width:92px;
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:16px 8px;
+    gap:6px;
     overflow-y:auto;
   }
-  .tool{
-    width:44px; height:44px; border-radius:var(--radius); border:1px solid transparent;
-    background:transparent; color:var(--chalk-dim); display:flex; align-items:center; justify-content:center;
-    cursor:pointer; position:relative;
+  .tool-btn{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:10px;
+    padding:9px 4px;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .15s;
   }
-  .tool svg{ width:20px; height:20px; }
-  .tool:hover{ background:var(--panel-2); color:var(--chalk); }
-  .tool.active{ background:var(--pitch); color:#fff; border-color:var(--pitch-light); }
-  .tool .tip{
-    position:absolute; left:52px; top:50%; transform:translateY(-50%);
-    background:#000; color:#fff; font-size:11px; padding:4px 8px; border-radius:4px;
-    white-space:nowrap; opacity:0; pointer-events:none; transition:.1s; z-index:20;
+  .tool-btn svg{width:22px;height:22px;stroke:currentColor;}
+  .tool-btn span{
+    font-family:var(--font-display);
+    font-size:0.62rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    text-align:center;
+    line-height:1.1;
   }
-  .tool:hover .tip{ opacity:1; }
-  .railsep{ width:32px; height:1px; background:var(--line); margin:4px 0; }
+  .tool-btn:hover{color:var(--text);background:var(--panel-2);}
+  .tool-btn.active{color:var(--gold);background:rgba(242,177,52,0.12);border-color:rgba(242,177,52,0.4);}
 
-  /* STAGE */
-  .stage-wrap{ flex:1; display:flex; flex-direction:column; min-width:0; background:#000; position:relative; }
-  .stage{
-    flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+  .canvas-stage{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    overflow:auto;
     background:
-      repeating-linear-gradient(0deg, #060907 0 2px, #05070600 2px 40px),
-      repeating-linear-gradient(90deg, #060907 0 2px, #05070600 2px 40px);
+      radial-gradient(ellipse at center, rgba(47,174,102,0.05), transparent 60%),
+      var(--bg);
   }
-  .canvas-box{ position:relative; }
-  canvas{ display:block; max-width:100%; max-height:100%; background:#111; cursor:crosshair; }
+  .canvas-frame{
+    position:relative;
+    max-width:100%;
+    background:#000;
+    border:1px solid var(--border);
+    border-radius:4px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);
+    transition:border-color .15s, background .15s;
+  }
+  .canvas-frame.dragover{border-color:var(--gold);background:rgba(242,177,52,0.05);}
+  .canvas-frame.tool-select #board{cursor:pointer;}
+  #board{
+    display:block;
+    width:100%;
+    height:auto;
+    max-height:78vh;
+    touch-action:none;
+    cursor:crosshair;
+    border-radius:2px;
+  }
+  .corner{position:absolute;width:22px;height:22px;pointer-events:none;}
+  .corner.tl{top:-1px;left:-1px;border-top:3px solid var(--gold);border-left:3px solid var(--gold);}
+  .corner.tr{top:-1px;right:-1px;border-top:3px solid var(--gold);border-right:3px solid var(--gold);}
+  .corner.bl{bottom:-1px;left:-1px;border-bottom:3px solid var(--gold);border-left:3px solid var(--gold);}
+  .corner.br{bottom:-1px;right:-1px;border-bottom:3px solid var(--gold);border-right:3px solid var(--gold);}
+
   .empty-state{
-    color:var(--chalk-dim); text-align:center; font-family:var(--body); max-width:340px;
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;text-align:center;padding:40px;
+    background:rgba(10,14,19,0.94);
+    border:2px dashed var(--border);
+    border-radius:4px;
   }
-  .empty-state .disp{ font-family:var(--disp); font-size:22px; color:var(--chalk); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
-  .empty-state svg{ width:56px; height:56px; margin-bottom:14px; opacity:.5; }
+  .canvas-frame.has-image .empty-state{display:none;}
+  .empty-state svg{width:48px;height:48px;stroke:var(--muted);}
+  .empty-state h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:1.3rem;
+    margin:0;
+    color:var(--text);
+    letter-spacing:0.01em;
+  }
+  .empty-state p{margin:0;color:var(--muted);font-size:0.88rem;max-width:320px;}
+  .canvas-frame{min-width:280px;min-height:280px;}
+  #board{background:#05070a;}
 
-  .rec-indicator{
-    position:absolute; top:12px; left:12px; display:none; align-items:center; gap:6px;
-    background:rgba(0,0,0,.6); padding:6px 10px; border-radius:20px; font-size:12px; font-family:var(--mono);
-  }
-  .rec-indicator .pulse{ width:9px; height:9px; border-radius:50%; background:var(--danger); animation:pulse 1s infinite; }
-  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
+  /* placeholder sizing before an image exists */
+  .canvas-frame:not(.has-image) #board{width:640px;max-width:80vw;height:400px;}
 
-  .hint-bar{
-    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-    background:rgba(0,0,0,.65); color:var(--chalk); font-size:12px; padding:6px 14px; border-radius:20px;
-    font-family:var(--body); pointer-events:none; opacity:0; transition:.2s; white-space:nowrap;
+  /* ---------- properties panel ---------- */
+  .properties-panel{
+    width:270px;
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    padding:18px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    overflow-y:auto;
   }
-  .hint-bar.show{ opacity:1; }
-
-  /* PROPS BAR (contextual, above timeline) */
-  .props-bar{
-    display:flex; align-items:center; gap:14px; padding:8px 16px; background:var(--panel);
-    border-top:1px solid var(--line); flex-wrap:wrap; flex-shrink:0;
+  .panel-section label.section-label{
+    display:block;
+    font-family:var(--font-display);
+    font-size:0.68rem;
+    font-weight:600;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
   }
-  .props-group{ display:flex; align-items:center; gap:8px; }
-  .props-group label{ font-size:11px; color:var(--chalk-dim); font-family:var(--mono); text-transform:uppercase; letter-spacing:.5px; }
+  .swatch-row{display:flex;gap:8px;flex-wrap:wrap;}
   .swatch{
-    width:22px; height:22px; border-radius:50%; border:2px solid transparent; cursor:pointer; flex-shrink:0;
+    width:28px;height:28px;border-radius:50%;
+    border:2px solid var(--border);
+    cursor:pointer;
+    transition:transform .12s, border-color .12s;
+    padding:0;
   }
-  .swatch.sel{ border-color:#fff; box-shadow:0 0 0 2px var(--bg); }
-  input[type=color]{ width:28px; height:28px; border:none; border-radius:50%; background:none; cursor:pointer; padding:0; }
-  input[type=color]::-webkit-color-swatch-wrapper{ padding:0; }
-  input[type=color]::-webkit-color-swatch{ border-radius:50%; border:2px solid var(--line); }
-  input[type=range]{ accent-color: var(--pitch-light); }
-  .num-input{ width:48px; background:var(--panel-2); border:1px solid var(--line); color:var(--chalk); border-radius:4px; padding:4px 6px; font-family:var(--mono); font-size:12px; }
-  .chk{ display:flex; align-items:center; gap:5px; font-size:12px; color:var(--chalk-dim); cursor:pointer; }
+  .swatch:hover{transform:scale(1.08);}
+  .swatch.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(242,177,52,0.25);}
+  .custom-color-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .custom-color-row input[type=color]{
+    width:36px;height:28px;border:1px solid var(--border);border-radius:6px;background:none;padding:0;cursor:pointer;
+  }
+  .custom-color-row span{font-size:0.78rem;color:var(--muted);}
 
-  /* TIMELINE */
-  .timeline-bar{
-    display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--panel-2);
-    border-top:1px solid var(--line); flex-shrink:0;
+  input[type=range]{width:100%;accent-color:var(--gold);}
+  .range-row{display:flex;align-items:center;gap:10px;}
+  .range-row .val{
+    font-family:var(--font-display);font-weight:600;font-size:0.95rem;
+    min-width:26px;text-align:right;color:var(--gold);
   }
-  .tc{ font-family:var(--mono); font-size:12px; color:var(--chalk-dim); min-width:52px; text-align:center; }
-  .timeline-track{ flex:1; position:relative; height:26px; display:flex; align-items:center; }
-  .timeline-track input[type=range]{
-    width:100%; height:8px; -webkit-appearance:none; appearance:none;
-    background: linear-gradient(90deg, var(--pitch) 0%, var(--pitch) var(--pct,0%), #263229 var(--pct,0%), #263229 100%);
-    border-radius:5px; outline:none; position:relative; z-index:2;
-  }
-  .timeline-track input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--whistle);
-    border:2px solid #000; cursor:pointer; margin-top:-1px;
-  }
-  .markers{ position:absolute; top:0; left:0; right:0; height:26px; pointer-events:none; }
-  .marker{ position:absolute; top:-2px; width:2px; height:8px; border-radius:1px; }
-  .marker::after{ content:''; position:absolute; top:8px; left:-2px; width:6px; height:6px; border-radius:50%; background:inherit; }
 
-  .icon-btn{
-    width:34px; height:34px; border-radius:50%; background:var(--panel); border:1px solid var(--line);
-    color:var(--chalk); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  .team-row{display:flex;gap:8px;}
+  .team-btn{
+    flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel-2);color:var(--text);font-size:0.8rem;font-weight:600;cursor:pointer;
   }
-  .icon-btn:hover{ background:var(--panel-2); }
-  .icon-btn svg{ width:16px; height:16px; }
+  .team-btn[data-color="#3d8ff2"]{border-left:4px solid var(--blue);}
+  .team-btn[data-color="#e2493d"]{border-left:4px solid var(--red);}
+  .team-btn.active{background:var(--panel-3);border-color:var(--gold);}
 
-  select{ background:var(--panel-2); color:var(--chalk); border:1px solid var(--line); border-radius:4px; padding:5px 8px; font-size:12px; font-family:var(--mono); }
-
-  /* SIDEBAR */
-  .sidebar{
-    width:260px; background:var(--panel); border-left:1px solid var(--line);
-    display:flex; flex-direction:column; flex-shrink:0;
+  .hint-box{
+    margin-top:auto;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+    font-size:0.8rem;
+    line-height:1.4;
+    color:var(--muted);
   }
-  .sidebar h2{
-    font-family:var(--disp); font-size:13px; text-transform:uppercase; letter-spacing:.8px;
-    padding:14px 16px 10px; margin:0; color:var(--chalk-dim); border-bottom:1px solid var(--line);
-  }
-  .ann-list{ flex:1; overflow-y:auto; padding:8px; }
-  .ann-item{
-    display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px; margin-bottom:4px;
-    background:var(--panel-2); cursor:pointer; border:1px solid transparent;
-  }
-  .ann-item:hover{ border-color:var(--pitch-light); }
-  .ann-item .ic{ width:16px; height:16px; flex-shrink:0; }
-  .ann-item .meta{ flex:1; min-width:0; }
-  .ann-item .meta .t1{ font-size:12px; font-weight:500; text-transform:capitalize; }
-  .ann-item .meta .t2{ font-size:10px; color:var(--chalk-dim); font-family:var(--mono); }
-  .ann-item .del{ color:var(--chalk-dim); cursor:pointer; padding:2px; }
-  .ann-item .del:hover{ color:var(--danger); }
-  .ann-empty{ color:var(--chalk-dim); font-size:12px; text-align:center; padding:30px 14px; line-height:1.5; }
+  .hint-box strong{color:var(--text);font-family:var(--font-display);font-weight:600;letter-spacing:0.03em;}
 
-  .sidebar-footer{ padding:12px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
-
-  ::-webkit-scrollbar{ width:8px; height:8px; }
-  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
-  ::-webkit-scrollbar-track{ background:transparent; }
-
-  @media (max-width: 860px){
-    .sidebar{ display:none; }
-    .toolrail{ width:52px; }
+  /* ---------- responsive ---------- */
+  @media (max-width:900px){
+    .workspace{flex-direction:column;}
+    .tools-dock{
+      width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);
+      justify-content:flex-start;
+    }
+    .tool-btn{width:auto;min-width:64px;}
+    .properties-panel{width:100%;border-left:none;border-top:1px solid var(--border);}
+    .canvas-stage{padding:16px;}
   }
 </style>
 </head>
 <body>
-<div class="app">
 
-  <div class="topbar">
-    <div class="brand">
-      <div class="dot"></div>
-      <div>
-        <h1>Prancheta Tática</h1>
-        <span id="statusText">nenhum vídeo carregado</span>
-      </div>
-    </div>
-    <label class="btn primary" for="videoInput">⤴ Carregar vídeo</label>
-    <input type="file" id="videoInput" accept="video/*">
-    <span class="fname" id="fname"></span>
-    <div class="spacer"></div>
-    <button class="btn" id="undoBtn" title="Desfazer (Ctrl+Z)">↺ Desfazer</button>
-    <button class="btn" id="clearBtn">🗑 Limpar tudo</button>
-    <button class="btn" id="snapBtn" disabled>📷 Exportar frame</button>
-    <button class="btn primary" id="exportBtn" disabled>🎬 Exportar vídeo</button>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">Prancheta <span>Tática</span></div>
+    <div class="pro-badge">PRO</div>
+    <div class="scorebug"><span class="rec-dot"></span>ANÁLISE DE LANCE</div>
   </div>
-
-  <div class="main">
-
-    <div class="toolrail" id="toolrail"></div>
-
-    <div class="stage-wrap">
-      <div class="stage" id="stage">
-        <div class="empty-state" id="emptyState">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M6 6l4 3-1.5 4.7h-5L2 9.7 6 6zm12 0l-4 3 1.5 4.7h5l1.5-4.7L18 6z"/></svg>
-          <div class="disp">Carregue um vídeo do jogo</div>
-          <div>Depois use as ferramentas à esquerda para desenhar setas de movimento, linhas de marcação, zonas e rastrear jogadores.</div>
-        </div>
-        <div class="canvas-box" id="canvasBox" style="display:none;">
-          <canvas id="cv"></canvas>
-        </div>
-        <div class="rec-indicator" id="recIndicator"><span class="pulse"></span> Gravando exportação…</div>
-        <div class="hint-bar" id="hintBar"></div>
-      </div>
-
-      <div class="props-bar" id="propsBar">
-        <div class="props-group">
-          <label>Cor</label>
-          <div class="swatch sel" style="background:#E8B923" data-color="#E8B923"></div>
-          <div class="swatch" style="background:#D64545" data-color="#D64545"></div>
-          <div class="swatch" style="background:#3B7DD8" data-color="#3B7DD8"></div>
-          <div class="swatch" style="background:#F3F1EA" data-color="#F3F1EA"></div>
-          <div class="swatch" style="background:#3E8A4C" data-color="#3E8A4C"></div>
-          <input type="color" id="customColor" value="#E8B923" title="Cor personalizada">
-        </div>
-        <div class="props-group">
-          <label>Espessura</label>
-          <input type="range" id="widthRange" min="1" max="12" value="4">
-        </div>
-        <div class="props-group">
-          <label>Duração (s)</label>
-          <input type="number" class="num-input" id="durationInput" min="0.5" max="30" step="0.5" value="3">
-        </div>
-        <div class="props-group">
-          <label class="chk"><input type="checkbox" id="dashChk"> Tracejado</label>
-        </div>
-        <div class="props-group">
-          <label class="chk"><input type="checkbox" id="fillChk"> Preencher zona</label>
-        </div>
-        <div class="props-group">
-          <label class="chk"><input type="checkbox" id="glowChk" checked> Brilho</label>
-        </div>
-        <div class="spacer"></div>
-        <div class="props-group" id="trackControls" style="display:none;">
-          <button class="btn" id="trackAddBtn">+ Ponto no frame atual</button>
-          <button class="btn primary" id="trackDoneBtn">✓ Concluir rastreio</button>
-        </div>
-      </div>
-
-      <div class="timeline-bar">
-        <button class="icon-btn" id="stepBackBtn" title="Voltar 1 frame">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6v12l-8.5-6z"/></svg>
-        </button>
-        <button class="icon-btn" id="playBtn" title="Play/Pause">
-          <svg viewBox="0 0 24 24" fill="currentColor" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <button class="icon-btn" id="stepFwdBtn" title="Avançar 1 frame">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6v12l8.5-6z"/></svg>
-        </button>
-        <span class="tc" id="curTime">00:00.0</span>
-        <div class="timeline-track">
-          <input type="range" id="seek" min="0" max="1000" value="0" step="1">
-          <div class="markers" id="markers"></div>
-        </div>
-        <span class="tc" id="durTime">00:00.0</span>
-        <select id="speedSel">
-          <option value="0.25">0.25×</option>
-          <option value="0.5">0.5×</option>
-          <option value="1" selected>1×</option>
-          <option value="1.5">1.5×</option>
-          <option value="2">2×</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="sidebar">
-      <h2>Anotações táticas</h2>
-      <div class="ann-list" id="annList">
-        <div class="ann-empty">As setas, linhas, zonas e rastreios que você criar vão aparecer aqui. Clique em um item para pular direto para o momento dele.</div>
-      </div>
-      <div class="sidebar-footer">
-        <div style="font-size:11px; color:var(--chalk-dim); line-height:1.5;">
-          A exportação de vídeo grava tela + som no formato WebM, no navegador. Isso pode levar o tempo de duração do vídeo.
-        </div>
-      </div>
-    </div>
-
+  <div class="actions">
+    <button class="btn" id="loadBtnTop">Carregar imagem</button>
+    <button class="btn" id="undoBtn" disabled>Desfazer</button>
+    <button class="btn" id="redoBtn" disabled>Refazer</button>
+    <button class="btn btn-ghost" id="resetBtn" disabled>Limpar marcações</button>
+    <button class="btn btn-primary" id="saveBtn" disabled>Salvar imagem</button>
   </div>
-</div>
+</header>
+
+<main class="workspace">
+
+  <aside class="tools-dock">
+    <button class="tool-btn active" data-tool="arrow" title="Seta tática">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 Q10 5 20 7"/><path d="M20 7l-4.5-1"/><path d="M20 7l-2 4.2"/></svg>
+      <span>Seta</span>
+    </button>
+    <button class="tool-btn" data-tool="zone" title="Zona em perspectiva">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19 L7 6 L17 6 L20 19 Z"/></svg>
+      <span>Zona</span>
+    </button>
+    <button class="tool-btn" data-tool="trail" title="Trajetória 3D da bola">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19 Q12 2 21 9"/><circle cx="21" cy="9" r="1.7" fill="currentColor" stroke="none"/><ellipse cx="3" cy="20.3" rx="2.4" ry="0.7" fill="currentColor" stroke="none" opacity="0.5"/></svg>
+      <span>Bola 3D</span>
+    </button>
+    <button class="tool-btn" data-tool="player" title="Marcador de jogador">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20c1.2-4.2 4-6.4 7.5-6.4s6.3 2.2 7.5 6.4"/></svg>
+      <span>Jogador</span>
+    </button>
+    <button class="tool-btn" data-tool="text" title="Texto / anotação">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5h15M12 6.5v13"/></svg>
+      <span>Texto</span>
+    </button>
+    <button class="tool-btn" data-tool="freehand" title="Traço livre">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l3.2-0.8L17.5 8.9a2 2 0 0 0 0-2.8l-1.6-1.6a2 2 0 0 0-2.8 0L2.8 14.8z"/><path d="M13.6 5.9l2.5 2.5"/></svg>
+      <span>Traço</span>
+    </button>
+    <button class="tool-btn" data-tool="select" title="Selecionar / excluir">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l4 17 2.2-6.8L19 11z"/></svg>
+      <span>Selecionar</span>
+    </button>
+  </aside>
+
+  <section class="canvas-stage">
+    <div class="canvas-frame" id="canvasFrame">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <canvas id="board"></canvas>
+      <div class="empty-state" id="emptyState">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5V6.2A2.2 2.2 0 0 1 6.2 4h11.6A2.2 2.2 0 0 1 20 6.2v10.3"/><path d="M4 16.5l5-5.4 3.5 3.6 3-3.2L20 16"/><circle cx="8.5" cy="8.5" r="1.4"/><path d="M4 19h16"/></svg>
+        <h2>Carregue o lance para começar</h2>
+        <p>Arraste uma imagem aqui ou selecione um arquivo para iniciar a marcação tática.</p>
+        <button class="btn btn-primary" id="loadBtnEmpty">Selecionar imagem</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="properties-panel">
+    <div class="panel-section" id="colorSection">
+      <label class="section-label">Cor</label>
+      <div class="swatch-row">
+        <button class="swatch active" data-color="#ffffff" style="background:#ffffff"></button>
+        <button class="swatch" data-color="#f2b134" style="background:#f2b134"></button>
+        <button class="swatch" data-color="#e2493d" style="background:#e2493d"></button>
+        <button class="swatch" data-color="#3d8ff2" style="background:#3d8ff2"></button>
+        <button class="swatch" data-color="#2fae66" style="background:#2fae66"></button>
+        <button class="swatch" data-color="#111318" style="background:#111318"></button>
+      </div>
+      <div class="custom-color-row">
+        <input type="color" id="customColor" value="#ffffff">
+        <span>Cor personalizada</span>
+      </div>
+    </div>
+
+    <div class="panel-section" id="widthSection">
+      <label class="section-label">Espessura</label>
+      <div class="range-row">
+        <input type="range" id="widthSlider" min="2" max="60" value="10">
+        <span class="val" id="widthValue">10</span>
+      </div>
+    </div>
+
+    <div class="panel-section" id="arcSection">
+      <label class="section-label">Altura do arco (bola 3D)</label>
+      <div class="range-row">
+        <input type="range" id="arcSlider" min="0.1" max="0.9" step="0.05" value="0.35">
+        <span class="val" id="arcValue">0.35</span>
+      </div>
+    </div>
+
+    <div class="panel-section" id="teamSection">
+      <label class="section-label">Time do jogador</label>
+      <div class="team-row">
+        <button class="team-btn active" data-color="#3d8ff2">Time A</button>
+        <button class="team-btn" data-color="#e2493d">Time B</button>
+      </div>
+    </div>
+
+    <div class="panel-section" id="selectSection">
+      <label class="section-label">Marcação selecionada</label>
+      <button class="btn btn-danger" id="deleteSelectedBtn" style="width:100%;">Excluir selecionado</button>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">Toque em Delete/Backspace no teclado também remove o item selecionado.</p>
+    </div>
+
+    <div class="hint-box">
+      <strong>Dica:</strong>
+      <p id="toolHint" style="margin:6px 0 0;"></p>
+    </div>
+  </aside>
+
+</main>
+
+<input type="file" id="fileInput" accept="image/*" style="display:none">
 
 <script>
 (function(){
-  "use strict";
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  const canvasFrame = document.getElementById('canvasFrame');
+  const fileInput = document.getElementById('fileInput');
+  const widthSlider = document.getElementById('widthSlider');
+  const widthValue = document.getElementById('widthValue');
+  const arcSlider = document.getElementById('arcSlider');
+  const arcValue = document.getElementById('arcValue');
+  const customColor = document.getElementById('customColor');
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+  const toolHint = document.getElementById('toolHint');
 
-  // ---------- Tool definitions ----------
-  const ICONS = {
-    select: '<path d="M4 3l7 17 2.5-7L20 10z" fill="currentColor" stroke="none"/>',
-    line: '<circle cx="5" cy="19" r="1.8" fill="currentColor" stroke="none"/><line x1="5" y1="19" x2="19" y2="5"/><circle cx="19" cy="5" r="1.8" fill="currentColor" stroke="none"/>',
-    arrow: '<line x1="4" y1="20" x2="18" y2="6"/><path d="M9 6h9v9" />',
-    circle: '<circle cx="12" cy="12" r="8"/>',
-    rect: '<rect x="4" y="6" width="16" height="12" rx="1"/>',
-    pen: '<path d="M3 17c2-4 3-2 5-5s2-5 5-2 3 5 6 1" /><circle cx="19" cy="6" r="1.6" fill="currentColor" stroke="none"/>',
-    text: '<path d="M5 5h14M12 5v14" />',
-    track: '<circle cx="7" cy="17" r="2" fill="currentColor" stroke="none"/><circle cx="17" cy="7" r="2" fill="currentColor" stroke="none"/><path d="M8.5 15.5C11 12 13 10 15.5 8.5" stroke-dasharray="2 2"/>'
-  };
-  const TOOLS = [
-    {id:'select', label:'Selecionar / mover'},
-    {id:'sep'},
-    {id:'line', label:'Linha (marcação, linha de impedimento)'},
-    {id:'arrow', label:'Seta (movimento / passe)'},
-    {id:'circle', label:'Círculo (destacar jogador)'},
-    {id:'rect', label:'Zona (área tática)'},
-    {id:'pen', label:'Caneta livre'},
-    {id:'text', label:'Texto'},
-    {id:'sep'},
-    {id:'track', label:'Rastreamento de jogador'},
-  ];
-
-  const rail = document.getElementById('toolrail');
-  TOOLS.forEach(t=>{
-    if(t.id==='sep'){ const s=document.createElement('div'); s.className='railsep'; rail.appendChild(s); return; }
-    const b=document.createElement('button');
-    b.className='tool'; b.dataset.tool=t.id;
-    b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[t.id]}</svg><span class="tip">${t.label}</span>`;
-    b.addEventListener('click', ()=>setTool(t.id));
-    rail.appendChild(b);
-  });
-
-  // ---------- State ----------
-  let video = null;
-  let canvas = document.getElementById('cv');
-  let ctx = canvas.getContext('2d');
-  let annotations = [];
-  let undoStack = [];
-  let currentTool = 'select';
-  let currentColor = '#E8B923';
-  let currentWidth = 4;
-  let selectedId = null;
-
-  // in-progress drawing state
+  let img = null;
+  let hasImage = false;
+  let objects = [];
+  let redoStack = [];
+  let currentTool = 'arrow';
+  let currentColor = '#ffffff';
+  let currentWidth = 10;
+  let arcHeight = 0.35;
+  let teamColor = '#3d8ff2';
+  let selectedIndex = -1;
+  let pending = null;
+  let zonePreviewPoint = null;
   let drawing = false;
-  let dragStart = null;
-  let penPoints = null;
-  let dragOffset = null;
 
-  // tracking mode state
-  let trackingAnn = null;
-
-  const els = {
-    fname: document.getElementById('fname'),
-    statusText: document.getElementById('statusText'),
-    emptyState: document.getElementById('emptyState'),
-    canvasBox: document.getElementById('canvasBox'),
-    stage: document.getElementById('stage'),
-    seek: document.getElementById('seek'),
-    curTime: document.getElementById('curTime'),
-    durTime: document.getElementById('durTime'),
-    playBtn: document.getElementById('playBtn'),
-    playIcon: document.getElementById('playIcon'),
-    speedSel: document.getElementById('speedSel'),
-    annList: document.getElementById('annList'),
-    markers: document.getElementById('markers'),
-    durationInput: document.getElementById('durationInput'),
-    widthRange: document.getElementById('widthRange'),
-    dashChk: document.getElementById('dashChk'),
-    fillChk: document.getElementById('fillChk'),
-    glowChk: document.getElementById('glowChk'),
-    customColor: document.getElementById('customColor'),
-    trackControls: document.getElementById('trackControls'),
-    trackAddBtn: document.getElementById('trackAddBtn'),
-    trackDoneBtn: document.getElementById('trackDoneBtn'),
-    snapBtn: document.getElementById('snapBtn'),
-    exportBtn: document.getElementById('exportBtn'),
-    recIndicator: document.getElementById('recIndicator'),
-    hintBar: document.getElementById('hintBar'),
-    undoBtn: document.getElementById('undoBtn'),
-    clearBtn: document.getElementById('clearBtn'),
+  const hints = {
+    arrow: 'Clique e arraste para desenhar uma seta com perspectiva, sombra e volume.',
+    zone: 'Clique para marcar até 4 cantos da área. Um clique duplo conclui antes com 3 pontos.',
+    trail: 'Clique no ponto de partida e arraste até o ponto de chegada da bola para gerar o arco 3D.',
+    player: 'Clique no campo para posicionar um jogador. Você pode informar o número da camisa.',
+    text: 'Clique no local desejado e digite a anotação.',
+    freehand: 'Clique, arraste e solte para desenhar um traço livre à mão.',
+    select: 'Clique em uma marcação para selecioná-la. Exclua pelo botão ou pela tecla Delete.'
   };
 
-  function hint(msg, ms){
-    els.hintBar.textContent = msg;
-    els.hintBar.classList.add('show');
-    clearTimeout(hint._t);
-    hint._t = setTimeout(()=>els.hintBar.classList.remove('show'), ms||2200);
+  /* ---------------- helpers ---------------- */
+  function shadeColor(hex, percent){
+    const f = parseInt(hex.slice(1),16);
+    const t = percent<0 ? 0 : 255;
+    const p = percent<0 ? percent*-1 : percent;
+    const R=f>>16, G=(f>>8)&0x00FF, B=f&0x0000FF;
+    const nr = Math.round((t-R)*p/100)+R;
+    const ng = Math.round((t-G)*p/100)+G;
+    const nb = Math.round((t-B)*p/100)+B;
+    return "#"+(0x1000000+nr*0x10000+ng*0x100+nb).toString(16).slice(1);
+  }
+  function hexToRgba(hex,a){
+    const v = hex.replace('#','');
+    const r = parseInt(v.substring(0,2),16), g = parseInt(v.substring(2,4),16), b = parseInt(v.substring(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  function quadPoint(p0,c,p1,t){
+    const mt = 1-t;
+    return { x: mt*mt*p0.x + 2*mt*t*c.x + t*t*p1.x, y: mt*mt*p0.y + 2*mt*t*c.y + t*t*p1.y };
+  }
+  function depthScale(y){
+    const t = Math.min(1, Math.max(0, y/canvas.height));
+    return 0.5 + 0.5*t;
   }
 
-  // ---------- Tool selection ----------
-  function setTool(id){
-    currentTool = id;
-    document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('active', b.dataset.tool===id));
-    els.trackControls.style.display = id==='track' ? 'flex' : 'none';
-    canvas.style.cursor = id==='select' ? 'default' : 'crosshair';
-    const hints = {
-      select:'Clique numa forma para selecionar. Arraste para mover. Delete para apagar.',
-      line:'Clique e arraste para desenhar uma linha.',
-      arrow:'Clique na origem e arraste até o destino do movimento.',
-      circle:'Clique no centro do jogador e arraste para definir o raio.',
-      rect:'Arraste para marcar uma zona do campo.',
-      pen:'Segure e desenhe livremente.',
-      text:'Clique no ponto onde o texto deve aparecer.',
-      track:'Pause no momento certo, clique "+ Ponto", mova o vídeo um pouco e repita. Depois "Concluir".'
-    };
-    if(hints[id]) hint(hints[id]);
-  }
-  setTool('select');
-
-  document.querySelectorAll('.swatch').forEach(s=>{
-    s.addEventListener('click', ()=>{
-      document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('sel'));
-      s.classList.add('sel');
-      currentColor = s.dataset.color;
-      els.customColor.value = currentColor;
-    });
-  });
-  els.customColor.addEventListener('input', e=>{
-    currentColor = e.target.value;
-    document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('sel'));
-  });
-  els.widthRange.addEventListener('input', e=> currentWidth = parseFloat(e.target.value));
-
-  // ---------- Video load ----------
-  document.getElementById('videoInput').addEventListener('change', e=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    if(video){ URL.revokeObjectURL(video.src); }
-    video = document.createElement('video');
-    video.src = URL.createObjectURL(file);
-    video.crossOrigin = 'anonymous';
-    video.playsInline = true;
-    video.muted = false;
-    els.fname.textContent = file.name;
-    els.statusText.textContent = 'carregando…';
-
-    video.addEventListener('loadedmetadata', ()=>{
-      els.emptyState.style.display='none';
-      els.canvasBox.style.display='block';
-      const maxW = 1280;
-      const scale = Math.min(1, maxW/video.videoWidth);
-      canvas.width = Math.round(video.videoWidth*scale);
-      canvas.height = Math.round(video.videoHeight*scale);
-      els.seek.max = Math.round(video.duration*1000);
-      els.durTime.textContent = fmt(video.duration);
-      els.statusText.textContent = `${video.videoWidth}×${video.videoHeight} · ${fmt(video.duration)}`;
-      els.snapBtn.disabled = false;
-      els.exportBtn.disabled = false;
-      resizeCanvasCss();
-      annotations = []; undoStack=[]; renderAnnList(); renderMarkers();
-      requestAnimationFrame(loop);
-    });
-    video.addEventListener('timeupdate', ()=>{
-      if(!seeking) els.seek.value = Math.round(video.currentTime*1000);
-      els.curTime.textContent = fmt(video.currentTime);
-      updateSeekPct();
-    });
-    video.addEventListener('play', ()=> els.playIcon.innerHTML='<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>');
-    video.addEventListener('pause', ()=> els.playIcon.innerHTML='<path d="M8 5v14l11-7z"/>');
-  });
-
-  window.addEventListener('resize', resizeCanvasCss);
-  function resizeCanvasCss(){
-    if(!video) return;
-    const wrap = els.stage;
-    const maxW = wrap.clientWidth - 24;
-    const maxH = wrap.clientHeight - 24;
-    const ratio = canvas.width/canvas.height;
-    let w = maxW, h = w/ratio;
-    if(h>maxH){ h=maxH; w=h*ratio; }
-    canvas.style.width = w+'px';
-    canvas.style.height = h+'px';
-  }
-
-  function fmt(t){
-    if(isNaN(t)) return '00:00.0';
-    const m = Math.floor(t/60);
-    const s = (t%60).toFixed(1).padStart(4,'0');
-    return String(m).padStart(2,'0')+':'+s;
-  }
-
-  // ---------- Playback controls ----------
-  let seeking=false;
-  els.seek.addEventListener('input', ()=>{
-    seeking=true;
-    if(video){ video.currentTime = els.seek.value/1000; els.curTime.textContent=fmt(video.currentTime); updateSeekPct(); }
-  });
-  els.seek.addEventListener('change', ()=> seeking=false);
-  function updateSeekPct(){
-    const pct = video ? (video.currentTime/video.duration*100) : 0;
-    els.seek.style.setProperty('--pct', pct+'%');
-  }
-  els.playBtn.addEventListener('click', ()=>{
-    if(!video) return;
-    if(video.paused) video.play(); else video.pause();
-  });
-  els.speedSel.addEventListener('change', ()=>{ if(video) video.playbackRate = parseFloat(els.speedSel.value); });
-  const FRAME = 1/30;
-  document.getElementById('stepBackBtn').addEventListener('click', ()=>{ if(!video) return; video.pause(); video.currentTime=Math.max(0,video.currentTime-FRAME); });
-  document.getElementById('stepFwdBtn').addEventListener('click', ()=>{ if(!video) return; video.pause(); video.currentTime=Math.min(video.duration,video.currentTime+FRAME); });
-  document.addEventListener('keydown', e=>{
-    if(!video) return;
-    if(e.code==='Space' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); video.paused?video.play():video.pause(); }
-    if(e.code==='ArrowLeft'){ video.pause(); video.currentTime=Math.max(0,video.currentTime-FRAME); }
-    if(e.code==='ArrowRight'){ video.pause(); video.currentTime=Math.min(video.duration,video.currentTime+FRAME); }
-    if((e.ctrlKey||e.metaKey) && e.key==='z'){ undo(); }
-    if((e.key==='Delete'||e.key==='Backspace') && selectedId && document.activeElement.tagName!=='INPUT'){ deleteAnn(selectedId); }
-  });
-
-  // ---------- Annotation helpers ----------
-  function uid(){ return 'a'+Math.random().toString(36).slice(2,9); }
-  function pushHistory(){ undoStack.push(JSON.stringify(annotations)); if(undoStack.length>50) undoStack.shift(); }
-  function undo(){ if(undoStack.length){ annotations = JSON.parse(undoStack.pop()); renderAnnList(); renderMarkers(); } }
-  els.undoBtn.addEventListener('click', undo);
-  els.clearBtn.addEventListener('click', ()=>{
-    if(!annotations.length) return;
-    if(confirm('Remover todas as anotações?')){ pushHistory(); annotations=[]; renderAnnList(); renderMarkers(); }
-  });
-
-  function canvasPos(e){
+  function getPos(e){
     const rect = canvas.getBoundingClientRect();
-    const cx = (e.touches? e.touches[0].clientX : e.clientX);
-    const cy = (e.touches? e.touches[0].clientY : e.clientY);
-    return { x:(cx-rect.left)/rect.width, y:(cy-rect.top)/rect.height };
+    const scaleX = canvas.width/rect.width;
+    const scaleY = canvas.height/rect.height;
+    return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
   }
 
-  function hitTest(p){
-    // iterate reverse (topmost first)
-    for(let i=annotations.length-1;i>=0;i--){
-      const a = annotations[i];
-      if(a.type==='circle'){
-        const d = Math.hypot((p.x-a.cx), (p.y-a.cy)*(canvas.height/canvas.width));
-        if(Math.abs(d - a.r) < 0.02 || d < a.r) return a;
-      } else if(a.type==='rect'){
-        if(p.x>=Math.min(a.x,a.x+a.w) && p.x<=Math.max(a.x,a.x+a.w) && p.y>=Math.min(a.y,a.y+a.h) && p.y<=Math.max(a.y,a.y+a.h)) return a;
-      } else if(a.type==='line' || a.type==='arrow'){
-        const d = pointToSeg(p, a.p1, a.p2);
-        if(d<0.02) return a;
-      } else if(a.type==='text'){
-        if(Math.hypot(p.x-a.x,p.y-a.y)<0.05) return a;
-      } else if(a.type==='pen'){
-        for(let j=0;j<a.points.length-1;j++){ if(pointToSeg(p,a.points[j],a.points[j+1])<0.02) return a; }
-      } else if(a.type==='track'){
-        const pos = trackPosAt(a, video?video.currentTime:0);
-        if(pos && Math.hypot(p.x-pos.x,p.y-pos.y)<0.04) return a;
-      }
+  /* ---------------- drawing primitives ---------------- */
+  function drawTaperedCurve(pc, p0,c,p1,wStart,wEnd,color){
+    const N=28;
+    const topPts=[], botPts=[];
+    let endTangent=null;
+    for(let i=0;i<=N;i++){
+      const t=i/N;
+      const pt=quadPoint(p0,c,p1,t);
+      const t2=Math.min(t+0.01,1);
+      const pt2=quadPoint(p0,c,p1,t2);
+      let tx=pt2.x-pt.x, ty=pt2.y-pt.y;
+      const len=Math.hypot(tx,ty)||1; tx/=len; ty/=len;
+      const nx=-ty, ny=tx;
+      const w=(wStart+(wEnd-wStart)*t)/2;
+      topPts.push({x:pt.x+nx*w,y:pt.y+ny*w});
+      botPts.push({x:pt.x-nx*w,y:pt.y-ny*w});
+      if(i===N) endTangent={x:tx,y:ty};
     }
-    return null;
-  }
-  function pointToSeg(p,a,b){
-    const A=p.x-a.x, B=p.y-a.y, C=b.x-a.x, D=b.y-a.y;
-    const dot=A*C+B*D, len=C*C+D*D;
-    let t = len? dot/len : 0; t=Math.max(0,Math.min(1,t));
-    const x=a.x+t*C, y=a.y+t*D;
-    return Math.hypot(p.x-x,p.y-y);
-  }
-
-  // ---------- Pointer events on canvas ----------
-  canvas.addEventListener('pointerdown', e=>{
-    if(!video) return;
-    const p = canvasPos(e);
-    if(currentTool==='select'){
-      const hit = hitTest(p);
-      selectedId = hit ? hit.id : null;
-      if(hit){
-        drawing=true;
-        dragOffset = getAnchor(hit, p);
-      }
-      renderAnnList();
-      return;
-    }
-    if(currentTool==='track'){
-      return; // track points added via button, not pointer
-    }
-    drawing = true;
-    dragStart = p;
-    if(currentTool==='pen') penPoints=[p];
-    if(currentTool==='text'){
-      drawing=false;
-      const txt = prompt('Texto da anotação:','');
-      if(txt){
-        pushHistory();
-        annotations.push(commonProps({id:uid(), type:'text', x:p.x, y:p.y, text:txt}));
-        renderAnnList(); renderMarkers();
-      }
-    }
-  });
-  canvas.addEventListener('pointermove', e=>{
-    if(!drawing || !video) return;
-    const p = canvasPos(e);
-    if(currentTool==='select' && selectedId){
-      moveAnn(selectedId, p);
-      return;
-    }
-    if(currentTool==='pen'){ penPoints.push(p); return; }
-    dragPreview = p;
-  });
-  window.addEventListener('pointerup', e=>{
-    if(!drawing || !video){ drawing=false; return; }
-    drawing=false;
-    if(currentTool==='select'){ dragOffset=null; return; }
-    const p = dragPreview || dragStart;
-    commitShape(dragStart, p);
-    dragStart=null; dragPreview=null; penPoints=null;
-  });
-  let dragPreview=null;
-
-  function getAnchor(a,p){ return {x:p.x,y:p.y}; }
-  function moveAnn(id,p){
-    const a = annotations.find(x=>x.id===id); if(!a) return;
-    if(!moveAnn._last) moveAnn._last=p;
-    const dx = p.x-moveAnn._last.x, dy = p.y-moveAnn._last.y;
-    if(a.type==='circle'){ a.cx+=dx; a.cy+=dy; }
-    else if(a.type==='rect'){ a.x+=dx; a.y+=dy; }
-    else if(a.type==='text'){ a.x+=dx; a.y+=dy; }
-    else if(a.type==='line'||a.type==='arrow'){ a.p1.x+=dx;a.p1.y+=dy;a.p2.x+=dx;a.p2.y+=dy; }
-    else if(a.type==='pen'){ a.points.forEach(pt=>{pt.x+=dx;pt.y+=dy;}); }
-    moveAnn._last=p;
-  }
-  window.addEventListener('pointerup', ()=> moveAnn._last=null);
-
-  function commonProps(a){
-    a.color = currentColor;
-    a.width = currentWidth;
-    a.dash = els.dashChk.checked;
-    a.fill = els.fillChk.checked;
-    a.glow = els.glowChk.checked;
-    if(a.type!=='track'){
-      const dur = parseFloat(els.durationInput.value)||3;
-      a.start = video.currentTime;
-      a.end = Math.min(video.duration, video.currentTime+dur);
-    }
-    return a;
-  }
-
-  function commitShape(p1,p2){
-    if(!p1||!p2) return;
-    if(Math.hypot(p2.x-p1.x,p2.y-p1.y)<0.005 && currentTool!=='pen') return;
-    pushHistory();
-    let a;
-    if(currentTool==='line') a = commonProps({id:uid(), type:'line', p1:{...p1}, p2:{...p2}});
-    else if(currentTool==='arrow') a = commonProps({id:uid(), type:'arrow', p1:{...p1}, p2:{...p2}});
-    else if(currentTool==='circle') a = commonProps({id:uid(), type:'circle', cx:p1.x, cy:p1.y, r:Math.hypot(p2.x-p1.x,(p2.y-p1.y)*(canvas.height/canvas.width))});
-    else if(currentTool==='rect') a = commonProps({id:uid(), type:'rect', x:p1.x, y:p1.y, w:p2.x-p1.x, h:p2.y-p1.y});
-    else if(currentTool==='pen') a = commonProps({id:uid(), type:'pen', points: penPoints.map(pt=>({...pt}))});
-    if(a){ annotations.push(a); renderAnnList(); renderMarkers(); }
-  }
-
-  // ---------- Tracking (keyframes) ----------
-  els.trackAddBtn.addEventListener('click', ()=>{
-    if(!video) return;
-    hint('Clique no vídeo para marcar a posição do jogador neste instante.',3000);
-    canvas.addEventListener('pointerdown', trackClickOnce, {once:true});
-  });
-  function trackClickOnce(e){
-    const p = canvasPos(e);
-    if(!trackingAnn){
-      pushHistory();
-      trackingAnn = commonProps({id:uid(), type:'track', keyframes:[]});
-      annotations.push(trackingAnn);
-    }
-    trackingAnn.keyframes.push({t:video.currentTime, x:p.x, y:p.y});
-    trackingAnn.keyframes.sort((a,b)=>a.t-b.t);
-    renderMarkers();
-    hint(`Ponto adicionado em ${fmt(video.currentTime)}. Avance o vídeo e adicione outro, ou conclua.`,2600);
-  }
-  els.trackDoneBtn.addEventListener('click', ()=>{
-    if(trackingAnn && trackingAnn.keyframes.length<2){
-      annotations = annotations.filter(a=>a!==trackingAnn);
-      hint('Rastreio precisa de ao menos 2 pontos. Cancelado.');
-    } else if(trackingAnn){
-      hint('Rastreio concluído.');
-      renderAnnList();
-    }
-    trackingAnn = null;
-  });
-
-  function trackPosAt(a, t){
-    const kf = a.keyframes;
-    if(!kf.length) return null;
-    if(t<=kf[0].t) return kf.length>1 && t<kf[0].t ? null : kf[0];
-    if(t>=kf[kf.length-1].t) return null;
-    for(let i=0;i<kf.length-1;i++){
-      if(t>=kf[i].t && t<=kf[i+1].t){
-        const span = kf[i+1].t-kf[i].t;
-        const f = span? (t-kf[i].t)/span : 0;
-        return { x: kf[i].x+(kf[i+1].x-kf[i].x)*f, y: kf[i].y+(kf[i+1].y-kf[i].y)*f };
-      }
-    }
-    return null;
-  }
-
-  // ---------- Delete ----------
-  function deleteAnn(id){
-    pushHistory();
-    annotations = annotations.filter(a=>a.id!==id);
-    if(selectedId===id) selectedId=null;
-    renderAnnList(); renderMarkers();
-  }
-
-  // ---------- Sidebar list ----------
-  const TYPE_LABEL = {line:'Linha', arrow:'Seta', circle:'Círculo', rect:'Zona', pen:'Caneta', text:'Texto', track:'Rastreio'};
-  function renderAnnList(){
-    els.annList.innerHTML='';
-    if(!annotations.length){
-      els.annList.innerHTML = '<div class="ann-empty">As setas, linhas, zonas e rastreios que você criar vão aparecer aqui. Clique em um item para pular direto para o momento dele.</div>';
-      return;
-    }
-    annotations.forEach(a=>{
-      const div = document.createElement('div');
-      div.className='ann-item';
-      const start = a.type==='track' ? (a.keyframes[0]?.t||0) : a.start;
-      const end = a.type==='track' ? (a.keyframes[a.keyframes.length-1]?.t||0) : a.end;
-      div.innerHTML = `
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="${a.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[a.type]}</svg>
-        <div class="meta">
-          <div class="t1">${TYPE_LABEL[a.type]}${a.type==='text' ? ': '+a.text.slice(0,16):''}</div>
-          <div class="t2">${fmt(start)} → ${fmt(end)}</div>
-        </div>
-        <div class="del" data-id="${a.id}">✕</div>
-      `;
-      div.addEventListener('click', ev=>{
-        if(ev.target.closest('.del')){ deleteAnn(a.id); return; }
-        video.currentTime = start;
-      });
-      els.annList.appendChild(div);
-    });
-  }
-
-  function renderMarkers(){
-    els.markers.innerHTML='';
-    if(!video || !video.duration) return;
-    annotations.forEach(a=>{
-      const start = a.type==='track' ? (a.keyframes[0]?.t||0) : a.start;
-      const pct = (start/video.duration*100);
-      const m = document.createElement('div');
-      m.className='marker';
-      m.style.left = pct+'%';
-      m.style.background = a.color;
-      els.markers.appendChild(m);
-    });
-  }
-
-  // ---------- Render loop ----------
-  function loop(){
-    if(video && canvas.width){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      try{ ctx.drawImage(video,0,0,canvas.width,canvas.height); }catch(e){}
-      const t = video.currentTime;
-      annotations.forEach(a=> drawAnn(a,t));
-      if(drawing && dragStart && dragPreview && currentTool!=='select' && currentTool!=='pen'){
-        drawPreviewShape(dragStart, dragPreview);
-      }
-      if(drawing && currentTool==='pen' && penPoints && penPoints.length>1){
-        strokePath(penPoints, currentColor, currentWidth, els.dashChk.checked, els.glowChk.checked);
-      }
-    }
-    requestAnimationFrame(loop);
-  }
-
-  function fadeAlpha(a,t){
-    const fade=0.35;
-    if(t < a.start+fade) return Math.max(0,(t-a.start)/fade);
-    if(t > a.end-fade) return Math.max(0,(a.end-t)/fade);
-    return 1;
-  }
-
-  function setStroke(color,width,dash,glow){
-    ctx.strokeStyle=color; ctx.lineWidth=width*(canvas.width/640);
-    ctx.setLineDash(dash?[width*3,width*2]:[]);
-    ctx.shadowBlur = glow? 12:0; ctx.shadowColor=color;
-    ctx.lineCap='round'; ctx.lineJoin='round';
-  }
-  function toXY(p){ return {x:p.x*canvas.width, y:p.y*canvas.height}; }
-
-  function drawAnn(a,t){
-    if(a.type==='track'){
-      const pos = trackPosAt(a,t);
-      const kf = a.keyframes;
-      if(!kf.length) return;
-      // trail
-      ctx.save();
-      setStroke(a.color, Math.max(1.5,a.width*0.5), true, a.glow);
-      ctx.globalAlpha=0.7;
-      ctx.beginPath();
-      let started=false;
-      kf.forEach(k=>{
-        if(k.t<=t){ const xy=toXY(k); if(!started){ctx.moveTo(xy.x,xy.y); started=true;} else ctx.lineTo(xy.x,xy.y); }
-      });
-      if(pos){ const xy=toXY(pos); if(started) ctx.lineTo(xy.x,xy.y); }
-      ctx.stroke();
-      ctx.restore();
-      if(pos){
-        const xy = toXY(pos);
-        ctx.save();
-        ctx.shadowBlur = a.glow?16:0; ctx.shadowColor=a.color;
-        ctx.fillStyle = a.color;
-        ctx.beginPath(); ctx.arc(xy.x,xy.y, Math.max(6,a.width*1.6), 0, Math.PI*2); ctx.fill();
-        ctx.lineWidth=2; ctx.strokeStyle='#00000080'; ctx.stroke();
-        ctx.restore();
-      }
-      return;
-    }
-    if(t<a.start || t>a.end) return;
-    const alpha = fadeAlpha(a,t);
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    if(a.type==='line'){
-      setStroke(a.color,a.width,a.dash,a.glow);
-      const p1=toXY(a.p1), p2=toXY(a.p2);
-      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
-    } else if(a.type==='arrow'){
-      setStroke(a.color,a.width,a.dash,a.glow);
-      drawArrow(toXY(a.p1),toXY(a.p2));
-    } else if(a.type==='circle'){
-      setStroke(a.color,a.width,a.dash,a.glow);
-      const cx=a.cx*canvas.width, cy=a.cy*canvas.height, r=a.r*canvas.width;
-      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-      if(a.fill){ ctx.globalAlpha=alpha*0.25; ctx.fillStyle=a.color; ctx.fill(); ctx.globalAlpha=alpha; }
-      ctx.stroke();
-    } else if(a.type==='rect'){
-      setStroke(a.color,a.width,a.dash,a.glow);
-      const x=a.x*canvas.width, y=a.y*canvas.height, w=a.w*canvas.width, h=a.h*canvas.height;
-      if(a.fill){ ctx.globalAlpha=alpha*0.22; ctx.fillStyle=a.color; ctx.fillRect(x,y,w,h); ctx.globalAlpha=alpha; }
-      ctx.strokeRect(x,y,w,h);
-    } else if(a.type==='pen'){
-      strokePath(a.points, a.color, a.width, a.dash, a.glow);
-    } else if(a.type==='text'){
-      const xy = toXY(a);
-      ctx.shadowBlur = a.glow?10:0; ctx.shadowColor=a.color;
-      ctx.fillStyle=a.color;
-      ctx.font = `700 ${Math.max(16,a.width*6)}px Oswald, sans-serif`;
-      ctx.textBaseline='middle';
-      ctx.fillText(a.text, xy.x, xy.y);
-    }
-    ctx.restore();
-  }
-
-  function strokePath(points,color,width,dash,glow){
-    ctx.save();
-    setStroke(color,width,dash,glow);
-    ctx.beginPath();
-    points.forEach((p,i)=>{ const xy=toXY(p); i===0?ctx.moveTo(xy.x,xy.y):ctx.lineTo(xy.x,xy.y); });
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawArrow(p1,p2){
-    const headlen = Math.max(14, currentWidthScale());
-    const angle = Math.atan2(p2.y-p1.y,p2.x-p1.x);
-    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
-    ctx.save();
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(p2.x,p2.y);
-    ctx.lineTo(p2.x-headlen*Math.cos(angle-Math.PI/7), p2.y-headlen*Math.sin(angle-Math.PI/7));
-    ctx.lineTo(p2.x-headlen*Math.cos(angle+Math.PI/7), p2.y-headlen*Math.sin(angle+Math.PI/7));
-    ctx.closePath();
-    ctx.fillStyle = ctx.strokeStyle;
-    ctx.fill();
-    ctx.restore();
-  }
-  function currentWidthScale(){ return (ctx.lineWidth||4)*3.2; }
-
-  function drawPreviewShape(p1,p2){
-    ctx.save();
-    ctx.globalAlpha=0.85;
-    setStroke(currentColor,currentWidth,els.dashChk.checked,els.glowChk.checked);
-    const P1=toXY(p1), P2=toXY(p2);
-    if(currentTool==='line'){ ctx.beginPath(); ctx.moveTo(P1.x,P1.y); ctx.lineTo(P2.x,P2.y); ctx.stroke(); }
-    else if(currentTool==='arrow'){ drawArrow(P1,P2); }
-    else if(currentTool==='circle'){ const r=Math.hypot(P2.x-P1.x,P2.y-P1.y); ctx.beginPath(); ctx.arc(P1.x,P1.y,r,0,Math.PI*2); ctx.stroke(); }
-    else if(currentTool==='rect'){ ctx.strokeRect(Math.min(P1.x,P2.x),Math.min(P1.y,P2.y),Math.abs(P2.x-P1.x),Math.abs(P2.y-P1.y)); }
-    ctx.restore();
-  }
-
-  // ---------- Export frame ----------
-  els.snapBtn.addEventListener('click', ()=>{
-    canvas.toBlob(blob=>{
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href=url; a.download = 'analise-tatica-frame.png'; a.click();
-      setTimeout(()=>URL.revokeObjectURL(url), 4000);
-    }, 'image/png');
-  });
-
-  // ---------- Export video ----------
-  els.exportBtn.addEventListener('click', async ()=>{
-    if(!video) return;
-    if(!canvas.captureStream){
-      alert('Seu navegador não suporta exportação de vídeo (captureStream). Tente Chrome ou Edge atualizados.');
-      return;
-    }
-    const wasTime = video.currentTime;
-    const wasRate = video.playbackRate;
-    video.playbackRate = 1;
-    video.pause();
-    video.currentTime = 0;
-
-    const canvasStream = canvas.captureStream(30);
-    let audioTracks = [];
-    try{ audioTracks = video.captureStream ? video.captureStream().getAudioTracks() : []; }catch(e){}
-    const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
-
-    let recorder;
+    pc.save();
+    pc.shadowColor='rgba(0,0,0,0.45)';
+    pc.shadowBlur=Math.max(4,wStart*0.5);
+    pc.shadowOffsetY=Math.max(2,wStart*0.18);
+    pc.beginPath();
+    pc.moveTo(topPts[0].x, topPts[0].y);
+    for(const p of topPts) pc.lineTo(p.x,p.y);
+    for(let i=botPts.length-1;i>=0;i--) pc.lineTo(botPts[i].x,botPts[i].y);
+    pc.closePath();
+    let grad;
     try{
-      recorder = new MediaRecorder(combined, {mimeType:'video/webm;codecs=vp9,opus'});
-    }catch(e){
-      recorder = new MediaRecorder(combined);
+      grad = pc.createLinearGradient(p0.x,p0.y,p1.x,p1.y);
+      grad.addColorStop(0, color);
+      grad.addColorStop(1, shadeColor(color,-15));
+    } catch(e){ grad = color; }
+    pc.fillStyle = grad;
+    pc.fill();
+    pc.lineWidth = Math.max(1,wStart*0.05);
+    pc.strokeStyle = 'rgba(0,0,0,0.35)';
+    pc.shadowBlur = 0;
+    pc.stroke();
+    pc.restore();
+    return { end:p1, endTangent };
+  }
+
+  function drawArrowHead(pc, tip, dir, size, color){
+    if(!dir) dir = {x:1,y:0};
+    const angle = Math.atan2(dir.y,dir.x);
+    const back = {x:tip.x-Math.cos(angle)*size, y:tip.y-Math.sin(angle)*size};
+    const left = {x:back.x+Math.cos(angle+Math.PI/2)*size*0.55, y:back.y+Math.sin(angle+Math.PI/2)*size*0.55};
+    const right= {x:back.x+Math.cos(angle-Math.PI/2)*size*0.55, y:back.y+Math.sin(angle-Math.PI/2)*size*0.55};
+    pc.save();
+    pc.shadowColor='rgba(0,0,0,0.4)'; pc.shadowBlur=4;
+    pc.beginPath();
+    pc.moveTo(tip.x,tip.y);
+    pc.lineTo(left.x,left.y);
+    pc.lineTo(right.x,right.y);
+    pc.closePath();
+    pc.fillStyle=color;
+    pc.fill();
+    pc.restore();
+  }
+
+  function drawArrow(pc,o){
+    const p0=o.points[0], p1=o.points[1];
+    const dx=p1.x-p0.x, dy=p1.y-p0.y;
+    const dist=Math.hypot(dx,dy)||1;
+    const mx=(p0.x+p1.x)/2, my=(p0.y+p1.y)/2;
+    const nx=-dy/dist, ny=dx/dist;
+    const bend=dist*0.14;
+    const c={x:mx+nx*bend,y:my+ny*bend};
+    const wStart=o.width, wEnd=Math.max(2,o.width*0.35);
+    const res=drawTaperedCurve(pc,p0,c,p1,wStart,wEnd,o.color);
+    const headSize=Math.max(8,o.width*1.6);
+    drawArrowHead(pc,p1,res.endTangent,headSize,shadeColor(o.color,-15));
+  }
+
+  function drawZone(pc,o){
+    if(o.points.length<2) return;
+    pc.save();
+    pc.beginPath();
+    pc.moveTo(o.points[0].x,o.points[0].y);
+    for(let i=1;i<o.points.length;i++) pc.lineTo(o.points[i].x,o.points[i].y);
+    if(o.points.length>=3) pc.closePath();
+    if(o.points.length>=3){
+      pc.fillStyle = hexToRgba(o.color,0.20);
+      pc.fill();
     }
-    const chunks=[];
-    recorder.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data); };
-    recorder.onstop = ()=>{
-      els.recIndicator.style.display='none';
-      els.exportBtn.disabled=false;
-      const blob = new Blob(chunks, {type:'video/webm'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href=url; a.download='analise-tatica.webm'; a.click();
-      video.playbackRate = wasRate;
-      hint('Vídeo exportado com sucesso.');
+    pc.lineWidth = Math.max(2,o.width*0.5);
+    pc.strokeStyle = o.color;
+    pc.setLineDash([o.width*1.1, o.width*0.7]);
+    pc.shadowColor='rgba(0,0,0,0.5)'; pc.shadowBlur=6;
+    pc.stroke();
+    pc.restore();
+  }
+
+  function drawGroundShadow(pc,pt,radius,scale){
+    pc.save();
+    pc.beginPath();
+    pc.ellipse(pt.x, pt.y+radius*0.25, radius, radius*0.34, 0,0,Math.PI*2);
+    pc.fillStyle = `rgba(0,0,0,${(0.30*scale).toFixed(2)})`;
+    if(typeof pc.filter !== 'undefined') pc.filter = 'blur(3px)';
+    pc.fill();
+    pc.filter = 'none';
+    pc.restore();
+  }
+
+  function drawBallSprite(pc,pt,r){
+    pc.save();
+    pc.beginPath();
+    pc.ellipse(pt.x, pt.y+r*0.95, r*1.15, r*0.42, 0,0,Math.PI*2);
+    pc.fillStyle = 'rgba(0,0,0,0.38)';
+    if(typeof pc.filter !== 'undefined') pc.filter = 'blur(2px)';
+    pc.fill();
+    pc.filter = 'none';
+    const grad = pc.createRadialGradient(pt.x-r*0.35,pt.y-r*0.35,r*0.15,pt.x,pt.y,r);
+    grad.addColorStop(0,'#ffffff');
+    grad.addColorStop(0.65,'#e2e8ec');
+    grad.addColorStop(1,'#9aa6ad');
+    pc.beginPath();
+    pc.arc(pt.x,pt.y,r,0,Math.PI*2);
+    pc.fillStyle = grad;
+    pc.shadowColor = 'rgba(0,0,0,0.5)';
+    pc.shadowBlur = Math.max(2,r*0.3);
+    pc.fill();
+    pc.strokeStyle = 'rgba(0,0,0,0.25)';
+    pc.lineWidth = Math.max(0.5,r*0.06);
+    pc.shadowBlur = 0;
+    pc.stroke();
+    pc.restore();
+  }
+
+  function drawTrail(pc,o){
+    const p0=o.points[0], p1=o.points[1];
+    const dist = Math.hypot(p1.x-p0.x, p1.y-p0.y);
+    const lift = dist*o.peakFactor + canvas.height*0.04;
+    const midx=(p0.x+p1.x)/2;
+    const midy=Math.min(p0.y,p1.y)-lift;
+    const c={x:midx,y:midy};
+    const s0=depthScale(p0.y), s1=depthScale(p1.y);
+    drawGroundShadow(pc,p0,o.width*2.2*s0,s0);
+    drawGroundShadow(pc,p1,o.width*2.2*s1,s1);
+    const wStart=Math.max(2,o.width*0.85*s0);
+    const wEnd=Math.max(2,o.width*0.85*s1);
+    drawTaperedCurve(pc,p0,c,p1,wStart,wEnd,o.color);
+    drawBallSprite(pc,p0,Math.max(4,o.width*1.5*s0));
+    drawBallSprite(pc,p1,Math.max(4,o.width*1.5*s1));
+  }
+
+  function drawPlayer(pc,o){
+    const pt=o.points[0];
+    const scale=depthScale(pt.y);
+    const r=o.baseR*scale;
+    pc.save();
+    pc.beginPath();
+    pc.ellipse(pt.x, pt.y+r*0.85, r*1.05, r*0.35, 0,0,Math.PI*2);
+    pc.fillStyle='rgba(0,0,0,0.4)';
+    if(typeof pc.filter !== 'undefined') pc.filter='blur(1.5px)';
+    pc.fill();
+    pc.filter='none';
+    const grad = pc.createRadialGradient(pt.x-r*0.3,pt.y-r*0.3,r*0.1,pt.x,pt.y,r);
+    grad.addColorStop(0, shadeColor(o.color,30));
+    grad.addColorStop(1, o.color);
+    pc.beginPath();
+    pc.arc(pt.x,pt.y,r,0,Math.PI*2);
+    pc.fillStyle=grad;
+    pc.lineWidth=Math.max(1,r*0.12);
+    pc.strokeStyle='rgba(0,0,0,0.5)';
+    pc.shadowColor='rgba(0,0,0,0.5)'; pc.shadowBlur=5;
+    pc.fill();
+    pc.shadowBlur=0;
+    pc.stroke();
+    if(o.number){
+      pc.fillStyle='#0a0e13';
+      pc.font = `bold ${Math.round(r*1.05)}px 'Barlow Condensed', sans-serif`;
+      pc.textAlign='center'; pc.textBaseline='middle';
+      pc.fillText(o.number, pt.x, pt.y+r*0.05);
+    }
+    pc.restore();
+  }
+
+  function drawText(pc,o){
+    pc.save();
+    pc.font = `700 ${o.size}px 'Barlow Condensed', sans-serif`;
+    pc.textBaseline='middle';
+    pc.shadowColor='rgba(0,0,0,0.6)'; pc.shadowBlur=4;
+    pc.lineWidth = Math.max(2,o.size*0.12);
+    pc.strokeStyle='rgba(0,0,0,0.7)';
+    pc.strokeText(o.text,o.points[0].x,o.points[0].y);
+    pc.fillStyle=o.color;
+    pc.shadowBlur=3;
+    pc.fillText(o.text,o.points[0].x,o.points[0].y);
+    pc.restore();
+  }
+
+  function drawFreehand(pc,o){
+    if(o.points.length<2) return;
+    pc.save();
+    pc.lineJoin='round'; pc.lineCap='round';
+    pc.strokeStyle=o.color; pc.lineWidth=o.width;
+    pc.shadowColor='rgba(0,0,0,0.4)'; pc.shadowBlur=4;
+    pc.beginPath();
+    pc.moveTo(o.points[0].x,o.points[0].y);
+    for(let i=1;i<o.points.length-1;i++){
+      const mx=(o.points[i].x+o.points[i+1].x)/2;
+      const my=(o.points[i].y+o.points[i+1].y)/2;
+      pc.quadraticCurveTo(o.points[i].x,o.points[i].y,mx,my);
+    }
+    const last=o.points[o.points.length-1];
+    pc.lineTo(last.x,last.y);
+    pc.stroke();
+    pc.restore();
+  }
+
+  function getBBox(o){
+    if(o.type==='player'){
+      const r=o.baseR*1.5;
+      return {x:o.points[0].x-r,y:o.points[0].y-r,w:r*2,h:r*2};
+    }
+    if(o.type==='text'){
+      const w=o.size*o.text.length*0.55;
+      return {x:o.points[0].x-5,y:o.points[0].y-o.size*0.6,w:w,h:o.size*1.3};
+    }
+    const xs=o.points.map(p=>p.x), ys=o.points.map(p=>p.y);
+    const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+    return {x:minX,y:minY,w:Math.max(4,maxX-minX),h:Math.max(4,maxY-minY)};
+  }
+
+  function drawSelectionOutline(o){
+    const b = getBBox(o);
+    ctx.save();
+    ctx.strokeStyle='#f2b134';
+    ctx.lineWidth=Math.max(2,canvas.width*0.0018);
+    ctx.setLineDash([canvas.width*0.01, canvas.width*0.006]);
+    ctx.strokeRect(b.x-12,b.y-12,b.w+24,b.h+24);
+    ctx.restore();
+  }
+
+  function drawObject(o,highlighted){
+    switch(o.type){
+      case 'arrow': drawArrow(ctx,o); break;
+      case 'zone': drawZone(ctx,o); break;
+      case 'trail': drawTrail(ctx,o); break;
+      case 'player': drawPlayer(ctx,o); break;
+      case 'text': drawText(ctx,o); break;
+      case 'freehand': drawFreehand(ctx,o); break;
+    }
+    if(highlighted) drawSelectionOutline(o);
+  }
+
+  function render(){
+    if(!hasImage) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    objects.forEach((o,i)=> drawObject(o, i===selectedIndex));
+    if(pending) drawObject(pending,false);
+    if(currentTool==='zone' && pending && zonePreviewPoint){
+      drawObject({...pending, points:[...pending.points, zonePreviewPoint]}, false);
+    }
+    updateActionButtons();
+  }
+
+  function updateActionButtons(){
+    undoBtn.disabled = objects.length===0;
+    redoBtn.disabled = redoStack.length===0;
+    resetBtn.disabled = objects.length===0;
+    saveBtn.disabled = !hasImage;
+    deleteSelectedBtn.disabled = selectedIndex<0;
+  }
+
+  function hitTest(pos){
+    for(let i=objects.length-1;i>=0;i--){
+      const b=getBBox(objects[i]);
+      const pad=Math.max(14, canvas.width*0.012);
+      if(pos.x>=b.x-pad && pos.x<=b.x+b.w+pad && pos.y>=b.y-pad && pos.y<=b.y+b.h+pad) return i;
+    }
+    return -1;
+  }
+
+  function finalizeObject(o){
+    objects.push(o);
+    redoStack=[];
+    render();
+  }
+
+  function undo(){
+    if(objects.length){ redoStack.push(objects.pop()); selectedIndex=-1; render(); }
+  }
+  function redo(){
+    if(redoStack.length){ objects.push(redoStack.pop()); render(); }
+  }
+  function deleteSelected(){
+    if(selectedIndex>=0){
+      objects.splice(selectedIndex,1);
+      selectedIndex=-1;
+      redoStack=[];
+      render();
+    }
+  }
+
+  /* ---------------- image loading ---------------- */
+  function loadImageFile(file){
+    if(!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      const image = new Image();
+      image.onload = ()=>{
+        img = image;
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        objects=[]; redoStack=[]; selectedIndex=-1; pending=null; zonePreviewPoint=null;
+        currentWidth = Math.max(3, Math.round(image.naturalWidth/260));
+        widthSlider.value = currentWidth;
+        widthValue.textContent = currentWidth;
+        hasImage = true;
+        canvasFrame.classList.add('has-image');
+        render();
+      };
+      image.src = ev.target.result;
     };
+    reader.readAsDataURL(file);
+  }
 
-    els.recIndicator.style.display='flex';
-    els.exportBtn.disabled=true;
-    hint('Gravando exportação — aguarde o vídeo terminar…', 4000);
+  function handleNewImage(file){
+    if(!file) return;
+    if(hasImage && objects.length>0){
+      if(!confirm('Carregar uma nova imagem apagará as marcações atuais. Continuar?')) return;
+    }
+    loadImageFile(file);
+  }
 
-    recorder.start();
-    await video.play();
-    video.onended = ()=>{ recorder.stop(); video.onended=null; };
+  document.getElementById('loadBtnEmpty').addEventListener('click', ()=> fileInput.click());
+  document.getElementById('loadBtnTop').addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', e=>{
+    const f = e.target.files[0];
+    handleNewImage(f);
+    fileInput.value='';
+  });
+  canvasFrame.addEventListener('dragover', e=>{ e.preventDefault(); canvasFrame.classList.add('dragover'); });
+  canvasFrame.addEventListener('dragleave', ()=> canvasFrame.classList.remove('dragover'));
+  canvasFrame.addEventListener('drop', e=>{
+    e.preventDefault();
+    canvasFrame.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    handleNewImage(f);
   });
 
+  /* ---------------- pointer interactions ---------------- */
+  function onDown(e){
+    if(!hasImage) return;
+    const pos = getPos(e);
+    if(currentTool==='select'){
+      selectedIndex = hitTest(pos);
+      render();
+      return;
+    }
+    if(currentTool==='arrow' || currentTool==='trail'){
+      drawing = true;
+      pending = {type: currentTool, points:[pos, {x:pos.x,y:pos.y}], color: currentColor, width: currentWidth, peakFactor: arcHeight};
+      render();
+      return;
+    }
+    if(currentTool==='freehand'){
+      drawing = true;
+      pending = {type:'freehand', points:[pos], color: currentColor, width: currentWidth};
+      return;
+    }
+    if(currentTool==='zone'){
+      if(!pending){
+        pending = {type:'zone', points:[pos], color: currentColor, width: currentWidth};
+      } else {
+        pending.points.push(pos);
+        if(pending.points.length>=4){
+          finalizeObject(pending);
+          pending=null; zonePreviewPoint=null;
+        }
+      }
+      render();
+      return;
+    }
+    if(currentTool==='player'){
+      const number = prompt('Número da camisa (opcional):','');
+      finalizeObject({type:'player', points:[pos], color: teamColor, number: number ? number.trim().slice(0,2) : '', baseR: Math.max(12, canvas.width/45)});
+      return;
+    }
+    if(currentTool==='text'){
+      const txt = prompt('Digite o texto da anotação:','');
+      if(txt && txt.trim()){
+        finalizeObject({type:'text', points:[pos], color: currentColor, text: txt.trim(), size: Math.max(18, canvas.width/26)});
+      }
+      return;
+    }
+  }
+
+  function onMove(e){
+    if(!hasImage) return;
+    const pos = getPos(e);
+    if(drawing && pending){
+      if(pending.type==='freehand') pending.points.push(pos);
+      else pending.points[1] = pos;
+      render();
+    } else if(currentTool==='zone' && pending){
+      zonePreviewPoint = pos;
+      render();
+    }
+  }
+
+  function onUp(){
+    if(drawing && pending){
+      drawing=false;
+      const p = pending;
+      pending = null;
+      if(p.type==='freehand'){
+        if(p.points.length>2) finalizeObject(p);
+      } else {
+        const d = Math.hypot(p.points[1].x-p.points[0].x, p.points[1].y-p.points[0].y);
+        if(d>4) finalizeObject(p);
+      }
+      render();
+    }
+  }
+
+  canvas.addEventListener('pointerdown', e=>{
+    if(e.pointerId!==undefined && canvas.setPointerCapture){
+      try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+    }
+    onDown(e);
+  });
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('dblclick', ()=>{
+    if(currentTool==='zone' && pending && pending.points.length>=3){
+      finalizeObject(pending);
+      pending=null; zonePreviewPoint=null;
+      render();
+    }
+  });
+
+  window.addEventListener('keydown', e=>{
+    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+    if(activeTag==='INPUT' || activeTag==='TEXTAREA') return;
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); undo(); }
+    else if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z'&&e.shiftKey))){ e.preventDefault(); redo(); }
+    else if(e.key==='Delete' || e.key==='Backspace'){ if(selectedIndex>=0){ e.preventDefault(); deleteSelected(); } }
+    else if(e.key==='Escape'){ pending=null; zonePreviewPoint=null; drawing=false; render(); }
+  });
+
+  /* ---------------- toolbar / panel wiring ---------------- */
+  function updatePanels(){
+    const show = id=>document.getElementById(id).style.display='';
+    const hide = id=>document.getElementById(id).style.display='none';
+    hide('colorSection'); hide('widthSection'); hide('arcSection'); hide('teamSection'); hide('selectSection');
+    if(['arrow','zone','trail','text','freehand'].includes(currentTool)) show('colorSection');
+    if(['arrow','zone','trail','freehand'].includes(currentTool)) show('widthSection');
+    if(currentTool==='trail') show('arcSection');
+    if(currentTool==='player') show('teamSection');
+    if(currentTool==='select') show('selectSection');
+    toolHint.textContent = hints[currentTool] || '';
+  }
+
+  document.querySelectorAll('.tool-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTool = btn.dataset.tool;
+      pending=null; zonePreviewPoint=null; drawing=false;
+      canvasFrame.classList.toggle('tool-select', currentTool==='select');
+      updatePanels();
+      render();
+    });
+  });
+
+  document.querySelectorAll('.swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+      sw.classList.add('active');
+      currentColor = sw.dataset.color;
+      customColor.value = currentColor;
+    });
+  });
+  customColor.addEventListener('input', e=>{
+    currentColor = e.target.value;
+    document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+  });
+
+  document.querySelectorAll('.team-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.team-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      teamColor = b.dataset.color;
+    });
+  });
+
+  widthSlider.addEventListener('input', e=>{
+    currentWidth = parseFloat(e.target.value);
+    widthValue.textContent = currentWidth;
+  });
+  arcSlider.addEventListener('input', e=>{
+    arcHeight = parseFloat(e.target.value);
+    arcValue.textContent = arcHeight.toFixed(2);
+  });
+
+  undoBtn.addEventListener('click', undo);
+  redoBtn.addEventListener('click', redo);
+  deleteSelectedBtn.addEventListener('click', deleteSelected);
+  resetBtn.addEventListener('click', ()=>{
+    if(objects.length===0) return;
+    if(confirm('Limpar todas as marcações desta imagem?')){
+      objects=[]; redoStack=[]; selectedIndex=-1; render();
+    }
+  });
+  saveBtn.addEventListener('click', ()=>{
+    if(!hasImage) return;
+    const prevSel = selectedIndex;
+    selectedIndex = -1;
+    render();
+    canvas.toBlob(blob=>{
+      if(!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'prancheta-tatica-' + Date.now() + '.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 2000);
+      selectedIndex = prevSel;
+      render();
+    }, 'image/png', 1.0);
+  });
+
+  updatePanels();
+  updateActionButtons();
 })();
 </script>
 </body>
