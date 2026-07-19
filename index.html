@@ -1,1023 +1,605 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prancheta Tática Pro — Editor de Lances</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#0a0e13;
-    --panel:#121920;
-    --panel-2:#161f27;
-    --panel-3:#1b2530;
-    --border:#232e38;
-    --green:#2fae66;
-    --gold:#f2b134;
-    --red:#e2493d;
-    --blue:#3d8ff2;
-    --text:#eef3f6;
-    --muted:#8a97a3;
-    --font-display:'Barlow Condensed', sans-serif;
-    --font-body:'Inter', sans-serif;
-  }
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:var(--font-body);
-    display:flex;
-    flex-direction:column;
-    min-height:100vh;
-  }
-  button{font-family:inherit;}
-  ::selection{background:rgba(242,177,52,0.35);}
-  :focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
-
-  /* ---------- topbar ---------- */
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    padding:12px 20px;
-    background:linear-gradient(180deg,#141c24,#101720);
-    border-bottom:1px solid var(--border);
-    flex-wrap:wrap;
-  }
-  .brand{display:flex;align-items:center;gap:10px;}
-  .brand-mark{
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:1.5rem;
-    letter-spacing:0.03em;
-    text-transform:uppercase;
-    color:var(--text);
-  }
-  .brand-mark span{color:var(--gold);}
-  .pro-badge{
-    background:var(--gold);
-    color:#1a1200;
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:0.7rem;
-    letter-spacing:0.08em;
-    padding:2px 8px;
-    border-radius:3px;
-  }
-  .scorebug{
-    display:flex;align-items:center;gap:6px;
-    font-family:var(--font-display);
-    font-size:0.72rem;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:var(--muted);
-    border-left:1px solid var(--border);
-    padding-left:14px;
-    margin-left:4px;
-  }
-  .rec-dot{
-    width:7px;height:7px;border-radius:50%;background:var(--red);
-    animation:pulse 1.6s ease-in-out infinite;
-  }
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
-  @media (prefers-reduced-motion: reduce){ .rec-dot{animation:none;} }
-
-  .actions{display:flex;gap:8px;flex-wrap:wrap;}
-  .btn{
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    color:var(--text);
-    padding:9px 14px;
-    border-radius:8px;
-    font-size:0.85rem;
-    font-weight:600;
-    cursor:pointer;
-    transition:border-color .15s, background .15s, transform .1s;
-  }
-  .btn:hover{border-color:var(--gold);}
-  .btn:active{transform:translateY(1px);}
-  .btn:disabled{opacity:0.4;cursor:not-allowed;}
-  .btn:disabled:hover{border-color:var(--border);}
-  .btn-primary{background:var(--gold);color:#1a1200;border-color:var(--gold);}
-  .btn-primary:hover{filter:brightness(1.08);}
-  .btn-danger{background:var(--red);color:#fff;border-color:var(--red);}
-  .btn-ghost{background:transparent;}
-
-  /* ---------- workspace ---------- */
-  .workspace{
-    flex:1;
-    display:flex;
-    min-height:0;
-  }
-  .tools-dock{
-    width:92px;
-    background:var(--panel);
-    border-right:1px solid var(--border);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:16px 8px;
-    gap:6px;
-    overflow-y:auto;
-  }
-  .tool-btn{
-    width:100%;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:4px;
-    background:transparent;
-    border:1px solid transparent;
-    border-radius:10px;
-    padding:9px 4px;
-    color:var(--muted);
-    cursor:pointer;
-    transition:all .15s;
-  }
-  .tool-btn svg{width:22px;height:22px;stroke:currentColor;}
-  .tool-btn span{
-    font-family:var(--font-display);
-    font-size:0.62rem;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
-    text-align:center;
-    line-height:1.1;
-  }
-  .tool-btn:hover{color:var(--text);background:var(--panel-2);}
-  .tool-btn.active{color:var(--gold);background:rgba(242,177,52,0.12);border-color:rgba(242,177,52,0.4);}
-
-  .canvas-stage{
-    flex:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:28px;
-    overflow:auto;
-    background:
-      radial-gradient(ellipse at center, rgba(47,174,102,0.05), transparent 60%),
-      var(--bg);
-  }
-  .canvas-frame{
-    position:relative;
-    max-width:100%;
-    background:#000;
-    border:1px solid var(--border);
-    border-radius:4px;
-    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7);
-    transition:border-color .15s, background .15s;
-  }
-  .canvas-frame.dragover{border-color:var(--gold);background:rgba(242,177,52,0.05);}
-  .canvas-frame.tool-select #board{cursor:pointer;}
-  #board{
-    display:block;
-    width:100%;
-    height:auto;
-    max-height:78vh;
-    touch-action:none;
-    cursor:crosshair;
-    border-radius:2px;
-  }
-  .corner{position:absolute;width:22px;height:22px;pointer-events:none;}
-  .corner.tl{top:-1px;left:-1px;border-top:3px solid var(--gold);border-left:3px solid var(--gold);}
-  .corner.tr{top:-1px;right:-1px;border-top:3px solid var(--gold);border-right:3px solid var(--gold);}
-  .corner.bl{bottom:-1px;left:-1px;border-bottom:3px solid var(--gold);border-left:3px solid var(--gold);}
-  .corner.br{bottom:-1px;right:-1px;border-bottom:3px solid var(--gold);border-right:3px solid var(--gold);}
-
-  .empty-state{
-    position:absolute;inset:0;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:14px;text-align:center;padding:40px;
-    background:rgba(10,14,19,0.94);
-    border:2px dashed var(--border);
-    border-radius:4px;
-  }
-  .canvas-frame.has-image .empty-state{display:none;}
-  .empty-state svg{width:48px;height:48px;stroke:var(--muted);}
-  .empty-state h2{
-    font-family:var(--font-display);
-    font-weight:600;
-    font-size:1.3rem;
-    margin:0;
-    color:var(--text);
-    letter-spacing:0.01em;
-  }
-  .empty-state p{margin:0;color:var(--muted);font-size:0.88rem;max-width:320px;}
-  .canvas-frame{min-width:280px;min-height:280px;}
-  #board{background:#05070a;}
-
-  /* placeholder sizing before an image exists */
-  .canvas-frame:not(.has-image) #board{width:640px;max-width:80vw;height:400px;}
-
-  /* ---------- properties panel ---------- */
-  .properties-panel{
-    width:270px;
-    background:var(--panel);
-    border-left:1px solid var(--border);
-    padding:18px 16px;
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-    overflow-y:auto;
-  }
-  .panel-section label.section-label{
-    display:block;
-    font-family:var(--font-display);
-    font-size:0.68rem;
-    font-weight:600;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    color:var(--muted);
-    margin-bottom:8px;
-  }
-  .swatch-row{display:flex;gap:8px;flex-wrap:wrap;}
-  .swatch{
-    width:28px;height:28px;border-radius:50%;
-    border:2px solid var(--border);
-    cursor:pointer;
-    transition:transform .12s, border-color .12s;
-    padding:0;
-  }
-  .swatch:hover{transform:scale(1.08);}
-  .swatch.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(242,177,52,0.25);}
-  .custom-color-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
-  .custom-color-row input[type=color]{
-    width:36px;height:28px;border:1px solid var(--border);border-radius:6px;background:none;padding:0;cursor:pointer;
-  }
-  .custom-color-row span{font-size:0.78rem;color:var(--muted);}
-
-  input[type=range]{width:100%;accent-color:var(--gold);}
-  .range-row{display:flex;align-items:center;gap:10px;}
-  .range-row .val{
-    font-family:var(--font-display);font-weight:600;font-size:0.95rem;
-    min-width:26px;text-align:right;color:var(--gold);
-  }
-
-  .team-row{display:flex;gap:8px;}
-  .team-btn{
-    flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border);
-    background:var(--panel-2);color:var(--text);font-size:0.8rem;font-weight:600;cursor:pointer;
-  }
-  .team-btn[data-color="#3d8ff2"]{border-left:4px solid var(--blue);}
-  .team-btn[data-color="#e2493d"]{border-left:4px solid var(--red);}
-  .team-btn.active{background:var(--panel-3);border-color:var(--gold);}
-
-  .hint-box{
-    margin-top:auto;
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    border-radius:8px;
-    padding:12px;
-    font-size:0.8rem;
-    line-height:1.4;
-    color:var(--muted);
-  }
-  .hint-box strong{color:var(--text);font-family:var(--font-display);font-weight:600;letter-spacing:0.03em;}
-
-  /* ---------- responsive ---------- */
-  @media (max-width:900px){
-    .workspace{flex-direction:column;}
-    .tools-dock{
-      width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);
-      justify-content:flex-start;
-    }
-    .tool-btn{width:auto;min-width:64px;}
-    .properties-panel{width:100%;border-left:none;border-top:1px solid var(--border);}
-    .canvas-stage{padding:16px;}
-  }
-</style>
-</head>
-<body>
-
-<header class="topbar">
-  <div class="brand">
-    <div class="brand-mark">Prancheta <span>Tática</span></div>
-    <div class="pro-badge">PRO</div>
-    <div class="scorebug"><span class="rec-dot"></span>ANÁLISE DE LANCE</div>
-  </div>
-  <div class="actions">
-    <button class="btn" id="loadBtnTop">Carregar imagem</button>
-    <button class="btn" id="undoBtn" disabled>Desfazer</button>
-    <button class="btn" id="redoBtn" disabled>Refazer</button>
-    <button class="btn btn-ghost" id="resetBtn" disabled>Limpar marcações</button>
-    <button class="btn btn-primary" id="saveBtn" disabled>Salvar imagem</button>
-  </div>
-</header>
-
-<main class="workspace">
-
-  <aside class="tools-dock">
-    <button class="tool-btn active" data-tool="arrow" title="Seta tática">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 Q10 5 20 7"/><path d="M20 7l-4.5-1"/><path d="M20 7l-2 4.2"/></svg>
-      <span>Seta</span>
-    </button>
-    <button class="tool-btn" data-tool="zone" title="Zona em perspectiva">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19 L7 6 L17 6 L20 19 Z"/></svg>
-      <span>Zona</span>
-    </button>
-    <button class="tool-btn" data-tool="trail" title="Trajetória 3D da bola">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19 Q12 2 21 9"/><circle cx="21" cy="9" r="1.7" fill="currentColor" stroke="none"/><ellipse cx="3" cy="20.3" rx="2.4" ry="0.7" fill="currentColor" stroke="none" opacity="0.5"/></svg>
-      <span>Bola 3D</span>
-    </button>
-    <button class="tool-btn" data-tool="player" title="Marcador de jogador">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20c1.2-4.2 4-6.4 7.5-6.4s6.3 2.2 7.5 6.4"/></svg>
-      <span>Jogador</span>
-    </button>
-    <button class="tool-btn" data-tool="text" title="Texto / anotação">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5h15M12 6.5v13"/></svg>
-      <span>Texto</span>
-    </button>
-    <button class="tool-btn" data-tool="freehand" title="Traço livre">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l3.2-0.8L17.5 8.9a2 2 0 0 0 0-2.8l-1.6-1.6a2 2 0 0 0-2.8 0L2.8 14.8z"/><path d="M13.6 5.9l2.5 2.5"/></svg>
-      <span>Traço</span>
-    </button>
-    <button class="tool-btn" data-tool="select" title="Selecionar / excluir">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l4 17 2.2-6.8L19 11z"/></svg>
-      <span>Selecionar</span>
-    </button>
-  </aside>
-
-  <section class="canvas-stage">
-    <div class="canvas-frame" id="canvasFrame">
-      <span class="corner tl"></span><span class="corner tr"></span>
-      <span class="corner bl"></span><span class="corner br"></span>
-      <canvas id="board"></canvas>
-      <div class="empty-state" id="emptyState">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5V6.2A2.2 2.2 0 0 1 6.2 4h11.6A2.2 2.2 0 0 1 20 6.2v10.3"/><path d="M4 16.5l5-5.4 3.5 3.6 3-3.2L20 16"/><circle cx="8.5" cy="8.5" r="1.4"/><path d="M4 19h16"/></svg>
-        <h2>Carregue o lance para começar</h2>
-        <p>Arraste uma imagem aqui ou selecione um arquivo para iniciar a marcação tática.</p>
-        <button class="btn btn-primary" id="loadBtnEmpty">Selecionar imagem</button>
-      </div>
-    </div>
-  </section>
-
-  <aside class="properties-panel">
-    <div class="panel-section" id="colorSection">
-      <label class="section-label">Cor</label>
-      <div class="swatch-row">
-        <button class="swatch active" data-color="#ffffff" style="background:#ffffff"></button>
-        <button class="swatch" data-color="#f2b134" style="background:#f2b134"></button>
-        <button class="swatch" data-color="#e2493d" style="background:#e2493d"></button>
-        <button class="swatch" data-color="#3d8ff2" style="background:#3d8ff2"></button>
-        <button class="swatch" data-color="#2fae66" style="background:#2fae66"></button>
-        <button class="swatch" data-color="#111318" style="background:#111318"></button>
-      </div>
-      <div class="custom-color-row">
-        <input type="color" id="customColor" value="#ffffff">
-        <span>Cor personalizada</span>
-      </div>
-    </div>
-
-    <div class="panel-section" id="widthSection">
-      <label class="section-label">Espessura</label>
-      <div class="range-row">
-        <input type="range" id="widthSlider" min="2" max="60" value="10">
-        <span class="val" id="widthValue">10</span>
-      </div>
-    </div>
-
-    <div class="panel-section" id="arcSection">
-      <label class="section-label">Altura do arco (bola 3D)</label>
-      <div class="range-row">
-        <input type="range" id="arcSlider" min="0.1" max="0.9" step="0.05" value="0.35">
-        <span class="val" id="arcValue">0.35</span>
-      </div>
-    </div>
-
-    <div class="panel-section" id="teamSection">
-      <label class="section-label">Time do jogador</label>
-      <div class="team-row">
-        <button class="team-btn active" data-color="#3d8ff2">Time A</button>
-        <button class="team-btn" data-color="#e2493d">Time B</button>
-      </div>
-    </div>
-
-    <div class="panel-section" id="selectSection">
-      <label class="section-label">Marcação selecionada</label>
-      <button class="btn btn-danger" id="deleteSelectedBtn" style="width:100%;">Excluir selecionado</button>
-      <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">Toque em Delete/Backspace no teclado também remove o item selecionado.</p>
-    </div>
-
-    <div class="hint-box">
-      <strong>Dica:</strong>
-      <p id="toolHint" style="margin:6px 0 0;"></p>
-    </div>
-  </aside>
-
-</main>
-
-<input type="file" id="fileInput" accept="image/*" style="display:none">
-
-<script>
-(function(){
-  const canvas = document.getElementById('board');
-  const ctx = canvas.getContext('2d');
-  const canvasFrame = document.getElementById('canvasFrame');
-  const fileInput = document.getElementById('fileInput');
-  const widthSlider = document.getElementById('widthSlider');
-  const widthValue = document.getElementById('widthValue');
-  const arcSlider = document.getElementById('arcSlider');
-  const arcValue = document.getElementById('arcValue');
-  const customColor = document.getElementById('customColor');
-  const undoBtn = document.getElementById('undoBtn');
-  const redoBtn = document.getElementById('redoBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const saveBtn = document.getElementById('saveBtn');
-  const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-  const toolHint = document.getElementById('toolHint');
-
-  let img = null;
-  let hasImage = false;
-  let objects = [];
-  let redoStack = [];
-  let currentTool = 'arrow';
-  let currentColor = '#ffffff';
-  let currentWidth = 10;
-  let arcHeight = 0.35;
-  let teamColor = '#3d8ff2';
-  let selectedIndex = -1;
-  let pending = null;
-  let zonePreviewPoint = null;
-  let drawing = false;
-
-  const hints = {
-    arrow: 'Clique e arraste para desenhar uma seta com perspectiva, sombra e volume.',
-    zone: 'Clique para marcar até 4 cantos da área. Um clique duplo conclui antes com 3 pontos.',
-    trail: 'Clique no ponto de partida e arraste até o ponto de chegada da bola para gerar o arco 3D.',
-    player: 'Clique no campo para posicionar um jogador. Você pode informar o número da camisa.',
-    text: 'Clique no local desejado e digite a anotação.',
-    freehand: 'Clique, arraste e solte para desenhar um traço livre à mão.',
-    select: 'Clique em uma marcação para selecioná-la. Exclua pelo botão ou pela tecla Delete.'
-  };
-
-  /* ---------------- helpers ---------------- */
-  function shadeColor(hex, percent){
-    const f = parseInt(hex.slice(1),16);
-    const t = percent<0 ? 0 : 255;
-    const p = percent<0 ? percent*-1 : percent;
-    const R=f>>16, G=(f>>8)&0x00FF, B=f&0x0000FF;
-    const nr = Math.round((t-R)*p/100)+R;
-    const ng = Math.round((t-G)*p/100)+G;
-    const nb = Math.round((t-B)*p/100)+B;
-    return "#"+(0x1000000+nr*0x10000+ng*0x100+nb).toString(16).slice(1);
-  }
-  function hexToRgba(hex,a){
-    const v = hex.replace('#','');
-    const r = parseInt(v.substring(0,2),16), g = parseInt(v.substring(2,4),16), b = parseInt(v.substring(4,6),16);
-    return `rgba(${r},${g},${b},${a})`;
-  }
-  function quadPoint(p0,c,p1,t){
-    const mt = 1-t;
-    return { x: mt*mt*p0.x + 2*mt*t*c.x + t*t*p1.x, y: mt*mt*p0.y + 2*mt*t*c.y + t*t*p1.y };
-  }
-  function depthScale(y){
-    const t = Math.min(1, Math.max(0, y/canvas.height));
-    return 0.5 + 0.5*t;
-  }
-
-  function getPos(e){
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width/rect.width;
-    const scaleY = canvas.height/rect.height;
-    return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
-  }
-
-  /* ---------------- drawing primitives ---------------- */
-  function drawTaperedCurve(pc, p0,c,p1,wStart,wEnd,color){
-    const N=28;
-    const topPts=[], botPts=[];
-    let endTangent=null;
-    for(let i=0;i<=N;i++){
-      const t=i/N;
-      const pt=quadPoint(p0,c,p1,t);
-      const t2=Math.min(t+0.01,1);
-      const pt2=quadPoint(p0,c,p1,t2);
-      let tx=pt2.x-pt.x, ty=pt2.y-pt.y;
-      const len=Math.hypot(tx,ty)||1; tx/=len; ty/=len;
-      const nx=-ty, ny=tx;
-      const w=(wStart+(wEnd-wStart)*t)/2;
-      topPts.push({x:pt.x+nx*w,y:pt.y+ny*w});
-      botPts.push({x:pt.x-nx*w,y:pt.y-ny*w});
-      if(i===N) endTangent={x:tx,y:ty};
-    }
-    pc.save();
-    pc.shadowColor='rgba(0,0,0,0.45)';
-    pc.shadowBlur=Math.max(4,wStart*0.5);
-    pc.shadowOffsetY=Math.max(2,wStart*0.18);
-    pc.beginPath();
-    pc.moveTo(topPts[0].x, topPts[0].y);
-    for(const p of topPts) pc.lineTo(p.x,p.y);
-    for(let i=botPts.length-1;i>=0;i--) pc.lineTo(botPts[i].x,botPts[i].y);
-    pc.closePath();
-    let grad;
-    try{
-      grad = pc.createLinearGradient(p0.x,p0.y,p1.x,p1.y);
-      grad.addColorStop(0, color);
-      grad.addColorStop(1, shadeColor(color,-15));
-    } catch(e){ grad = color; }
-    pc.fillStyle = grad;
-    pc.fill();
-    pc.lineWidth = Math.max(1,wStart*0.05);
-    pc.strokeStyle = 'rgba(0,0,0,0.35)';
-    pc.shadowBlur = 0;
-    pc.stroke();
-    pc.restore();
-    return { end:p1, endTangent };
-  }
-
-  function drawArrowHead(pc, tip, dir, size, color){
-    if(!dir) dir = {x:1,y:0};
-    const angle = Math.atan2(dir.y,dir.x);
-    const back = {x:tip.x-Math.cos(angle)*size, y:tip.y-Math.sin(angle)*size};
-    const left = {x:back.x+Math.cos(angle+Math.PI/2)*size*0.55, y:back.y+Math.sin(angle+Math.PI/2)*size*0.55};
-    const right= {x:back.x+Math.cos(angle-Math.PI/2)*size*0.55, y:back.y+Math.sin(angle-Math.PI/2)*size*0.55};
-    pc.save();
-    pc.shadowColor='rgba(0,0,0,0.4)'; pc.shadowBlur=4;
-    pc.beginPath();
-    pc.moveTo(tip.x,tip.y);
-    pc.lineTo(left.x,left.y);
-    pc.lineTo(right.x,right.y);
-    pc.closePath();
-    pc.fillStyle=color;
-    pc.fill();
-    pc.restore();
-  }
-
-  function drawArrow(pc,o){
-    const p0=o.points[0], p1=o.points[1];
-    const dx=p1.x-p0.x, dy=p1.y-p0.y;
-    const dist=Math.hypot(dx,dy)||1;
-    const mx=(p0.x+p1.x)/2, my=(p0.y+p1.y)/2;
-    const nx=-dy/dist, ny=dx/dist;
-    const bend=dist*0.14;
-    const c={x:mx+nx*bend,y:my+ny*bend};
-    const wStart=o.width, wEnd=Math.max(2,o.width*0.35);
-    const res=drawTaperedCurve(pc,p0,c,p1,wStart,wEnd,o.color);
-    const headSize=Math.max(8,o.width*1.6);
-    drawArrowHead(pc,p1,res.endTangent,headSize,shadeColor(o.color,-15));
-  }
-
-  function drawZone(pc,o){
-    if(o.points.length<2) return;
-    pc.save();
-    pc.beginPath();
-    pc.moveTo(o.points[0].x,o.points[0].y);
-    for(let i=1;i<o.points.length;i++) pc.lineTo(o.points[i].x,o.points[i].y);
-    if(o.points.length>=3) pc.closePath();
-    if(o.points.length>=3){
-      pc.fillStyle = hexToRgba(o.color,0.20);
-      pc.fill();
-    }
-    pc.lineWidth = Math.max(2,o.width*0.5);
-    pc.strokeStyle = o.color;
-    pc.setLineDash([o.width*1.1, o.width*0.7]);
-    pc.shadowColor='rgba(0,0,0,0.5)'; pc.shadowBlur=6;
-    pc.stroke();
-    pc.restore();
-  }
-
-  function drawGroundShadow(pc,pt,radius,scale){
-    pc.save();
-    pc.beginPath();
-    pc.ellipse(pt.x, pt.y+radius*0.25, radius, radius*0.34, 0,0,Math.PI*2);
-    pc.fillStyle = `rgba(0,0,0,${(0.30*scale).toFixed(2)})`;
-    if(typeof pc.filter !== 'undefined') pc.filter = 'blur(3px)';
-    pc.fill();
-    pc.filter = 'none';
-    pc.restore();
-  }
-
-  function drawBallSprite(pc,pt,r){
-    pc.save();
-    pc.beginPath();
-    pc.ellipse(pt.x, pt.y+r*0.95, r*1.15, r*0.42, 0,0,Math.PI*2);
-    pc.fillStyle = 'rgba(0,0,0,0.38)';
-    if(typeof pc.filter !== 'undefined') pc.filter = 'blur(2px)';
-    pc.fill();
-    pc.filter = 'none';
-    const grad = pc.createRadialGradient(pt.x-r*0.35,pt.y-r*0.35,r*0.15,pt.x,pt.y,r);
-    grad.addColorStop(0,'#ffffff');
-    grad.addColorStop(0.65,'#e2e8ec');
-    grad.addColorStop(1,'#9aa6ad');
-    pc.beginPath();
-    pc.arc(pt.x,pt.y,r,0,Math.PI*2);
-    pc.fillStyle = grad;
-    pc.shadowColor = 'rgba(0,0,0,0.5)';
-    pc.shadowBlur = Math.max(2,r*0.3);
-    pc.fill();
-    pc.strokeStyle = 'rgba(0,0,0,0.25)';
-    pc.lineWidth = Math.max(0.5,r*0.06);
-    pc.shadowBlur = 0;
-    pc.stroke();
-    pc.restore();
-  }
-
-  function drawTrail(pc,o){
-    const p0=o.points[0], p1=o.points[1];
-    const dist = Math.hypot(p1.x-p0.x, p1.y-p0.y);
-    const lift = dist*o.peakFactor + canvas.height*0.04;
-    const midx=(p0.x+p1.x)/2;
-    const midy=Math.min(p0.y,p1.y)-lift;
-    const c={x:midx,y:midy};
-    const s0=depthScale(p0.y), s1=depthScale(p1.y);
-    drawGroundShadow(pc,p0,o.width*2.2*s0,s0);
-    drawGroundShadow(pc,p1,o.width*2.2*s1,s1);
-    const wStart=Math.max(2,o.width*0.85*s0);
-    const wEnd=Math.max(2,o.width*0.85*s1);
-    drawTaperedCurve(pc,p0,c,p1,wStart,wEnd,o.color);
-    drawBallSprite(pc,p0,Math.max(4,o.width*1.5*s0));
-    drawBallSprite(pc,p1,Math.max(4,o.width*1.5*s1));
-  }
-
-  function drawPlayer(pc,o){
-    const pt=o.points[0];
-    const scale=depthScale(pt.y);
-    const r=o.baseR*scale;
-    pc.save();
-    pc.beginPath();
-    pc.ellipse(pt.x, pt.y+r*0.85, r*1.05, r*0.35, 0,0,Math.PI*2);
-    pc.fillStyle='rgba(0,0,0,0.4)';
-    if(typeof pc.filter !== 'undefined') pc.filter='blur(1.5px)';
-    pc.fill();
-    pc.filter='none';
-    const grad = pc.createRadialGradient(pt.x-r*0.3,pt.y-r*0.3,r*0.1,pt.x,pt.y,r);
-    grad.addColorStop(0, shadeColor(o.color,30));
-    grad.addColorStop(1, o.color);
-    pc.beginPath();
-    pc.arc(pt.x,pt.y,r,0,Math.PI*2);
-    pc.fillStyle=grad;
-    pc.lineWidth=Math.max(1,r*0.12);
-    pc.strokeStyle='rgba(0,0,0,0.5)';
-    pc.shadowColor='rgba(0,0,0,0.5)'; pc.shadowBlur=5;
-    pc.fill();
-    pc.shadowBlur=0;
-    pc.stroke();
-    if(o.number){
-      pc.fillStyle='#0a0e13';
-      pc.font = `bold ${Math.round(r*1.05)}px 'Barlow Condensed', sans-serif`;
-      pc.textAlign='center'; pc.textBaseline='middle';
-      pc.fillText(o.number, pt.x, pt.y+r*0.05);
-    }
-    pc.restore();
-  }
-
-  function drawText(pc,o){
-    pc.save();
-    pc.font = `700 ${o.size}px 'Barlow Condensed', sans-serif`;
-    pc.textBaseline='middle';
-    pc.shadowColor='rgba(0,0,0,0.6)'; pc.shadowBlur=4;
-    pc.lineWidth = Math.max(2,o.size*0.12);
-    pc.strokeStyle='rgba(0,0,0,0.7)';
-    pc.strokeText(o.text,o.points[0].x,o.points[0].y);
-    pc.fillStyle=o.color;
-    pc.shadowBlur=3;
-    pc.fillText(o.text,o.points[0].x,o.points[0].y);
-    pc.restore();
-  }
-
-  function drawFreehand(pc,o){
-    if(o.points.length<2) return;
-    pc.save();
-    pc.lineJoin='round'; pc.lineCap='round';
-    pc.strokeStyle=o.color; pc.lineWidth=o.width;
-    pc.shadowColor='rgba(0,0,0,0.4)'; pc.shadowBlur=4;
-    pc.beginPath();
-    pc.moveTo(o.points[0].x,o.points[0].y);
-    for(let i=1;i<o.points.length-1;i++){
-      const mx=(o.points[i].x+o.points[i+1].x)/2;
-      const my=(o.points[i].y+o.points[i+1].y)/2;
-      pc.quadraticCurveTo(o.points[i].x,o.points[i].y,mx,my);
-    }
-    const last=o.points[o.points.length-1];
-    pc.lineTo(last.x,last.y);
-    pc.stroke();
-    pc.restore();
-  }
-
-  function getBBox(o){
-    if(o.type==='player'){
-      const r=o.baseR*1.5;
-      return {x:o.points[0].x-r,y:o.points[0].y-r,w:r*2,h:r*2};
-    }
-    if(o.type==='text'){
-      const w=o.size*o.text.length*0.55;
-      return {x:o.points[0].x-5,y:o.points[0].y-o.size*0.6,w:w,h:o.size*1.3};
-    }
-    const xs=o.points.map(p=>p.x), ys=o.points.map(p=>p.y);
-    const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
-    return {x:minX,y:minY,w:Math.max(4,maxX-minX),h:Math.max(4,maxY-minY)};
-  }
-
-  function drawSelectionOutline(o){
-    const b = getBBox(o);
-    ctx.save();
-    ctx.strokeStyle='#f2b134';
-    ctx.lineWidth=Math.max(2,canvas.width*0.0018);
-    ctx.setLineDash([canvas.width*0.01, canvas.width*0.006]);
-    ctx.strokeRect(b.x-12,b.y-12,b.w+24,b.h+24);
-    ctx.restore();
-  }
-
-  function drawObject(o,highlighted){
-    switch(o.type){
-      case 'arrow': drawArrow(ctx,o); break;
-      case 'zone': drawZone(ctx,o); break;
-      case 'trail': drawTrail(ctx,o); break;
-      case 'player': drawPlayer(ctx,o); break;
-      case 'text': drawText(ctx,o); break;
-      case 'freehand': drawFreehand(ctx,o); break;
-    }
-    if(highlighted) drawSelectionOutline(o);
-  }
-
-  function render(){
-    if(!hasImage) return;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
-    objects.forEach((o,i)=> drawObject(o, i===selectedIndex));
-    if(pending) drawObject(pending,false);
-    if(currentTool==='zone' && pending && zonePreviewPoint){
-      drawObject({...pending, points:[...pending.points, zonePreviewPoint]}, false);
-    }
-    updateActionButtons();
-  }
-
-  function updateActionButtons(){
-    undoBtn.disabled = objects.length===0;
-    redoBtn.disabled = redoStack.length===0;
-    resetBtn.disabled = objects.length===0;
-    saveBtn.disabled = !hasImage;
-    deleteSelectedBtn.disabled = selectedIndex<0;
-  }
-
-  function hitTest(pos){
-    for(let i=objects.length-1;i>=0;i--){
-      const b=getBBox(objects[i]);
-      const pad=Math.max(14, canvas.width*0.012);
-      if(pos.x>=b.x-pad && pos.x<=b.x+b.w+pad && pos.y>=b.y-pad && pos.y<=b.y+b.h+pad) return i;
-    }
-    return -1;
-  }
-
-  function finalizeObject(o){
-    objects.push(o);
-    redoStack=[];
-    render();
-  }
-
-  function undo(){
-    if(objects.length){ redoStack.push(objects.pop()); selectedIndex=-1; render(); }
-  }
-  function redo(){
-    if(redoStack.length){ objects.push(redoStack.pop()); render(); }
-  }
-  function deleteSelected(){
-    if(selectedIndex>=0){
-      objects.splice(selectedIndex,1);
-      selectedIndex=-1;
-      redoStack=[];
-      render();
-    }
-  }
-
-  /* ---------------- image loading ---------------- */
-  function loadImageFile(file){
-    if(!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = ev=>{
-      const image = new Image();
-      image.onload = ()=>{
-        img = image;
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-        objects=[]; redoStack=[]; selectedIndex=-1; pending=null; zonePreviewPoint=null;
-        currentWidth = Math.max(3, Math.round(image.naturalWidth/260));
-        widthSlider.value = currentWidth;
-        widthValue.textContent = currentWidth;
-        hasImage = true;
-        canvasFrame.classList.add('has-image');
-        render();
-      };
-      image.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function handleNewImage(file){
-    if(!file) return;
-    if(hasImage && objects.length>0){
-      if(!confirm('Carregar uma nova imagem apagará as marcações atuais. Continuar?')) return;
-    }
-    loadImageFile(file);
-  }
-
-  document.getElementById('loadBtnEmpty').addEventListener('click', ()=> fileInput.click());
-  document.getElementById('loadBtnTop').addEventListener('click', ()=> fileInput.click());
-  fileInput.addEventListener('change', e=>{
-    const f = e.target.files[0];
-    handleNewImage(f);
-    fileInput.value='';
-  });
-  canvasFrame.addEventListener('dragover', e=>{ e.preventDefault(); canvasFrame.classList.add('dragover'); });
-  canvasFrame.addEventListener('dragleave', ()=> canvasFrame.classList.remove('dragover'));
-  canvasFrame.addEventListener('drop', e=>{
-    e.preventDefault();
-    canvasFrame.classList.remove('dragover');
-    const f = e.dataTransfer.files[0];
-    handleNewImage(f);
-  });
-
-  /* ---------------- pointer interactions ---------------- */
-  function onDown(e){
-    if(!hasImage) return;
-    const pos = getPos(e);
-    if(currentTool==='select'){
-      selectedIndex = hitTest(pos);
-      render();
-      return;
-    }
-    if(currentTool==='arrow' || currentTool==='trail'){
-      drawing = true;
-      pending = {type: currentTool, points:[pos, {x:pos.x,y:pos.y}], color: currentColor, width: currentWidth, peakFactor: arcHeight};
-      render();
-      return;
-    }
-    if(currentTool==='freehand'){
-      drawing = true;
-      pending = {type:'freehand', points:[pos], color: currentColor, width: currentWidth};
-      return;
-    }
-    if(currentTool==='zone'){
-      if(!pending){
-        pending = {type:'zone', points:[pos], color: currentColor, width: currentWidth};
-      } else {
-        pending.points.push(pos);
-        if(pending.points.length>=4){
-          finalizeObject(pending);
-          pending=null; zonePreviewPoint=null;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tática 3D Pro - Análise de Futebol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Ocultar barra de rolagem mas manter funcionalidade */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-      }
-      render();
-      return;
-    }
-    if(currentTool==='player'){
-      const number = prompt('Número da camisa (opcional):','');
-      finalizeObject({type:'player', points:[pos], color: teamColor, number: number ? number.trim().slice(0,2) : '', baseR: Math.max(12, canvas.width/45)});
-      return;
-    }
-    if(currentTool==='text'){
-      const txt = prompt('Digite o texto da anotação:','');
-      if(txt && txt.trim()){
-        finalizeObject({type:'text', points:[pos], color: currentColor, text: txt.trim(), size: Math.max(18, canvas.width/26)});
-      }
-      return;
-    }
-  }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Estilo customizado para o slider de vídeo */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #4b5563;
+            border-radius: 2px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        
+        /* Prevenir seleções e toques indesejados no canvas no mobile */
+        #canvas-overlay {
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-white h-screen flex flex-col overflow-hidden font-sans">
 
-  function onMove(e){
-    if(!hasImage) return;
-    const pos = getPos(e);
-    if(drawing && pending){
-      if(pending.type==='freehand') pending.points.push(pos);
-      else pending.points[1] = pos;
-      render();
-    } else if(currentTool==='zone' && pending){
-      zonePreviewPoint = pos;
-      render();
-    }
-  }
+    <!-- Header -->
+    <header class="bg-gray-900 border-b border-gray-800 p-3 flex justify-between items-center z-20">
+        <div class="flex items-center gap-2">
+            <i data-lucide="scan" class="text-blue-500 w-6 h-6"></i>
+            <h1 class="text-lg font-bold tracking-tight">Tática <span class="text-blue-500">3D</span> Pro</h1>
+        </div>
+        <div class="flex gap-2">
+            <label for="video-upload" class="bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2 rounded-lg font-medium cursor-pointer flex items-center gap-2 transition-colors">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Carregar Vídeo</span>
+            </label>
+            <input type="file" id="video-upload" accept="video/*" class="hidden">
+        </div>
+    </header>
 
-  function onUp(){
-    if(drawing && pending){
-      drawing=false;
-      const p = pending;
-      pending = null;
-      if(p.type==='freehand'){
-        if(p.points.length>2) finalizeObject(p);
-      } else {
-        const d = Math.hypot(p.points[1].x-p.points[0].x, p.points[1].y-p.points[0].y);
-        if(d>4) finalizeObject(p);
-      }
-      render();
-    }
-  }
+    <!-- Área Principal de Visualização -->
+    <main class="flex-1 relative flex items-center justify-center bg-black overflow-hidden" id="video-container">
+        <!-- Mensagem de estado vazio -->
+        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 z-0">
+            <i data-lucide="video" class="w-16 h-16 mb-4 opacity-50"></i>
+            <p class="text-lg">Carregue um vídeo para começar</p>
+        </div>
 
-  canvas.addEventListener('pointerdown', e=>{
-    if(e.pointerId!==undefined && canvas.setPointerCapture){
-      try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
-    }
-    onDown(e);
-  });
-  canvas.addEventListener('pointermove', onMove);
-  canvas.addEventListener('pointerup', onUp);
-  canvas.addEventListener('pointercancel', onUp);
-  canvas.addEventListener('dblclick', ()=>{
-    if(currentTool==='zone' && pending && pending.points.length>=3){
-      finalizeObject(pending);
-      pending=null; zonePreviewPoint=null;
-      render();
-    }
-  });
+        <video id="main-video" class="max-w-full max-h-full w-auto h-auto object-contain hidden" playsinline></video>
+        <canvas id="canvas-overlay" class="absolute pointer-events-auto hidden"></canvas>
+    </main>
 
-  window.addEventListener('keydown', e=>{
-    const activeTag = document.activeElement ? document.activeElement.tagName : '';
-    if(activeTag==='INPUT' || activeTag==='TEXTAREA') return;
-    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); undo(); }
-    else if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z'&&e.shiftKey))){ e.preventDefault(); redo(); }
-    else if(e.key==='Delete' || e.key==='Backspace'){ if(selectedIndex>=0){ e.preventDefault(); deleteSelected(); } }
-    else if(e.key==='Escape'){ pending=null; zonePreviewPoint=null; drawing=false; render(); }
-  });
+    <!-- Controles e Ferramentas (Bottom) -->
+    <footer class="bg-gray-900 border-t border-gray-800 flex flex-col z-20 pb-safe">
+        
+        <!-- Timeline e Tempo -->
+        <div class="px-4 py-2 flex items-center gap-3 border-b border-gray-800">
+            <span id="time-current" class="text-xs font-mono text-gray-400 w-12 text-right">00:00</span>
+            <input type="range" id="timeline" min="0" max="100" value="0" step="0.001" class="flex-1" disabled>
+            <span id="time-duration" class="text-xs font-mono text-gray-400 w-12">00:00</span>
+        </div>
 
-  /* ---------------- toolbar / panel wiring ---------------- */
-  function updatePanels(){
-    const show = id=>document.getElementById(id).style.display='';
-    const hide = id=>document.getElementById(id).style.display='none';
-    hide('colorSection'); hide('widthSection'); hide('arcSection'); hide('teamSection'); hide('selectSection');
-    if(['arrow','zone','trail','text','freehand'].includes(currentTool)) show('colorSection');
-    if(['arrow','zone','trail','freehand'].includes(currentTool)) show('widthSection');
-    if(currentTool==='trail') show('arcSection');
-    if(currentTool==='player') show('teamSection');
-    if(currentTool==='select') show('selectSection');
-    toolHint.textContent = hints[currentTool] || '';
-  }
+        <!-- Barra de Ferramentas (Rolagem horizontal para mobile) -->
+        <div class="flex items-center p-2 gap-2 overflow-x-auto no-scrollbar justify-between">
+            
+            <!-- Controles de Playback -->
+            <div class="flex items-center gap-1 bg-gray-800 rounded-lg p-1 shrink-0">
+                <button id="btn-step-back" class="p-3 rounded-md hover:bg-gray-700 text-gray-300 disabled:opacity-50" title="-1 Frame" disabled>
+                    <i data-lucide="skip-back" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-play-pause" class="p-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50" disabled>
+                    <i data-lucide="play" class="w-5 h-5" id="icon-play"></i>
+                </button>
+                <button id="btn-step-fwd" class="p-3 rounded-md hover:bg-gray-700 text-gray-300 disabled:opacity-50" title="+1 Frame" disabled>
+                    <i data-lucide="skip-forward" class="w-5 h-5"></i>
+                </button>
+            </div>
 
-  document.querySelectorAll('.tool-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentTool = btn.dataset.tool;
-      pending=null; zonePreviewPoint=null; drawing=false;
-      canvasFrame.classList.toggle('tool-select', currentTool==='select');
-      updatePanels();
-      render();
-    });
-  });
+            <!-- Divisor -->
+            <div class="w-px h-8 bg-gray-700 shrink-0 mx-1"></div>
 
-  document.querySelectorAll('.swatch').forEach(sw=>{
-    sw.addEventListener('click', ()=>{
-      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
-      sw.classList.add('active');
-      currentColor = sw.dataset.color;
-      customColor.value = currentColor;
-    });
-  });
-  customColor.addEventListener('input', e=>{
-    currentColor = e.target.value;
-    document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
-  });
+            <!-- Ferramentas Táticas -->
+            <div class="flex items-center gap-1 shrink-0" id="tool-buttons">
+                <button data-tool="select" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 active-tool disabled:opacity-50" title="Selecionar" disabled>
+                    <i data-lucide="mouse-pointer-2" class="w-5 h-5"></i>
+                </button>
+                <button data-tool="calibrate" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 disabled:opacity-50" title="Calibrar Perspectiva (4 pontos)" disabled>
+                    <i data-lucide="pipette" class="w-5 h-5"></i>
+                </button>
+                <button data-tool="player" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 relative disabled:opacity-50" title="Rastrear Jogador" disabled>
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                    <span class="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
+                </button>
+                <button data-tool="ball" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 disabled:opacity-50" title="Rastrear Bola" disabled>
+                    <i data-lucide="circle-dot" class="w-5 h-5"></i>
+                </button>
+                <button id="btn-clear" class="p-3 rounded-md hover:bg-red-900/50 text-red-400 ml-2 disabled:opacity-50" title="Limpar Tudo" disabled>
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Instruções Dinâmicas -->
+        <div id="instruction-bar" class="bg-blue-900/30 text-blue-300 text-xs text-center py-1 hidden">
+            Selecione uma ferramenta.
+        </div>
+    </footer>
 
-  document.querySelectorAll('.team-btn').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      document.querySelectorAll('.team-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      teamColor = b.dataset.color;
-    });
-  });
+    <script>
+        // Inicializar Ícones
+        lucide.createIcons();
 
-  widthSlider.addEventListener('input', e=>{
-    currentWidth = parseFloat(e.target.value);
-    widthValue.textContent = currentWidth;
-  });
-  arcSlider.addEventListener('input', e=>{
-    arcHeight = parseFloat(e.target.value);
-    arcValue.textContent = arcHeight.toFixed(2);
-  });
+        // Elementos DOM
+        const video = document.getElementById('main-video');
+        const canvas = document.getElementById('canvas-overlay');
+        const ctx = canvas.getContext('2d');
+        const videoContainer = document.getElementById('video-container');
+        const emptyState = document.getElementById('empty-state');
+        const uploadInput = document.getElementById('video-upload');
+        const timeline = document.getElementById('timeline');
+        const timeCurrent = document.getElementById('time-current');
+        const timeDuration = document.getElementById('time-duration');
+        const btnPlayPause = document.getElementById('btn-play-pause');
+        const iconPlay = document.getElementById('icon-play');
+        const btnStepBack = document.getElementById('btn-step-back');
+        const btnStepFwd = document.getElementById('btn-step-fwd');
+        const toolBtns = document.querySelectorAll('.tool-btn');
+        const btnClear = document.getElementById('btn-clear');
+        const instructionBar = document.getElementById('instruction-bar');
 
-  undoBtn.addEventListener('click', undo);
-  redoBtn.addEventListener('click', redo);
-  deleteSelectedBtn.addEventListener('click', deleteSelected);
-  resetBtn.addEventListener('click', ()=>{
-    if(objects.length===0) return;
-    if(confirm('Limpar todas as marcações desta imagem?')){
-      objects=[]; redoStack=[]; selectedIndex=-1; render();
-    }
-  });
-  saveBtn.addEventListener('click', ()=>{
-    if(!hasImage) return;
-    const prevSel = selectedIndex;
-    selectedIndex = -1;
-    render();
-    canvas.toBlob(blob=>{
-      if(!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'prancheta-tatica-' + Date.now() + '.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=> URL.revokeObjectURL(url), 2000);
-      selectedIndex = prevSel;
-      render();
-    }, 'image/png', 1.0);
-  });
+        // Estado da Aplicação
+        let appState = {
+            isPlaying: false,
+            duration: 0,
+            fps: 30, // Estimado
+            currentTool: 'select', // 'select', 'calibrate', 'player', 'ball'
+            activeTrackId: null, // Para continuar rastreando o mesmo objeto
+            tracks: [], // Array de objetos de rastreamento
+            calibration: [] // Array de 4 pontos {x, y}
+        };
 
-  updatePanels();
-  updateActionButtons();
-})();
-</script>
+        // Estrutura de um Track:
+        // { id: string, type: 'player'|'ball', color: string, points: [{time: number, x: number, y: number}] }
+
+        const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+        let colorIndex = 0;
+
+        // --- Funções Utilitárias ---
+
+        const formatTime = (seconds) => {
+            if (isNaN(seconds)) return "00:00";
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        };
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+
+        // --- Gerenciamento de Vídeo ---
+
+        uploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            video.src = url;
+            
+            // UI Updates
+            emptyState.classList.add('hidden');
+            video.classList.remove('hidden');
+            canvas.classList.remove('hidden');
+            
+            // Enable controls
+            timeline.disabled = false;
+            btnPlayPause.disabled = false;
+            btnStepBack.disabled = false;
+            btnStepFwd.disabled = false;
+            toolBtns.forEach(btn => btn.disabled = false);
+            btnClear.disabled = false;
+
+            // Reset state
+            appState.tracks = [];
+            appState.calibration = [];
+            setTool('select');
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            appState.duration = video.duration;
+            timeline.max = video.duration;
+            timeDuration.textContent = formatTime(video.duration);
+            resizeCanvas();
+            renderLoop(); // Iniciar loop de renderização
+        });
+
+        video.addEventListener('timeupdate', () => {
+            if (!appState.isPlaying) { // Se estiver tocando, o renderLoop lida com a timeline para ser mais suave
+                timeline.value = video.currentTime;
+                timeCurrent.textContent = formatTime(video.currentTime);
+            }
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function resizeCanvas() {
+            if (!video.videoWidth) return;
+            // Fazer o canvas ter o mesmo tamanho do vídeo renderizado na tela
+            const rect = video.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            // Ajustar posição para sobrepor exatamente
+            canvas.style.left = `${rect.left}px`;
+            canvas.style.top = `${rect.top}px`;
+        }
+
+        // --- Controles de Playback ---
+
+        const togglePlay = () => {
+            if (video.paused) {
+                video.play();
+                appState.isPlaying = true;
+                iconPlay.setAttribute('data-lucide', 'pause');
+                setTool('select'); // Voltar para seleção ao dar play
+            } else {
+                video.pause();
+                appState.isPlaying = false;
+                iconPlay.setAttribute('data-lucide', 'play');
+            }
+            lucide.createIcons();
+        };
+
+        btnPlayPause.addEventListener('click', togglePlay);
+
+        const stepFrame = (direction) => {
+            if (appState.isPlaying) togglePlay();
+            const step = 1 / appState.fps;
+            video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + (step * direction)));
+            // Forçar atualização do input range e tempo
+            timeline.value = video.currentTime;
+            timeCurrent.textContent = formatTime(video.currentTime);
+            render(); // Forçar render imediato
+        };
+
+        btnStepBack.addEventListener('click', () => stepFrame(-1));
+        btnStepFwd.addEventListener('click', () => stepFrame(1));
+
+        timeline.addEventListener('input', (e) => {
+            if (appState.isPlaying) togglePlay();
+            video.currentTime = parseFloat(e.target.value);
+            timeCurrent.textContent = formatTime(video.currentTime);
+            render();
+        });
+
+        // --- Ferramentas e Interação (Canvas) ---
+
+        const setTool = (toolName) => {
+            appState.currentTool = toolName;
+            appState.activeTrackId = null; // Resetar active track ao mudar de ferramenta
+            
+            toolBtns.forEach(btn => {
+                if (btn.dataset.tool === toolName) {
+                    btn.classList.add('bg-gray-800', 'text-white');
+                    btn.classList.remove('text-gray-400');
+                } else {
+                    btn.classList.remove('bg-gray-800', 'text-white');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+
+            instructionBar.classList.remove('hidden');
+            switch(toolName) {
+                case 'calibrate':
+                    instructionBar.textContent = `Toque para definir 4 pontos da perspectiva (Atual: ${appState.calibration.length}/4)`;
+                    break;
+                case 'player':
+                    instructionBar.textContent = "Toque no jogador para rastrear (Avance frames para adicionar caminhos).";
+                    break;
+                case 'ball':
+                    instructionBar.textContent = "Toque na bola para marcar sua posição.";
+                    break;
+                default:
+                    instructionBar.classList.add('hidden');
+            }
+        };
+
+        toolBtns.forEach(btn => {
+            btn.addEventListener('click', () => setTool(btn.dataset.tool));
+        });
+
+        btnClear.addEventListener('click', () => {
+            if(confirm("Deseja apagar todos os rastreios e calibrações?")) {
+                appState.tracks = [];
+                appState.calibration = [];
+                appState.activeTrackId = null;
+                setTool('select');
+                render();
+            }
+        });
+
+        // Converter coordenadas do clique para coordenadas do canvas interno
+        const getCanvasCoords = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        };
+
+        const handlePointerDown = (e) => {
+            if (!video.src || appState.isPlaying) return;
+            
+            const coords = getCanvasCoords(e);
+            const time = video.currentTime;
+
+            if (appState.currentTool === 'calibrate') {
+                if (appState.calibration.length < 4) {
+                    appState.calibration.push(coords);
+                    setTool('calibrate'); // Update instruction text
+                } else {
+                    // Reset e recomeça
+                    appState.calibration = [coords];
+                    setTool('calibrate');
+                }
+            } 
+            else if (appState.currentTool === 'player' || appState.currentTool === 'ball') {
+                
+                let track;
+                // Se já temos um track ativo dessa ferramenta, adicionamos ponto a ele
+                if (appState.activeTrackId) {
+                    track = appState.tracks.find(t => t.id === appState.activeTrackId);
+                } 
+                
+                // Se não tem ou mudou de ferramenta, cria novo
+                if (!track) {
+                    track = {
+                        id: generateId(),
+                        type: appState.currentTool,
+                        color: COLORS[colorIndex % COLORS.length],
+                        points: []
+                    };
+                    colorIndex++;
+                    appState.tracks.push(track);
+                    appState.activeTrackId = track.id;
+                }
+
+                // Verifica se já existe um ponto muito próximo deste tempo, se sim, substitui
+                const existingPointIndex = track.points.findIndex(p => Math.abs(p.time - time) < 0.05);
+                if (existingPointIndex > -1) {
+                    track.points[existingPointIndex] = { time, x: coords.x, y: coords.y };
+                } else {
+                    track.points.push({ time, x: coords.x, y: coords.y });
+                    // Ordena por tempo para interpolação funcionar corretamente
+                    track.points.sort((a, b) => a.time - b.time);
+                }
+            }
+            
+            render();
+        };
+
+        // Eventos unificados para Mouse e Touch
+        canvas.addEventListener('mousedown', handlePointerDown);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Previne scroll ao tocar no canvas
+            handlePointerDown(e);
+        }, { passive: false });
+
+        // --- Lógica de Renderização ---
+
+        // Interpolação linear entre dois pontos
+        const lerp = (start, end, amt) => {
+            return (1 - amt) * start + amt * end;
+        };
+
+        // Obter posição interpolada de um track num dado tempo
+        const getTrackPositionAtTime = (track, time) => {
+            if (track.points.length === 0) return null;
+            if (track.points.length === 1) {
+                // Mostrar apenas se estiver muito perto do tempo do frame (ex: +- 0.2s)
+                return Math.abs(track.points[0].time - time) < 0.2 ? track.points[0] : null;
+            }
+
+            // Encontrar pontos antes e depois do tempo atual
+            let pBefore = null;
+            let pAfter = null;
+
+            for (let i = 0; i < track.points.length; i++) {
+                if (track.points[i].time <= time) pBefore = track.points[i];
+                if (track.points[i].time > time && !pAfter) pAfter = track.points[i];
+            }
+
+            if (!pBefore && pAfter) return null; // Antes do primeiro ponto marcado
+            if (pBefore && !pAfter) {
+                 // Depois do último ponto. Mostrar se estiver perto.
+                 return Math.abs(pBefore.time - time) < 0.5 ? pBefore : null;
+            }
+            
+            // Interpolação
+            const tDiff = pAfter.time - pBefore.time;
+            const tProg = (time - pBefore.time) / tDiff;
+            
+            return {
+                x: lerp(pBefore.x, pAfter.x, tProg),
+                y: lerp(pBefore.y, pAfter.y, tProg)
+            };
+        };
+
+        // Desenhar Quadrilátero de Calibração com "Perspectiva" visual
+        const drawCalibrationGrid = () => {
+            const pts = appState.calibration;
+            if (pts.length === 0) return;
+
+            ctx.lineWidth = 2;
+            
+            // Desenhar linhas conectando
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+                ctx.lineTo(pts[i].x, pts[i].y);
+            }
+            if (pts.length === 4) {
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'; // Blue tint
+                ctx.fill();
+                
+                // Desenhar grade interna simplificada (interpolação bilinear)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                const steps = 5;
+                
+                // Linhas verticais da grade
+                for(let i=1; i<steps; i++) {
+                    const u = i/steps;
+                    const topX = lerp(pts[0].x, pts[1].x, u);
+                    const topY = lerp(pts[0].y, pts[1].y, u);
+                    const botX = lerp(pts[3].x, pts[2].x, u);
+                    const botY = lerp(pts[3].y, pts[2].y, u);
+                    ctx.beginPath(); ctx.moveTo(topX, topY); ctx.lineTo(botX, botY); ctx.stroke();
+                }
+                // Linhas horizontais da grade
+                for(let i=1; i<steps; i++) {
+                    const v = i/steps;
+                    const leftX = lerp(pts[0].x, pts[3].x, v);
+                    const leftY = lerp(pts[0].y, pts[3].y, v);
+                    const rightX = lerp(pts[1].x, pts[2].x, v);
+                    const rightY = lerp(pts[1].y, pts[2].y, v);
+                    ctx.beginPath(); ctx.moveTo(leftX, leftY); ctx.lineTo(rightX, rightY); ctx.stroke();
+                }
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+                ctx.lineWidth = 2;
+            } else {
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
+            }
+            ctx.stroke();
+
+            // Desenhar os nós
+            pts.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+            });
+        };
+
+        const drawMarker = (x, y, color, type, isActive) => {
+            if (type === 'player') {
+                // Desenhar disco de perspectiva no chão (elipse)
+                ctx.beginPath();
+                // A elipse simula a perspectiva. Fixo para MVP, mas poderia depender da calibração.
+                ctx.ellipse(x, y + 10, 15, 6, 0, 0, Math.PI * 2); 
+                ctx.fillStyle = color + '80'; // Transparente
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Ponto central
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                
+                // Linha vertical (cone)
+                ctx.beginPath();
+                ctx.moveTo(x, y+10);
+                ctx.lineTo(x, y-20);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Info tag se ativo
+                if (isActive) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x + 10, y - 30, 10, 10);
+                }
+
+            } else if (type === 'ball') {
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#000';
+                ctx.stroke();
+            }
+        };
+
+        const drawTracks = () => {
+            const time = video.currentTime;
+            
+            appState.tracks.forEach(track => {
+                const pos = getTrackPositionAtTime(track, time);
+                
+                // Desenhar o rastro (caminho) para trás
+                if (track.points.length > 1) {
+                    ctx.beginPath();
+                    let hasStarted = false;
+                    for (let i = 0; i < track.points.length; i++) {
+                        const pt = track.points[i];
+                        if (pt.time <= time) {
+                            if (!hasStarted) {
+                                ctx.moveTo(pt.x, pt.y);
+                                hasStarted = true;
+                            } else {
+                                ctx.lineTo(pt.x, pt.y);
+                            }
+                        }
+                    }
+                    if (pos && hasStarted) {
+                        ctx.lineTo(pos.x, pos.y);
+                    }
+                    ctx.strokeStyle = track.color + '60'; // Semitransparente
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.setLineDash([]); // Reset
+                }
+
+                // Desenhar o marcador atual
+                if (pos) {
+                    const isActive = track.id === appState.activeTrackId;
+                    drawMarker(pos.x, pos.y, track.color, track.type, isActive);
+                }
+            });
+        };
+
+        const render = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCalibrationGrid();
+            drawTracks();
+        };
+
+        const renderLoop = () => {
+            if (appState.isPlaying) {
+                timeline.value = video.currentTime;
+                timeCurrent.textContent = formatTime(video.currentTime);
+                render();
+            }
+            requestAnimationFrame(renderLoop);
+        };
+
+    </script>
 </body>
 </html>
+
+```
