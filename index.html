@@ -1,605 +1,881 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tática 3D Pro - Análise de Futebol</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Ocultar barra de rolagem mas manter funcionalidade */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        
-        /* Estilo customizado para o slider de vídeo */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            margin-top: -6px;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #4b5563;
-            border-radius: 2px;
-        }
-        input[type=range]:focus {
-            outline: none;
-        }
-        
-        /* Prevenir seleções e toques indesejados no canvas no mobile */
-        #canvas-overlay {
-            touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rota de Diligências — Mapa de Cobertura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14181f;
+    --ink-soft:#1f2530;
+    --paper:#f4f2ea;
+    --paper-line:#d9d3c2;
+    --amber:#b97c2c;
+    --amber-soft:#e0a85c;
+    --teal:#2c6b5e;
+    --teal-soft:#3f8f7c;
+    --text:#1c2028;
+    --text-muted:#6b6a5f;
+    --danger:#a13d3d;
+    --radius:10px;
+    --shadow:0 2px 10px rgba(20,24,31,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--text);
+    background:var(--ink);
+    overflow:hidden;
+  }
+  #app{display:flex;flex-direction:column;height:100vh;}
+
+  /* ---------- TOPBAR ---------- */
+  #topbar{
+    background:var(--ink);
+    color:#e9e6da;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 20px;
+    border-bottom:1px solid #2a3140;
+    flex-shrink:0;
+    z-index:20;
+  }
+  #brand{display:flex;align-items:baseline;gap:10px;}
+  #brand h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:19px;
+    letter-spacing:.2px;
+    margin:0;
+    color:#f3efe2;
+  }
+  #brand span{font-size:11px;color:#9aa3b5;font-family:'IBM Plex Mono',monospace;letter-spacing:.5px;text-transform:uppercase;}
+  #progress-wrap{display:flex;align-items:center;gap:14px;}
+  #progress-stats{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#c9c4b3;white-space:nowrap;}
+  #progress-bar-track{width:160px;height:6px;background:#2a3140;border-radius:4px;overflow:hidden;}
+  #progress-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--amber-soft),var(--teal-soft));transition:width .4s ease;}
+  #user-controls{display:flex;align-items:center;gap:8px;}
+  #user-controls select, #user-controls input, #user-controls button{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:12.5px;
+  }
+  .badge-id{
+    background:#232a38;border:1px solid #333c4d;color:#e9e6da;
+    padding:6px 10px;border-radius:6px;display:flex;align-items:center;gap:6px;
+  }
+  .badge-id::before{content:"◆";color:var(--amber-soft);font-size:10px;}
+
+  select, input[type=text]{
+    background:#1c222d;color:#e9e6da;border:1px solid #333c4d;border-radius:6px;padding:6px 8px;
+  }
+  button{
+    cursor:pointer;border:none;border-radius:6px;padding:7px 12px;font-weight:500;
+    font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;
+  }
+  .btn-ghost{background:transparent;color:#c9c4b3;border:1px solid #333c4d;}
+  .btn-ghost:hover{background:#232a38;}
+  .btn-danger{background:transparent;color:#e08a8a;border:1px solid #4a2f2f;}
+  .btn-danger:hover{background:#2a1c1c;}
+  .btn-amber{background:var(--amber);color:#fff;}
+  .btn-amber:hover{background:#a06d24;}
+  .btn-teal{background:var(--teal);color:#fff;}
+  .btn-teal:hover{background:#245a4f;}
+
+  /* ---------- MAIN LAYOUT ---------- */
+  #main{flex:1;display:flex;min-height:0;}
+
+  /* ---------- SIDEBAR ---------- */
+  #sidebar{
+    width:340px;
+    background:var(--paper);
+    border-right:1px solid var(--paper-line);
+    display:flex;flex-direction:column;
+    flex-shrink:0;
+    position:relative;
+  }
+  #sidebar::before{
+    content:"";position:absolute;top:0;right:0;bottom:0;width:1px;
+    background:repeating-linear-gradient(180deg,var(--paper-line) 0 6px, transparent 6px 12px);
+  }
+  .sb-section{padding:14px 16px;border-bottom:1px solid var(--paper-line);}
+  .sb-section h2{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--text-muted);margin:0 0 10px 0;
+  }
+  #search-row{display:flex;gap:6px;}
+  #search-row input{flex:1;background:#fff;color:var(--text);border:1px solid var(--paper-line);}
+  #add-mode-btn{width:100%;margin-top:8px;}
+  #add-mode-btn.active{background:var(--amber);color:#fff;border-color:var(--amber);}
+
+  #tabs{display:flex;gap:0;}
+  .tab{
+    flex:1;text-align:center;padding:8px 0;font-size:12.5px;font-weight:500;
+    color:var(--text-muted);border-bottom:2px solid transparent;cursor:pointer;
+  }
+  .tab.active{color:var(--text);border-bottom-color:var(--amber);}
+  .tab .count{font-family:'IBM Plex Mono',monospace;margin-left:4px;}
+
+  #list-wrap{flex:1;overflow-y:auto;padding:8px 12px;}
+  .loc-card{
+    background:#fff;border:1px solid var(--paper-line);border-radius:var(--radius);
+    padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:box-shadow .15s ease, transform .1s ease;
+  }
+  .loc-card:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
+  .loc-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .loc-card .name{font-weight:600;font-size:13.5px;color:var(--text);}
+  .loc-card .addr{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+  .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+  .status-dot.pending{background:var(--amber);}
+  .status-dot.done{background:var(--teal);}
+  .loc-card .meta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);margin-top:6px;}
+  .empty-msg{color:var(--text-muted);font-size:12.5px;padding:20px 6px;text-align:center;line-height:1.5;}
+
+  #exploration-toggle{width:100%;}
+  #exploration-toggle.on{background:var(--teal);color:#fff;}
+  .hint{font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5;}
+
+  /* ---------- MAP AREA ---------- */
+  #map-wrap{flex:1;position:relative;background:#0d1117;}
+  #map{position:absolute;inset:0;}
+  #fog-canvas{position:absolute;inset:0;pointer-events:none;}
+
+  #legend{
+    position:absolute;bottom:16px;left:16px;background:rgba(20,24,31,0.88);
+    color:#e9e6da;padding:10px 14px;border-radius:8px;font-size:11.5px;
+    display:flex;gap:16px;font-family:'IBM Plex Mono',monospace;z-index:10;
+  }
+  .legend-item{display:flex;align-items:center;gap:6px;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;}
+
+  #new-loc-form{
+    position:absolute;background:#fff;border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    padding:14px;width:260px;z-index:30;display:none;
+  }
+  #new-loc-form h3{margin:0 0 8px 0;font-size:13px;font-family:'Fraunces',serif;}
+  #new-loc-form label{font-size:11px;color:var(--text-muted);display:block;margin-top:8px;}
+  #new-loc-form input, #new-loc-form textarea{
+    width:100%;border:1px solid var(--paper-line);border-radius:6px;padding:6px 8px;font-size:12.5px;
+    font-family:'IBM Plex Sans',sans-serif;margin-top:3px;
+  }
+  #new-loc-form textarea{resize:vertical;min-height:44px;}
+  #new-loc-form .actions{display:flex;gap:8px;margin-top:12px;}
+
+  #toast-container{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:40;}
+  .toast{
+    background:var(--ink);color:#e9e6da;padding:10px 14px;border-radius:8px;
+    font-size:12.5px;box-shadow:var(--shadow);border-left:3px solid var(--teal-soft);
+    animation:fadeIn .2s ease;
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+
+  #api-key-warning{
+    position:absolute;inset:0;background:var(--paper);z-index:100;
+    display:flex;align-items:center;justify-content:center;padding:40px;
+  }
+  #api-key-warning .box{max-width:520px;background:#fff;border:1px solid var(--paper-line);
+    border-radius:12px;padding:28px 30px;box-shadow:var(--shadow);}
+  #api-key-warning h2{font-family:'Fraunces',serif;margin-top:0;}
+  #api-key-warning code{background:#f1efe6;padding:2px 6px;border-radius:4px;font-size:12.5px;}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--paper-line);border-radius:4px;}
+</style>
 </head>
-<body class="bg-gray-950 text-white h-screen flex flex-col overflow-hidden font-sans">
+<body>
+<div id="app">
 
-    <!-- Header -->
-    <header class="bg-gray-900 border-b border-gray-800 p-3 flex justify-between items-center z-20">
-        <div class="flex items-center gap-2">
-            <i data-lucide="scan" class="text-blue-500 w-6 h-6"></i>
-            <h1 class="text-lg font-bold tracking-tight">Tática <span class="text-blue-500">3D</span> Pro</h1>
+  <div id="topbar">
+    <div id="brand">
+      <h1>Rota de Diligências</h1>
+      <span>Mapa de cobertura em campo</span>
+    </div>
+    <div id="progress-wrap">
+      <div id="progress-stats">0 / 0 concluídas · 0%</div>
+      <div id="progress-bar-track"><div id="progress-bar-fill"></div></div>
+    </div>
+    <div id="user-controls">
+      <div class="badge-id" id="current-user-badge">—</div>
+      <select id="user-select"></select>
+      <button class="btn-ghost" id="new-user-btn">+ Novo usuário</button>
+      <button class="btn-danger" id="reset-btn">Reiniciar progresso</button>
+      <button class="btn-ghost" id="export-btn">Exportar</button>
+      <button class="btn-ghost" id="import-btn">Importar</button>
+      <input type="file" id="import-file" accept="application/json" style="display:none;">
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="sidebar">
+      <div class="sb-section">
+        <h2>Buscar endereço</h2>
+        <div id="search-row">
+          <input type="text" id="search-input" placeholder="Digite um endereço…">
+          <button class="btn-ghost" id="search-btn">Buscar</button>
         </div>
-        <div class="flex gap-2">
-            <label for="video-upload" class="bg-blue-600 hover:bg-blue-700 text-sm px-4 py-2 rounded-lg font-medium cursor-pointer flex items-center gap-2 transition-colors">
-                <i data-lucide="upload" class="w-4 h-4"></i>
-                <span class="hidden sm:inline">Carregar Vídeo</span>
-            </label>
-            <input type="file" id="video-upload" accept="video/*" class="hidden">
+        <button class="btn-amber" id="add-mode-btn">📍 Adicionar local (clique no mapa)</button>
+        <div class="hint">Com o modo ativo, clique em qualquer ponto do mapa para cadastrar uma diligência pendente naquele local.</div>
+      </div>
+
+      <div class="sb-section" style="border-bottom:none;padding-bottom:0;">
+        <h2>Exploração em campo</h2>
+        <button class="btn-teal" id="exploration-toggle">▶ Iniciar exploração (GPS)</button>
+        <div class="hint">Ao ativar, sua localização real vai revelando o mapa conforme você se desloca. Chegar perto de um local pendente marca a diligência automaticamente.</div>
+      </div>
+
+      <div id="tabs">
+        <div class="tab active" data-tab="pending">Pendentes <span class="count" id="count-pending">0</span></div>
+        <div class="tab" data-tab="done">Concluídas <span class="count" id="count-done">0</span></div>
+      </div>
+      <div id="list-wrap"></div>
+    </div>
+
+    <div id="map-wrap">
+      <div id="map"></div>
+      <canvas id="fog-canvas"></canvas>
+      <div id="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber-soft);"></div> Pendente (sob neblina)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--teal-soft);"></div> Diligência concluída</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4a90e2;"></div> Você (GPS)</div>
+      </div>
+      <div id="toast-container"></div>
+
+      <div id="new-loc-form">
+        <h3>Nova diligência</h3>
+        <label>Nome do local</label>
+        <input type="text" id="nl-name" placeholder="Ex: Imóvel Rua das Flores, 123">
+        <label>Endereço (preenchido automaticamente)</label>
+        <input type="text" id="nl-address">
+        <label>Observações</label>
+        <textarea id="nl-notes" placeholder="Notas internas, contato, referência de processo…"></textarea>
+        <div class="actions">
+          <button class="btn-ghost" id="nl-cancel">Cancelar</button>
+          <button class="btn-amber" id="nl-save">Salvar</button>
         </div>
-    </header>
+      </div>
 
-    <!-- Área Principal de Visualização -->
-    <main class="flex-1 relative flex items-center justify-center bg-black overflow-hidden" id="video-container">
-        <!-- Mensagem de estado vazio -->
-        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 z-0">
-            <i data-lucide="video" class="w-16 h-16 mb-4 opacity-50"></i>
-            <p class="text-lg">Carregue um vídeo para começar</p>
+      <div id="api-key-warning">
+        <div class="box">
+          <h2>Configure sua chave da API do Google Maps</h2>
+          <p>Este app precisa de uma chave da <strong>Google Maps JavaScript API</strong> (com as bibliotecas <code>places</code> e <code>geometry</code> habilitadas) para carregar o mapa.</p>
+          <p>Abra o arquivo <code>diligencias-mapa.html</code> em um editor de texto, localize a linha:</p>
+          <p><code>const GOOGLE_MAPS_API_KEY = "SUA_CHAVE_AQUI";</code></p>
+          <p>e substitua pela sua chave. Depois, salve e abra o arquivo novamente no navegador (ou hospede em um servidor/GitHub Pages).</p>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <video id="main-video" class="max-w-full max-h-full w-auto h-auto object-contain hidden" playsinline></video>
-        <canvas id="canvas-overlay" class="absolute pointer-events-auto hidden"></canvas>
-    </main>
+<script>
+/* ======================================================================
+   CONFIGURAÇÃO — insira sua chave da API do Google Maps aqui
+   ====================================================================== */
+const GOOGLE_MAPS_API_KEY = "SUA_CHAVE_AQUI";
 
-    <!-- Controles e Ferramentas (Bottom) -->
-    <footer class="bg-gray-900 border-t border-gray-800 flex flex-col z-20 pb-safe">
-        
-        <!-- Timeline e Tempo -->
-        <div class="px-4 py-2 flex items-center gap-3 border-b border-gray-800">
-            <span id="time-current" class="text-xs font-mono text-gray-400 w-12 text-right">00:00</span>
-            <input type="range" id="timeline" min="0" max="100" value="0" step="0.001" class="flex-1" disabled>
-            <span id="time-duration" class="text-xs font-mono text-gray-400 w-12">00:00</span>
+/* ======================================================================
+   PERSISTÊNCIA (localStorage — por navegador/dispositivo, por usuário)
+   ====================================================================== */
+const STORE_USERS_KEY = "diligencias_users_v1";
+const STORE_CURRENT_KEY = "diligencias_current_user_v1";
+const STORE_DATA_PREFIX = "diligencias_data_v1_";
+
+function getUsers(){
+  try{ return JSON.parse(localStorage.getItem(STORE_USERS_KEY)) || []; }catch(e){ return []; }
+}
+function saveUsers(list){ localStorage.setItem(STORE_USERS_KEY, JSON.stringify(list)); }
+function getCurrentUserName(){ return localStorage.getItem(STORE_CURRENT_KEY) || null; }
+function setCurrentUserName(name){ localStorage.setItem(STORE_CURRENT_KEY, name); }
+function defaultState(){ return { locations: [], explored: [] }; }
+function loadState(user){
+  try{
+    const raw = localStorage.getItem(STORE_DATA_PREFIX + user);
+    return raw ? JSON.parse(raw) : defaultState();
+  }catch(e){ return defaultState(); }
+}
+function saveState(user, state){
+  localStorage.setItem(STORE_DATA_PREFIX + user, JSON.stringify(state));
+}
+
+let state = defaultState();
+let currentUser = null;
+
+/* ======================================================================
+   MAPA / FOG-OF-WAR
+   ====================================================================== */
+let map, geocoder, projHelper, fogCanvas, fogCtx;
+let markers = {};
+let pendingPositions = []; // {id,x,y} recalculado a cada draw, para clique nos "pings"
+let watchId = null;
+let userPosMarker = null;
+let addModeActive = false;
+let pendingClickLatLng = null;
+
+const REVEAL_RADIUS_LOCATION = 160; // metros revelados ao concluir uma diligência
+const REVEAL_RADIUS_TRAIL = 55;     // metros revelados pelo rastro de GPS
+const MIN_TRAIL_STEP = 22;          // metros mínimos entre pontos do rastro
+const ARRIVAL_RADIUS = 55;          // metros para marcar conclusão automática
+
+function initApp(){
+  if(!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY === "SUA_CHAVE_AQUI"){
+    document.getElementById("api-key-warning").style.display = "flex";
+    return;
+  }
+  document.getElementById("api-key-warning").style.display = "none";
+
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: -14.235, lng: -51.9253 },
+    zoom: 4.2,
+    disableDefaultUI: false,
+    fullscreenControl: false,
+    streetViewControl: false,
+    mapTypeControl: true,
+    styles: mapStyleQuiet()
+  });
+
+  geocoder = new google.maps.Geocoder();
+
+  // helper invisível apenas para conversão lat/lng -> pixel
+  function ProjHelper(){}
+  ProjHelper.prototype = new google.maps.OverlayView();
+  ProjHelper.prototype.onAdd = function(){};
+  ProjHelper.prototype.draw = function(){ scheduleFogRedraw(); };
+  ProjHelper.prototype.onRemove = function(){};
+  projHelper = new ProjHelper();
+  projHelper.setMap(map);
+
+  fogCanvas = document.getElementById("fog-canvas");
+  fogCtx = fogCanvas.getContext("2d");
+
+  ["idle","zoom_changed","bounds_changed"].forEach(ev => map.addListener(ev, scheduleFogRedraw));
+  window.addEventListener("resize", scheduleFogRedraw);
+
+  map.addListener("click", (e) => {
+    if(!addModeActive) return;
+    openNewLocForm(e.latLng, e.domEvent);
+  });
+
+  initUsersUI();
+  bindUI();
+}
+
+// paleta discreta para o mapa base (tons neutros, sem poluição visual)
+function mapStyleQuiet(){
+  return [
+    { elementType: "geometry", stylers: [{ color: "#ede9dd" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#5c584c" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#f4f2ea" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#b9c9c6" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", stylers: [{ visibility: "off" }] }
+  ];
+}
+
+let fogRAF = null;
+function scheduleFogRedraw(){
+  if(fogRAF) cancelAnimationFrame(fogRAF);
+  fogRAF = requestAnimationFrame(drawFog);
+}
+
+function drawFog(){
+  if(!map || !fogCtx) return;
+  const wrap = document.getElementById("map-wrap");
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  if(fogCanvas.width !== w || fogCanvas.height !== h){
+    fogCanvas.width = w; fogCanvas.height = h;
+  }
+  const projection = projHelper.getProjection();
+  if(!projection) return;
+
+  fogCtx.globalCompositeOperation = "source-over";
+  fogCtx.clearRect(0,0,w,h);
+  fogCtx.fillStyle = "rgba(23,19,15,0.90)";
+  fogCtx.fillRect(0,0,w,h);
+
+  const zoom = map.getZoom();
+  const centerLat = map.getCenter().lat();
+  const metersPerPixel = 156543.03392 * Math.cos(centerLat * Math.PI/180) / Math.pow(2, zoom);
+
+  function latLngToXY(lat,lng){
+    const pt = projection.fromLatLngToDivPixel(new google.maps.LatLng(lat,lng));
+    return { x: pt.x, y: pt.y };
+  }
+  function cutHole(x,y,radiusPx){
+    if(radiusPx < 2) return;
+    fogCtx.globalCompositeOperation = "destination-out";
+    const grad = fogCtx.createRadialGradient(x,y,radiusPx*0.55,x,y,radiusPx);
+    grad.addColorStop(0,"rgba(0,0,0,1)");
+    grad.addColorStop(1,"rgba(0,0,0,0)");
+    fogCtx.fillStyle = grad;
+    fogCtx.beginPath();
+    fogCtx.arc(x,y,radiusPx,0,Math.PI*2);
+    fogCtx.fill();
+  }
+
+  // rastro de exploração (GPS)
+  state.explored.forEach(p=>{
+    const {x,y} = latLngToXY(p.lat,p.lng);
+    cutHole(x,y, REVEAL_RADIUS_TRAIL/metersPerPixel);
+  });
+
+  // locais concluídos revelam área ao redor
+  state.locations.filter(l=>l.status==="done").forEach(l=>{
+    const {x,y} = latLngToXY(l.lat,l.lng);
+    cutHole(x,y, REVEAL_RADIUS_LOCATION/metersPerPixel);
+    fogCtx.globalCompositeOperation = "source-over";
+    fogCtx.strokeStyle = "rgba(63,143,124,0.55)";
+    fogCtx.lineWidth = 2;
+    fogCtx.beginPath();
+    fogCtx.arc(x,y, REVEAL_RADIUS_LOCATION/metersPerPixel, 0, Math.PI*2);
+    fogCtx.stroke();
+  });
+
+  // ping visível para locais pendentes (sem revelar o mapa ao redor)
+  fogCtx.globalCompositeOperation = "source-over";
+  pendingPositions = [];
+  state.locations.filter(l=>l.status==="pending").forEach(l=>{
+    const {x,y} = latLngToXY(l.lat,l.lng);
+    if(x < -20 || y < -20 || x > w+20 || y > h+20) return;
+    pendingPositions.push({id:l.id, x, y});
+    fogCtx.beginPath();
+    fogCtx.arc(x,y,7,0,Math.PI*2);
+    fogCtx.fillStyle = "rgba(224,168,92,0.95)";
+    fogCtx.fill();
+    fogCtx.lineWidth = 2;
+    fogCtx.strokeStyle = "rgba(23,19,15,0.9)";
+    fogCtx.stroke();
+    fogCtx.beginPath();
+    fogCtx.arc(x,y,13,0,Math.PI*2);
+    fogCtx.strokeStyle = "rgba(224,168,92,0.45)";
+    fogCtx.lineWidth = 1.5;
+    fogCtx.stroke();
+  });
+}
+
+// clique num "ping" pendente (o canvas fica por cima, então tratamos manualmente)
+document.addEventListener("DOMContentLoaded", ()=>{
+  const canvas = document.getElementById("fog-canvas");
+  canvas.style.pointerEvents = "none"; // mapa recebe cliques normalmente; pings tratados via proximidade nos markers reais
+});
+
+/* ======================================================================
+   MARCADORES REAIS DO GOOGLE MAPS (abaixo da neblina)
+   ====================================================================== */
+function renderMarkers(){
+  Object.values(markers).forEach(m => m.setMap(null));
+  markers = {};
+  state.locations.forEach(loc=>{
+    const icon = {
+      path: google.maps.SymbolPath.CIRCLE,
+      fillColor: loc.status === "done" ? "#2c6b5e" : "#b97c2c",
+      fillOpacity: 1,
+      strokeColor: "#ffffff",
+      strokeWeight: 2,
+      scale: 8
+    };
+    const marker = new google.maps.Marker({
+      position: { lat: loc.lat, lng: loc.lng },
+      map, icon, title: loc.name, zIndex: loc.status==="done" ? 5 : 3
+    });
+    const info = new google.maps.InfoWindow({ content: buildInfoContent(loc) });
+    marker.addListener("click", ()=>{
+      info.setContent(buildInfoContent(loc));
+      info.open(map, marker);
+      google.maps.event.addListenerOnce(info, "domready", ()=> bindInfoButtons(loc.id, info));
+    });
+    markers[loc.id] = marker;
+  });
+  scheduleFogRedraw();
+}
+
+function buildInfoContent(loc){
+  const statusLabel = loc.status === "done" ? "✅ Concluída" : "🕘 Pendente";
+  const doneInfo = loc.doneAt ? `<div style="font-size:11px;color:#6b6a5f;margin-top:4px;">Concluída em ${new Date(loc.doneAt).toLocaleString('pt-BR')}</div>` : "";
+  return `
+    <div style="font-family:'IBM Plex Sans',sans-serif;max-width:220px;">
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:2px;">${escapeHtml(loc.name)}</div>
+      <div style="font-size:11.5px;color:#6b6a5f;">${escapeHtml(loc.address||"")}</div>
+      <div style="font-size:12px;margin-top:6px;">${statusLabel}</div>
+      ${doneInfo}
+      ${loc.notes ? `<div style="font-size:11.5px;margin-top:6px;border-top:1px solid #eee;padding-top:6px;">${escapeHtml(loc.notes)}</div>` : ""}
+      <div style="margin-top:10px;display:flex;gap:6px;">
+        <button id="iw-toggle-${loc.id}" style="flex:1;padding:5px 8px;border:none;border-radius:5px;cursor:pointer;background:${loc.status==='done' ? '#b97c2c' : '#2c6b5e'};color:#fff;font-size:11.5px;">
+          ${loc.status === "done" ? "Reabrir" : "Marcar concluída"}
+        </button>
+        <button id="iw-delete-${loc.id}" style="padding:5px 8px;border:1px solid #a13d3d;background:transparent;color:#a13d3d;border-radius:5px;cursor:pointer;font-size:11.5px;">Excluir</button>
+      </div>
+    </div>`;
+}
+function bindInfoButtons(id, infoWindow){
+  const t = document.getElementById("iw-toggle-"+id);
+  const d = document.getElementById("iw-delete-"+id);
+  if(t) t.onclick = ()=>{ toggleStatus(id); infoWindow.close(); };
+  if(d) d.onclick = ()=>{ if(confirm("Excluir esta diligência do mapa?")){ deleteLocation(id); infoWindow.close(); } };
+}
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ======================================================================
+   AÇÕES SOBRE LOCAIS
+   ====================================================================== */
+function toggleStatus(id){
+  const loc = state.locations.find(l=>l.id===id);
+  if(!loc) return;
+  loc.status = loc.status === "done" ? "pending" : "done";
+  loc.doneAt = loc.status === "done" ? Date.now() : null;
+  persist();
+  renderMarkers();
+  renderList();
+  renderProgress();
+  toast(loc.status==="done" ? `Diligência concluída: ${loc.name}` : `Diligência reaberta: ${loc.name}`);
+}
+function deleteLocation(id){
+  state.locations = state.locations.filter(l=>l.id!==id);
+  persist();
+  renderMarkers();
+  renderList();
+  renderProgress();
+}
+function addLocation({name, address, lat, lng, notes}){
+  state.locations.push({
+    id: "loc_" + Date.now() + "_" + Math.floor(Math.random()*1000),
+    name: name || "Local sem nome",
+    address: address || "",
+    lat, lng, notes: notes || "",
+    status: "pending", doneAt: null
+  });
+  persist();
+  renderMarkers();
+  renderList();
+  renderProgress();
+}
+
+/* ======================================================================
+   FORMULÁRIO DE NOVO LOCAL (clique no mapa)
+   ====================================================================== */
+function openNewLocForm(latLng, domEvent){
+  pendingClickLatLng = latLng;
+  const form = document.getElementById("new-loc-form");
+  const wrapRect = document.getElementById("map-wrap").getBoundingClientRect();
+  let x = (domEvent.clientX - wrapRect.left) + 12;
+  let y = (domEvent.clientY - wrapRect.top) + 12;
+  if(x + 270 > wrapRect.width) x -= 290;
+  if(y + 260 > wrapRect.height) y -= 260;
+  form.style.left = x + "px";
+  form.style.top = y + "px";
+  form.style.display = "block";
+  document.getElementById("nl-name").value = "";
+  document.getElementById("nl-notes").value = "";
+  document.getElementById("nl-address").value = "Buscando endereço…";
+  geocoder.geocode({ location: latLng }, (results, status)=>{
+    document.getElementById("nl-address").value =
+      (status === "OK" && results[0]) ? results[0].formatted_address : "Endereço não encontrado";
+  });
+  document.getElementById("nl-name").focus();
+}
+function closeNewLocForm(){
+  document.getElementById("new-loc-form").style.display = "none";
+  pendingClickLatLng = null;
+}
+
+/* ======================================================================
+   LISTA LATERAL / ABAS
+   ====================================================================== */
+let activeTab = "pending";
+function renderList(){
+  const wrap = document.getElementById("list-wrap");
+  wrap.innerHTML = "";
+  const items = state.locations.filter(l => activeTab === "pending" ? l.status==="pending" : l.status==="done");
+  document.getElementById("count-pending").textContent = state.locations.filter(l=>l.status==="pending").length;
+  document.getElementById("count-done").textContent = state.locations.filter(l=>l.status==="done").length;
+
+  if(items.length === 0){
+    wrap.innerHTML = `<div class="empty-msg">${activeTab==="pending" ? "Nenhuma diligência pendente. Use “Adicionar local” ou busque um endereço." : "Nenhuma diligência concluída ainda."}</div>`;
+    return;
+  }
+  items.sort((a,b)=> (b.doneAt||b.id.length) - (a.doneAt||a.id.length));
+  items.forEach(loc=>{
+    const card = document.createElement("div");
+    card.className = "loc-card";
+    card.innerHTML = `
+      <div class="row1">
+        <div>
+          <div class="name">${escapeHtml(loc.name)}</div>
+          <div class="addr">${escapeHtml(loc.address||"")}</div>
         </div>
+        <div class="status-dot ${loc.status}"></div>
+      </div>
+      <div class="meta">${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}${loc.doneAt ? " · " + new Date(loc.doneAt).toLocaleDateString('pt-BR') : ""}</div>
+    `;
+    card.onclick = ()=>{
+      map.panTo({lat:loc.lat,lng:loc.lng});
+      map.setZoom(Math.max(map.getZoom(), 15));
+      google.maps.event.trigger(markers[loc.id], "click");
+    };
+    wrap.appendChild(card);
+  });
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      activeTab = tab.dataset.tab;
+      renderList();
+    });
+  });
+});
 
-        <!-- Barra de Ferramentas (Rolagem horizontal para mobile) -->
-        <div class="flex items-center p-2 gap-2 overflow-x-auto no-scrollbar justify-between">
-            
-            <!-- Controles de Playback -->
-            <div class="flex items-center gap-1 bg-gray-800 rounded-lg p-1 shrink-0">
-                <button id="btn-step-back" class="p-3 rounded-md hover:bg-gray-700 text-gray-300 disabled:opacity-50" title="-1 Frame" disabled>
-                    <i data-lucide="skip-back" class="w-5 h-5"></i>
-                </button>
-                <button id="btn-play-pause" class="p-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50" disabled>
-                    <i data-lucide="play" class="w-5 h-5" id="icon-play"></i>
-                </button>
-                <button id="btn-step-fwd" class="p-3 rounded-md hover:bg-gray-700 text-gray-300 disabled:opacity-50" title="+1 Frame" disabled>
-                    <i data-lucide="skip-forward" class="w-5 h-5"></i>
-                </button>
-            </div>
+/* ======================================================================
+   PROGRESSO
+   ====================================================================== */
+function renderProgress(){
+  const total = state.locations.length;
+  const done = state.locations.filter(l=>l.status==="done").length;
+  const pct = total === 0 ? 0 : Math.round((done/total)*100);
+  document.getElementById("progress-stats").textContent = `${done} / ${total} concluídas · ${pct}%`;
+  document.getElementById("progress-bar-fill").style.width = pct + "%";
+}
 
-            <!-- Divisor -->
-            <div class="w-px h-8 bg-gray-700 shrink-0 mx-1"></div>
+/* ======================================================================
+   USUÁRIOS
+   ====================================================================== */
+function initUsersUI(){
+  let users = getUsers();
+  if(users.length === 0){
+    users = ["Padrão"];
+    saveUsers(users);
+  }
+  let current = getCurrentUserName();
+  if(!current || !users.includes(current)){
+    current = users[0];
+    setCurrentUserName(current);
+  }
+  populateUserSelect(users, current);
+  switchUser(current, true);
+}
+function populateUserSelect(users, current){
+  const sel = document.getElementById("user-select");
+  sel.innerHTML = "";
+  users.forEach(u=>{
+    const opt = document.createElement("option");
+    opt.value = u; opt.textContent = u;
+    if(u === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+function switchUser(name, silent){
+  currentUser = name;
+  setCurrentUserName(name);
+  state = loadState(name);
+  document.getElementById("current-user-badge").textContent = name;
+  renderMarkers();
+  renderList();
+  renderProgress();
+  if(!silent) toast(`Usuário alterado para: ${name}`);
+}
+function persist(){
+  if(currentUser) saveState(currentUser, state);
+}
 
-            <!-- Ferramentas Táticas -->
-            <div class="flex items-center gap-1 shrink-0" id="tool-buttons">
-                <button data-tool="select" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 active-tool disabled:opacity-50" title="Selecionar" disabled>
-                    <i data-lucide="mouse-pointer-2" class="w-5 h-5"></i>
-                </button>
-                <button data-tool="calibrate" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 disabled:opacity-50" title="Calibrar Perspectiva (4 pontos)" disabled>
-                    <i data-lucide="pipette" class="w-5 h-5"></i>
-                </button>
-                <button data-tool="player" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 relative disabled:opacity-50" title="Rastrear Jogador" disabled>
-                    <i data-lucide="user" class="w-5 h-5"></i>
-                    <span class="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-red-500"></span>
-                </button>
-                <button data-tool="ball" class="tool-btn p-3 rounded-md hover:bg-gray-800 text-gray-400 disabled:opacity-50" title="Rastrear Bola" disabled>
-                    <i data-lucide="circle-dot" class="w-5 h-5"></i>
-                </button>
-                <button id="btn-clear" class="p-3 rounded-md hover:bg-red-900/50 text-red-400 ml-2 disabled:opacity-50" title="Limpar Tudo" disabled>
-                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Instruções Dinâmicas -->
-        <div id="instruction-bar" class="bg-blue-900/30 text-blue-300 text-xs text-center py-1 hidden">
-            Selecione uma ferramenta.
-        </div>
-    </footer>
+/* ======================================================================
+   EXPLORAÇÃO POR GPS
+   ====================================================================== */
+function haversine(lat1,lng1,lat2,lng2){
+  const R = 6371000;
+  const toRad = d => d*Math.PI/180;
+  const dLat = toRad(lat2-lat1), dLng = toRad(lng2-lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function toggleExploration(){
+  const btn = document.getElementById("exploration-toggle");
+  if(watchId === null){
+    if(!navigator.geolocation){
+      toast("Geolocalização não disponível neste navegador.");
+      return;
+    }
+    watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
+      enableHighAccuracy: true, maximumAge: 5000, timeout: 15000
+    });
+    btn.textContent = "⏸ Parar exploração";
+    btn.classList.add("on");
+    toast("Exploração iniciada. Desloque-se para revelar o mapa.");
+  } else {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    btn.textContent = "▶ Iniciar exploração (GPS)";
+    btn.classList.remove("on");
+    toast("Exploração pausada.");
+  }
+}
+function onPositionError(err){
+  toast("Não foi possível obter sua localização: " + err.message);
+}
+function onPosition(pos){
+  const lat = pos.coords.latitude, lng = pos.coords.longitude;
 
-    <script>
-        // Inicializar Ícones
-        lucide.createIcons();
+  if(!userPosMarker){
+    userPosMarker = new google.maps.Marker({
+      position: {lat,lng}, map,
+      icon: { path: google.maps.SymbolPath.CIRCLE, fillColor:"#4a90e2", fillOpacity:1, strokeColor:"#fff", strokeWeight:2, scale:7 },
+      zIndex: 10
+    });
+    map.panTo({lat,lng});
+    map.setZoom(16);
+  } else {
+    userPosMarker.setPosition({lat,lng});
+  }
 
-        // Elementos DOM
-        const video = document.getElementById('main-video');
-        const canvas = document.getElementById('canvas-overlay');
-        const ctx = canvas.getContext('2d');
-        const videoContainer = document.getElementById('video-container');
-        const emptyState = document.getElementById('empty-state');
-        const uploadInput = document.getElementById('video-upload');
-        const timeline = document.getElementById('timeline');
-        const timeCurrent = document.getElementById('time-current');
-        const timeDuration = document.getElementById('time-duration');
-        const btnPlayPause = document.getElementById('btn-play-pause');
-        const iconPlay = document.getElementById('icon-play');
-        const btnStepBack = document.getElementById('btn-step-back');
-        const btnStepFwd = document.getElementById('btn-step-fwd');
-        const toolBtns = document.querySelectorAll('.tool-btn');
-        const btnClear = document.getElementById('btn-clear');
-        const instructionBar = document.getElementById('instruction-bar');
+  const last = state.explored[state.explored.length-1];
+  if(!last || haversine(last.lat,last.lng,lat,lng) > MIN_TRAIL_STEP){
+    state.explored.push({lat,lng});
+    if(state.explored.length > 3000) state.explored.shift();
+    persist();
+  }
 
-        // Estado da Aplicação
-        let appState = {
-            isPlaying: false,
-            duration: 0,
-            fps: 30, // Estimado
-            currentTool: 'select', // 'select', 'calibrate', 'player', 'ball'
-            activeTrackId: null, // Para continuar rastreando o mesmo objeto
-            tracks: [], // Array de objetos de rastreamento
-            calibration: [] // Array de 4 pontos {x, y}
-        };
+  // detecção de chegada automática
+  state.locations.filter(l=>l.status==="pending").forEach(l=>{
+    if(haversine(l.lat,l.lng,lat,lng) <= ARRIVAL_RADIUS){
+      l.status = "done";
+      l.doneAt = Date.now();
+      toast(`✅ Diligência concluída automaticamente: ${l.name}`);
+      persist();
+      renderMarkers();
+      renderList();
+      renderProgress();
+    }
+  });
 
-        // Estrutura de um Track:
-        // { id: string, type: 'player'|'ball', color: string, points: [{time: number, x: number, y: number}] }
+  scheduleFogRedraw();
+}
 
-        const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
-        let colorIndex = 0;
+/* ======================================================================
+   TOASTS
+   ====================================================================== */
+function toast(msg){
+  const c = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 4200);
+}
 
-        // --- Funções Utilitárias ---
+/* ======================================================================
+   LIGAÇÃO DA UI
+   ====================================================================== */
+function bindUI(){
+  document.getElementById("user-select").addEventListener("change", (e)=> switchUser(e.target.value));
 
-        const formatTime = (seconds) => {
-            if (isNaN(seconds)) return "00:00";
-            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-        };
+  document.getElementById("new-user-btn").addEventListener("click", ()=>{
+    const name = prompt("Nome do novo usuário (ex: nome do agente de campo):");
+    if(!name) return;
+    const trimmed = name.trim();
+    if(!trimmed) return;
+    let users = getUsers();
+    if(!users.includes(trimmed)) users.push(trimmed);
+    saveUsers(users);
+    populateUserSelect(users, trimmed);
+    switchUser(trimmed);
+  });
 
-        const generateId = () => Math.random().toString(36).substr(2, 9);
+  document.getElementById("reset-btn").addEventListener("click", ()=>{
+    if(!confirm(`Reiniciar todo o progresso do usuário "${currentUser}"?\n\nTodas as diligências voltarão a "pendente" e a área explorada será apagada. Os locais cadastrados NÃO serão excluídos.`)) return;
+    state.explored = [];
+    state.locations.forEach(l=>{ l.status="pending"; l.doneAt=null; });
+    persist();
+    renderMarkers(); renderList(); renderProgress();
+    toast("Progresso reiniciado.");
+  });
 
-        // --- Gerenciamento de Vídeo ---
+  document.getElementById("export-btn").addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify({user:currentUser, state}, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `diligencias_${currentUser}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  });
+  document.getElementById("import-btn").addEventListener("click", ()=> document.getElementById("import-file").click());
+  document.getElementById("import-file").addEventListener("change", (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        if(data.state && data.state.locations){
+          state = data.state;
+          persist();
+          renderMarkers(); renderList(); renderProgress();
+          toast("Dados importados com sucesso.");
+        } else { toast("Arquivo inválido."); }
+      }catch(err){ toast("Erro ao importar arquivo."); }
+    };
+    reader.readAsText(file);
+  });
 
-        uploadInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+  document.getElementById("add-mode-btn").addEventListener("click", (e)=>{
+    addModeActive = !addModeActive;
+    e.target.classList.toggle("active", addModeActive);
+    e.target.textContent = addModeActive ? "✕ Cancelar adição (clique no mapa)" : "📍 Adicionar local (clique no mapa)";
+  });
 
-            const url = URL.createObjectURL(file);
-            video.src = url;
-            
-            // UI Updates
-            emptyState.classList.add('hidden');
-            video.classList.remove('hidden');
-            canvas.classList.remove('hidden');
-            
-            // Enable controls
-            timeline.disabled = false;
-            btnPlayPause.disabled = false;
-            btnStepBack.disabled = false;
-            btnStepFwd.disabled = false;
-            toolBtns.forEach(btn => btn.disabled = false);
-            btnClear.disabled = false;
+  document.getElementById("search-btn").addEventListener("click", doSearch);
+  document.getElementById("search-input").addEventListener("keydown", (e)=>{ if(e.key==="Enter") doSearch(); });
+  function doSearch(){
+    const q = document.getElementById("search-input").value.trim();
+    if(!q) return;
+    geocoder.geocode({ address: q }, (results, status)=>{
+      if(status === "OK" && results[0]){
+        map.panTo(results[0].geometry.location);
+        map.setZoom(15);
+      } else {
+        toast("Endereço não encontrado.");
+      }
+    });
+  }
 
-            // Reset state
-            appState.tracks = [];
-            appState.calibration = [];
-            setTool('select');
-        });
+  document.getElementById("nl-cancel").addEventListener("click", closeNewLocForm);
+  document.getElementById("nl-save").addEventListener("click", ()=>{
+    if(!pendingClickLatLng) return;
+    const name = document.getElementById("nl-name").value.trim();
+    const address = document.getElementById("nl-address").value.trim();
+    const notes = document.getElementById("nl-notes").value.trim();
+    addLocation({
+      name: name || "Local sem nome",
+      address, notes,
+      lat: pendingClickLatLng.lat(), lng: pendingClickLatLng.lng()
+    });
+    closeNewLocForm();
+    addModeActive = false;
+    const btn = document.getElementById("add-mode-btn");
+    btn.classList.remove("active");
+    btn.textContent = "📍 Adicionar local (clique no mapa)";
+    toast("Diligência adicionada.");
+  });
 
-        video.addEventListener('loadedmetadata', () => {
-            appState.duration = video.duration;
-            timeline.max = video.duration;
-            timeDuration.textContent = formatTime(video.duration);
-            resizeCanvas();
-            renderLoop(); // Iniciar loop de renderização
-        });
+  document.getElementById("exploration-toggle").addEventListener("click", toggleExploration);
+}
+</script>
 
-        video.addEventListener('timeupdate', () => {
-            if (!appState.isPlaying) { // Se estiver tocando, o renderLoop lida com a timeline para ser mais suave
-                timeline.value = video.currentTime;
-                timeCurrent.textContent = formatTime(video.currentTime);
-            }
-        });
-
-        window.addEventListener('resize', resizeCanvas);
-
-        function resizeCanvas() {
-            if (!video.videoWidth) return;
-            // Fazer o canvas ter o mesmo tamanho do vídeo renderizado na tela
-            const rect = video.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            // Ajustar posição para sobrepor exatamente
-            canvas.style.left = `${rect.left}px`;
-            canvas.style.top = `${rect.top}px`;
-        }
-
-        // --- Controles de Playback ---
-
-        const togglePlay = () => {
-            if (video.paused) {
-                video.play();
-                appState.isPlaying = true;
-                iconPlay.setAttribute('data-lucide', 'pause');
-                setTool('select'); // Voltar para seleção ao dar play
-            } else {
-                video.pause();
-                appState.isPlaying = false;
-                iconPlay.setAttribute('data-lucide', 'play');
-            }
-            lucide.createIcons();
-        };
-
-        btnPlayPause.addEventListener('click', togglePlay);
-
-        const stepFrame = (direction) => {
-            if (appState.isPlaying) togglePlay();
-            const step = 1 / appState.fps;
-            video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + (step * direction)));
-            // Forçar atualização do input range e tempo
-            timeline.value = video.currentTime;
-            timeCurrent.textContent = formatTime(video.currentTime);
-            render(); // Forçar render imediato
-        };
-
-        btnStepBack.addEventListener('click', () => stepFrame(-1));
-        btnStepFwd.addEventListener('click', () => stepFrame(1));
-
-        timeline.addEventListener('input', (e) => {
-            if (appState.isPlaying) togglePlay();
-            video.currentTime = parseFloat(e.target.value);
-            timeCurrent.textContent = formatTime(video.currentTime);
-            render();
-        });
-
-        // --- Ferramentas e Interação (Canvas) ---
-
-        const setTool = (toolName) => {
-            appState.currentTool = toolName;
-            appState.activeTrackId = null; // Resetar active track ao mudar de ferramenta
-            
-            toolBtns.forEach(btn => {
-                if (btn.dataset.tool === toolName) {
-                    btn.classList.add('bg-gray-800', 'text-white');
-                    btn.classList.remove('text-gray-400');
-                } else {
-                    btn.classList.remove('bg-gray-800', 'text-white');
-                    btn.classList.add('text-gray-400');
-                }
-            });
-
-            instructionBar.classList.remove('hidden');
-            switch(toolName) {
-                case 'calibrate':
-                    instructionBar.textContent = `Toque para definir 4 pontos da perspectiva (Atual: ${appState.calibration.length}/4)`;
-                    break;
-                case 'player':
-                    instructionBar.textContent = "Toque no jogador para rastrear (Avance frames para adicionar caminhos).";
-                    break;
-                case 'ball':
-                    instructionBar.textContent = "Toque na bola para marcar sua posição.";
-                    break;
-                default:
-                    instructionBar.classList.add('hidden');
-            }
-        };
-
-        toolBtns.forEach(btn => {
-            btn.addEventListener('click', () => setTool(btn.dataset.tool));
-        });
-
-        btnClear.addEventListener('click', () => {
-            if(confirm("Deseja apagar todos os rastreios e calibrações?")) {
-                appState.tracks = [];
-                appState.calibration = [];
-                appState.activeTrackId = null;
-                setTool('select');
-                render();
-            }
-        });
-
-        // Converter coordenadas do clique para coordenadas do canvas interno
-        const getCanvasCoords = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            let clientX, clientY;
-
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
-        };
-
-        const handlePointerDown = (e) => {
-            if (!video.src || appState.isPlaying) return;
-            
-            const coords = getCanvasCoords(e);
-            const time = video.currentTime;
-
-            if (appState.currentTool === 'calibrate') {
-                if (appState.calibration.length < 4) {
-                    appState.calibration.push(coords);
-                    setTool('calibrate'); // Update instruction text
-                } else {
-                    // Reset e recomeça
-                    appState.calibration = [coords];
-                    setTool('calibrate');
-                }
-            } 
-            else if (appState.currentTool === 'player' || appState.currentTool === 'ball') {
-                
-                let track;
-                // Se já temos um track ativo dessa ferramenta, adicionamos ponto a ele
-                if (appState.activeTrackId) {
-                    track = appState.tracks.find(t => t.id === appState.activeTrackId);
-                } 
-                
-                // Se não tem ou mudou de ferramenta, cria novo
-                if (!track) {
-                    track = {
-                        id: generateId(),
-                        type: appState.currentTool,
-                        color: COLORS[colorIndex % COLORS.length],
-                        points: []
-                    };
-                    colorIndex++;
-                    appState.tracks.push(track);
-                    appState.activeTrackId = track.id;
-                }
-
-                // Verifica se já existe um ponto muito próximo deste tempo, se sim, substitui
-                const existingPointIndex = track.points.findIndex(p => Math.abs(p.time - time) < 0.05);
-                if (existingPointIndex > -1) {
-                    track.points[existingPointIndex] = { time, x: coords.x, y: coords.y };
-                } else {
-                    track.points.push({ time, x: coords.x, y: coords.y });
-                    // Ordena por tempo para interpolação funcionar corretamente
-                    track.points.sort((a, b) => a.time - b.time);
-                }
-            }
-            
-            render();
-        };
-
-        // Eventos unificados para Mouse e Touch
-        canvas.addEventListener('mousedown', handlePointerDown);
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Previne scroll ao tocar no canvas
-            handlePointerDown(e);
-        }, { passive: false });
-
-        // --- Lógica de Renderização ---
-
-        // Interpolação linear entre dois pontos
-        const lerp = (start, end, amt) => {
-            return (1 - amt) * start + amt * end;
-        };
-
-        // Obter posição interpolada de um track num dado tempo
-        const getTrackPositionAtTime = (track, time) => {
-            if (track.points.length === 0) return null;
-            if (track.points.length === 1) {
-                // Mostrar apenas se estiver muito perto do tempo do frame (ex: +- 0.2s)
-                return Math.abs(track.points[0].time - time) < 0.2 ? track.points[0] : null;
-            }
-
-            // Encontrar pontos antes e depois do tempo atual
-            let pBefore = null;
-            let pAfter = null;
-
-            for (let i = 0; i < track.points.length; i++) {
-                if (track.points[i].time <= time) pBefore = track.points[i];
-                if (track.points[i].time > time && !pAfter) pAfter = track.points[i];
-            }
-
-            if (!pBefore && pAfter) return null; // Antes do primeiro ponto marcado
-            if (pBefore && !pAfter) {
-                 // Depois do último ponto. Mostrar se estiver perto.
-                 return Math.abs(pBefore.time - time) < 0.5 ? pBefore : null;
-            }
-            
-            // Interpolação
-            const tDiff = pAfter.time - pBefore.time;
-            const tProg = (time - pBefore.time) / tDiff;
-            
-            return {
-                x: lerp(pBefore.x, pAfter.x, tProg),
-                y: lerp(pBefore.y, pAfter.y, tProg)
-            };
-        };
-
-        // Desenhar Quadrilátero de Calibração com "Perspectiva" visual
-        const drawCalibrationGrid = () => {
-            const pts = appState.calibration;
-            if (pts.length === 0) return;
-
-            ctx.lineWidth = 2;
-            
-            // Desenhar linhas conectando
-            ctx.beginPath();
-            ctx.moveTo(pts[0].x, pts[0].y);
-            for (let i = 1; i < pts.length; i++) {
-                ctx.lineTo(pts[i].x, pts[i].y);
-            }
-            if (pts.length === 4) {
-                ctx.closePath();
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'; // Blue tint
-                ctx.fill();
-                
-                // Desenhar grade interna simplificada (interpolação bilinear)
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.lineWidth = 1;
-                const steps = 5;
-                
-                // Linhas verticais da grade
-                for(let i=1; i<steps; i++) {
-                    const u = i/steps;
-                    const topX = lerp(pts[0].x, pts[1].x, u);
-                    const topY = lerp(pts[0].y, pts[1].y, u);
-                    const botX = lerp(pts[3].x, pts[2].x, u);
-                    const botY = lerp(pts[3].y, pts[2].y, u);
-                    ctx.beginPath(); ctx.moveTo(topX, topY); ctx.lineTo(botX, botY); ctx.stroke();
-                }
-                // Linhas horizontais da grade
-                for(let i=1; i<steps; i++) {
-                    const v = i/steps;
-                    const leftX = lerp(pts[0].x, pts[3].x, v);
-                    const leftY = lerp(pts[0].y, pts[3].y, v);
-                    const rightX = lerp(pts[1].x, pts[2].x, v);
-                    const rightY = lerp(pts[1].y, pts[2].y, v);
-                    ctx.beginPath(); ctx.moveTo(leftX, leftY); ctx.lineTo(rightX, rightY); ctx.stroke();
-                }
-                ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
-                ctx.lineWidth = 2;
-            } else {
-                ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)';
-            }
-            ctx.stroke();
-
-            // Desenhar os nós
-            pts.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-            });
-        };
-
-        const drawMarker = (x, y, color, type, isActive) => {
-            if (type === 'player') {
-                // Desenhar disco de perspectiva no chão (elipse)
-                ctx.beginPath();
-                // A elipse simula a perspectiva. Fixo para MVP, mas poderia depender da calibração.
-                ctx.ellipse(x, y + 10, 15, 6, 0, 0, Math.PI * 2); 
-                ctx.fillStyle = color + '80'; // Transparente
-                ctx.fill();
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Ponto central
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-                
-                // Linha vertical (cone)
-                ctx.beginPath();
-                ctx.moveTo(x, y+10);
-                ctx.lineTo(x, y-20);
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Info tag se ativo
-                if (isActive) {
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x + 10, y - 30, 10, 10);
-                }
-
-            } else if (type === 'ball') {
-                ctx.beginPath();
-                ctx.arc(x, y, 6, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#000';
-                ctx.stroke();
-            }
-        };
-
-        const drawTracks = () => {
-            const time = video.currentTime;
-            
-            appState.tracks.forEach(track => {
-                const pos = getTrackPositionAtTime(track, time);
-                
-                // Desenhar o rastro (caminho) para trás
-                if (track.points.length > 1) {
-                    ctx.beginPath();
-                    let hasStarted = false;
-                    for (let i = 0; i < track.points.length; i++) {
-                        const pt = track.points[i];
-                        if (pt.time <= time) {
-                            if (!hasStarted) {
-                                ctx.moveTo(pt.x, pt.y);
-                                hasStarted = true;
-                            } else {
-                                ctx.lineTo(pt.x, pt.y);
-                            }
-                        }
-                    }
-                    if (pos && hasStarted) {
-                        ctx.lineTo(pos.x, pos.y);
-                    }
-                    ctx.strokeStyle = track.color + '60'; // Semitransparente
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([5, 5]);
-                    ctx.stroke();
-                    ctx.setLineDash([]); // Reset
-                }
-
-                // Desenhar o marcador atual
-                if (pos) {
-                    const isActive = track.id === appState.activeTrackId;
-                    drawMarker(pos.x, pos.y, track.color, track.type, isActive);
-                }
-            });
-        };
-
-        const render = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawCalibrationGrid();
-            drawTracks();
-        };
-
-        const renderLoop = () => {
-            if (appState.isPlaying) {
-                timeline.value = video.currentTime;
-                timeCurrent.textContent = formatTime(video.currentTime);
-                render();
-            }
-            requestAnimationFrame(renderLoop);
-        };
-
-    </script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=REPLACE_ME&libraries=places,geometry&callback=initApp" id="gmaps-script"></script>
+<script>
+  // injeta a chave configurada no atributo src do script do Google Maps
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const s = document.getElementById("gmaps-script");
+    if(GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== "SUA_CHAVE_AQUI"){
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry&callback=initApp`;
+    } else {
+      document.getElementById("api-key-warning").style.display = "flex";
+    }
+  });
+</script>
 </body>
 </html>
-
-```
